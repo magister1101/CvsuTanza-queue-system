@@ -153,7 +153,7 @@
         <div class="q-mt-lg">
           <q-table
             :loading="tableLoading"
-            style="border-radius: 14px; background-color: #fdffdf"
+            style="border-radius: 12px; background-color: #fdffdf"
             title="Recent Students"
             :rows="rows"
             :columns="columns"
@@ -170,7 +170,12 @@
             </template>
             <template v-slot:body="props">
               <q-tr :props="props">
-                <q-td v-for="col in columns" :key="col.name" :props="props">
+                <q-td
+                  v-for="col in columns"
+                  :key="col.name"
+                  :props="props"
+                  :style="{ maxWidth: '200px', whiteSpace: 'normal', wordWrap: 'break-word' }"
+                >
                   <template v-if="col.name === '#'">
                     {{ props.rowIndex + 1 }}
                   </template>

@@ -58,13 +58,13 @@
                               />
                             </div>
                             <div>
-                              <q-btn
+                              <!-- <q-btn
                                 :loading="loading"
                                 label="Send Email"
                                 no-caps
                                 flat
                                 style="width: 100%; color: green"
-                              />
+                              /> -->
                             </div>
                           </q-list>
                         </q-btn-dropdown>

@@ -94,13 +94,33 @@
                     <q-card-section style="width: 100%">
                       Password:
                       <div style="width: 100%">
-                        <q-input type="password" outlined v-model="password" />
+                        <q-input :type="isPwd ? 'password' : 'text'" outlined v-model="password">
+                          <template v-slot:append>
+                            <q-icon
+                              :name="isPwd ? 'visibility_off' : 'visibility'"
+                              class="cursor-pointer"
+                              @click="isPwd = !isPwd"
+                            />
+                          </template>
+                        </q-input>
                       </div>
                     </q-card-section>
                     <q-card-section style="width: 100%">
                       Confirm Password:
                       <div style="width: 100%">
-                        <q-input type="password" outlined v-model="confirmPassword" />
+                        <q-input
+                          :type="isPwd ? 'password' : 'text'"
+                          outlined
+                          v-model="confirmPassword"
+                        >
+                          <template v-slot:append>
+                            <q-icon
+                              :name="isPwd ? 'visibility_off' : 'visibility'"
+                              class="cursor-pointer"
+                              @click="isPwd = !isPwd"
+                            />
+                          </template>
+                        </q-input>
                       </div>
                     </q-card-section>
                     <q-card-section style="width: 100%">

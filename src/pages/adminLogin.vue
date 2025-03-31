@@ -71,7 +71,7 @@
                   </div>
                   <div>
                     <q-input
-                      type="password"
+                      :type="isPwd ? 'password' : 'text'"
                       v-model="password"
                       label="Password"
                       input-style="color: #f6f8ed"
@@ -79,6 +79,14 @@
                     >
                       <template v-slot:prepend>
                         <q-icon name="lock" size="34px" />
+                      </template>
+
+                      <template v-slot:append>
+                        <q-icon
+                          :name="isPwd ? 'visibility_off' : 'visibility'"
+                          class="cursor-pointer"
+                          @click="isPwd = !isPwd"
+                        />
                       </template>
                     </q-input>
                   </div>
@@ -150,7 +158,6 @@ async function login() {
       Notify.create({ type: 'positive', message: 'Login successful!' })
       await new Promise((resolve) => setTimeout(resolve, 500))
       router.replace(`/new/dashboardPage`)
-
     } else {
       Notify.create({
         type: 'negative',
@@ -220,5 +227,4 @@ async function login() {
 
   .main-container
     padding-top: 80px
-
 </style>
