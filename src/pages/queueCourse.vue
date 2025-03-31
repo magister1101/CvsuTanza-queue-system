@@ -199,6 +199,37 @@ const prerequisitesColumn = ref([
   },
 ])
 
+async function sendEmail() {
+  loading.value = true
+  try {
+    const token = localStorage.getItem('authToken')
+    const response = await axios.post(
+      `${process.env.api_host}/users/sendEmail/${studentId}`,
+      {},
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: token,
+        },
+      },
+    )
+    if (response.status === 200) {
+      Notify.create({
+        type: 'positive',
+        message: 'Email sent successfully',
+      })
+    }
+  } catch (err) {
+    console.error(err)
+    Notify.create({
+      type: 'negative',
+      message: 'Failed to send email',
+    })
+  } finally {
+    loading.value = false
+  }
+}
+
 async function getCourses() {
   tableLoading.value = true
   try {
@@ -299,6 +330,7 @@ async function checkCourse() {
           },
         },
       )
+      sendEmail()
       router.replace(`/new/addStudent/`)
     }
     prerequisitesMessage.value = response.data
