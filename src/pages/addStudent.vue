@@ -665,6 +665,8 @@ async function getAllStudents() {
       },
     })
 
+    console.log(userResponse.data.year)
+
     if (
       userResponse.data.role === 'admin' ||
       userResponse.data.role === 'osas' ||
@@ -692,7 +694,7 @@ async function getAllStudents() {
       }
     } else {
       const response = await axios.get(
-        `${process.env.api_host}/users?role=student&program=${userResponse.data.role}&isArchived=false`,
+        `${process.env.api_host}/users?role=student&program=${userResponse.data.role}&year=${userResponse.data.year}&isArchived=false`,
         {
           headers: {
             'Content-Type': 'application/json',

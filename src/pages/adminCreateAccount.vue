@@ -267,6 +267,18 @@
                           >
                             <q-select v-model="role" :options="roleOptions.option" borderless />
                           </div>
+
+                          Year
+                          <div
+                            style="
+                              border: 2px solid #9fa092;
+                              width: 100%;
+                              background-color: #fefeff;
+                              border-radius: 14px;
+                            "
+                          >
+                            <q-select v-model="year" :options="yearOptions" borderless />
+                          </div>
                         </q-card-section>
                       </div>
                     </div>
@@ -401,6 +413,17 @@
                           >
                             <q-select v-model="role" :options="roleOptions" borderless />
                           </div>
+                          Year
+                          <div
+                            style="
+                              border: 2px solid #9fa092;
+                              width: 100%;
+                              background-color: #fefeff;
+                              border-radius: 14px;
+                            "
+                          >
+                            <q-select v-model="year" :options="yearOptions" borderless />
+                          </div>
                         </q-card-section>
                       </div>
                     </div>
@@ -415,7 +438,7 @@
                         />
                         <q-btn
                           class="q-ml-sm"
-                          @click="editDialog = false"
+                          @click="cancelCreate"
                           label="Cancel"
                           flat
                           style="color: red"
@@ -456,12 +479,14 @@ const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 const role = ref(null)
+const year = ref(null)
 
 const roleValidation = ref('')
 const isAdmin = ref('')
 const notAdmin = ref('')
 
 const roleOptions = ref({})
+const yearOptions = ['First', 'Second', 'Third', 'Fourth']
 const extraOptions = ['registrar', 'osas', 'cashier', 'admin']
 
 const statusOptions = ['Active', 'Inactive']
@@ -537,7 +562,9 @@ async function cancelCreate() {
     (password.value = ''),
     (confirmPassword.value = '')
   role.value = null
+  year.value = null
   createAccountDialog.value = false
+  editDialog.value = false
 }
 
 async function createAccount() {
@@ -577,6 +604,7 @@ async function createAccount() {
         password: password.value,
         role: role.value,
         isEmailSent: true,
+        year: year.value,
       },
       {
         headers: {
@@ -598,6 +626,7 @@ async function createAccount() {
     password.value = ''
     confirmPassword.value = ''
     role.value = null
+    year.value = null
     createAccountDialog.value = false
   } catch (err) {
     console.error(err)
@@ -645,6 +674,7 @@ function openEditDialog(user) {
   email.value = user.fullData.email
   role.value = user.fullData.role
   editDialog.value = true
+  year.value = user.fullData.year
 }
 
 async function deleteUserDialog(studentId) {

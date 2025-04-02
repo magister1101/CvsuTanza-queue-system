@@ -132,6 +132,7 @@ const router = useRouter()
 // login input
 const username = ref('')
 const password = ref('')
+const isPwd = ref(true)
 
 // async function backBtn() {
 //   router.replace(`/`)

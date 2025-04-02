@@ -109,15 +109,15 @@
                       Confirm Password:
                       <div style="width: 100%">
                         <q-input
-                          :type="isPwd ? 'password' : 'text'"
+                          :type="isCnfrmPwd ? 'password' : 'text'"
                           outlined
                           v-model="confirmPassword"
                         >
                           <template v-slot:append>
                             <q-icon
-                              :name="isPwd ? 'visibility_off' : 'visibility'"
+                              :name="isCnfrmPwd ? 'visibility_off' : 'visibility'"
                               class="cursor-pointer"
-                              @click="isPwd = !isPwd"
+                              @click="isCnfrmPwd = !isCnfrmPwd"
                             />
                           </template>
                         </q-input>
@@ -171,6 +171,8 @@ const middleName = ref(``)
 const lastName = ref('')
 const username = ref('')
 const password = ref('')
+const isPwd = ref(true)
+const isCnfrmPwd = ref(true)
 const confirmPassword = ref('')
 const email = ref('')
 const section = ref('')

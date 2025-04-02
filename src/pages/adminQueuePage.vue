@@ -94,7 +94,11 @@
                 @click="stopSpeech"
                 icon="stop"
               />
-              <q-btn label="LIST" style="background-color: #fffeb8;margin-left: 8px;" @click="queueListPage" />
+              <q-btn
+                label="LIST"
+                style="background-color: #fffeb8; margin-left: 8px"
+                @click="queueListPage"
+              />
             </div>
           </q-card>
         </q-card-section>
@@ -112,19 +116,41 @@
               </div>
             </q-btn>
           </div>
-          <div class="action-button-container ellipsis">
+          <div
+            class="action-button-container ellipsis"
+            style="display: flex; flex-direction: column; align-items: center; gap: 12px"
+          >
             <q-btn
               @click="transferredQueue(currentQueue._id)"
               :loading="loading"
               class="action-button"
-              style="background-color: #fcffc2"
+              style="background-color: #fcffc2; width: 200px"
             >
               <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
                 <q-icon name="sync_alt" size="80px" />
                 <div class="text-h4 text-weight-medium">TRANSFER</div>
               </div>
             </q-btn>
+
+            <div style="display: flex; justify-content: center; gap: 8px">
+              <q-btn
+                label="Registrar"
+                style="background-color: #b7faff"
+                @click="updateQueue(currentQueue._id, 'registrar')"
+              />
+              <q-btn
+                label="OSAS"
+                style="background-color: #fffeb8"
+                @click="updateQueue(currentQueue._id, 'osas')"
+              />
+              <q-btn
+                label="Cashier"
+                style="background-color: #fe7e7f"
+                @click="updateQueue(currentQueue._id, 'cashier')"
+              />
+            </div>
           </div>
+
           <div class="action-button-container ellipsis">
             <q-btn
               @click="doneQueue(currentQueue._id)"
@@ -422,6 +448,40 @@ async function transferredQueue(queueId) {
   }
 }
 
+async function updateQueue(queueId, destination) {
+  loading.value = true
+  const token = localStorage.getItem('authToken')
+  console.log(destination)
+  try {
+    const response = await axios.post(
+      `${process.env.api_host}/queues/updateQueue/${queueId}`,
+      {
+        destination: destination,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token,
+        },
+      },
+    )
+    getCurrentQueue(queueInfo.value.role)
+    userInfo()
+    Notify.create({
+      type: 'positive',
+      message: 'Queue has been transferred successfully',
+    })
+  } catch (err) {
+    console.error(err)
+    Notify.create({
+      type: 'negative',
+      message: 'Something went wrong',
+    })
+  } finally {
+    loading.value = false
+  }
+}
+
 async function doneQueue(queueId) {
   loading.value = true
   const token = localStorage.getItem('authToken')
@@ -585,7 +645,6 @@ onMounted(async () => {
     clearInterval(interval)
   })
 })
-
 </script>
 
 <style lang="sass" scoped>
