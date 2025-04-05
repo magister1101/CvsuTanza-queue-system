@@ -145,7 +145,22 @@ const columns = ref([
   },
 ])
 
-async function getCourses() {
+async function getStudent() {
+  tableLoading.value = true
+  try {
+    const response = await axios.get(`${process.env.api_host}/users?query=${userId}`)
+    const user = response.data[0]
+    const course = user.course
+    console.log(course)
+    getCourses(course)
+  } catch (err) {
+    console.error(err)
+  } finally {
+    tableLoading.value = false
+  }
+}
+
+async function getCourses(course) {
   tableLoading.value = true
   try {
     const token = localStorage.getItem('Authtoken')
@@ -157,13 +172,15 @@ async function getCourses() {
     // })
     // const user = userResponse.data
 
-    const response = await axios.get(`${process.env.api_host}/courses?program=&isArchived=false`, {
-      headers: {
-        'Content-Type': 'application/json',
-        authorization: token,
+    const response = await axios.get(
+      `${process.env.api_host}/courses?isArchived=false&program=${course}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: token,
+        },
       },
-    })
-    console.log(response.data)
+    )
     if (response.data && Array.isArray(response.data)) {
       rows.value = response.data
     } else {
@@ -205,7 +222,7 @@ async function updateCourses() {
       type: 'positive',
       message: 'Courses updated successfully',
     })
-    router.replace(`/`)
+    router.replace(`/thankYou`)
   } catch (err) {
     console.error(err)
     Notify.create({
@@ -221,7 +238,6 @@ const onSelectAllClick = (val) => {
 
 watch(selected, (newVal) => {
   selectedCourseIds.value = newVal.map((course) => course._id)
-  console.log('Selected course IDs:', selectedCourseIds.value)
   selectAll.value = newVal.length === rows.value.length
 })
 
@@ -234,7 +250,7 @@ const formatPrerequisites = (prerequisites) => {
 }
 
 onMounted(() => {
-  getCourses()
+  getStudent()
 })
 </script>
 

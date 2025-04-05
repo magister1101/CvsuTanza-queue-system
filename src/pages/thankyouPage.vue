@@ -1,0 +1,87 @@
+<template>
+  <q-page class="page-background">
+    <div class="main-container">
+      <q-card-section class="container-courseInfo">
+        <div class="divContent">
+          <p class="thank-you-text">
+            Thank you for registering, kindly wait for our email confirmation
+          </p>
+          <div class="divBtn">
+            <q-btn
+              label="Register Again"
+              class="login-btn text-h5 text-weight-medium"
+              no-caps
+              @click="toRegister"
+            />
+          </div>
+        </div>
+      </q-card-section>
+    </div>
+  </q-page>
+</template>
+
+<script setup>
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+async function toRegister() {
+  router.push(`/studentRegister`)
+}
+</script>
+
+<style lang="sass" scoped>
+.page-background
+  background: url('https://res.cloudinary.com/dqaw6ndtn/image/upload/v1737617278/assets/queing/q5xrh22iplhm2bndvvru.jpg') no-repeat center center
+  background-size: cover
+  width: 100%
+  min-height: 100vh
+  border: 3px solid #606060
+  display: flex
+  align-items: center
+  justify-content: center
+
+.main-container
+  width: 100%
+  display: flex
+  justify-content: center
+  align-items: center
+
+.container-courseInfo
+  display: flex
+  justify-content: center
+  align-items: center
+  width: 100%
+
+.divContent
+  width: 60%
+  max-width: 500px
+  padding: 40px 20px
+  border-radius: 14px
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  text-align: center
+  row-gap: 20px
+
+.thank-you-text
+  color: #000000
+  font-size: 1.3rem
+  font-weight: 500
+  line-height: 1.5
+
+.login-btn
+  width: 100%
+  color: #ffffff
+  background-color: #4f772d
+  border-radius: 14px
+
+@media (max-width: 530px)
+  .divContent
+    width: 85%
+    padding: 30px 15px
+
+  .thank-you-text
+    font-size: 1.1rem
+</style>

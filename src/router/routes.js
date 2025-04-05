@@ -9,6 +9,7 @@ const routes = [
       { path: 'transactionPage', component: () => import('pages/transactionPage.vue') },
       { path: 'studentInfo', component: () => import('pages/studentInfo.vue') },
       { path: 'studentRegister', component: () => import('pages/studentRegister.vue') },
+      { path: 'thankYou', component: () => import('pages/thankyouPage.vue') },
       { path: 'studentInfoInput', component: () => import('pages/studentInfoInput.vue') },
       { path: 'courseInfo', component: () => import('pages/courseInfo.vue') },
       { path: 'registerCourse/:userId', component: () => import('pages/registerCourse.vue') },
