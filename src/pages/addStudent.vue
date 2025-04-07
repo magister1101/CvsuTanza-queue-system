@@ -185,6 +185,7 @@
                         <q-list>
                           <div>
                             <q-btn
+                              v-if="isAdmin"
                               @click="openEditDialog(props.row)"
                               label="Edit"
                               no-caps
@@ -450,8 +451,7 @@ const editForm = ref({
   status: '',
 })
 const roleValidation = ref('')
-const isAdmin = ref('')
-const notAdmin = ref('')
+const isAdmin = ref('true')
 const editYearOption = ref({
   options: ['First', 'Second', 'Third', 'Fourth'],
 })
@@ -958,10 +958,12 @@ async function userInfo() {
       },
     })
     roleValidation.value = response.data.role
-    if (roleValidation.value === 'admin') {
-      return (isAdmin.value = true)
-    } else {
-      return (notAdmin.value = true)
+    if (
+      roleValidation.value === 'registrar' ||
+      roleValidation.value === 'osas' ||
+      roleValidation.value === 'cashier'
+    ) {
+      return (isAdmin.value = false)
     }
   } catch (err) {
     console.error(err)
