@@ -21,7 +21,18 @@
           <q-card-section class="button-section">
             <q-btn label="Export CSV" no-caps @click="exportTable" flat class="action-button" />
           </q-card-section>
+
+          <q-card-section class="button-section">
+            <q-btn
+              :label="'Current Semester: ' + semester"
+              no-caps
+              @click="changeSemster"
+              flat
+              class="action-button"
+            />
+          </q-card-section>
         </div>
+
         <!-- add student -->
         <div>
           <q-dialog v-model="addStudentPopUp" persistent>
@@ -413,6 +424,10 @@ const loading = ref(false)
 const route = useRoute()
 const router = useRouter()
 
+//value
+const semester = ref('')
+const semesterData = ref([])
+
 // popup
 const addStudentPopUp = ref(false)
 const editStudentInfo = ref(false)
@@ -645,6 +660,7 @@ const columns = ref([
     field: (row) => row.courses?.map((course) => course.code).join(', '),
     sortable: false,
   },
+
   {
     name: 'action',
     align: 'left',
@@ -655,6 +671,28 @@ const columns = ref([
 
 const rows = ref([])
 
+async function getSemester() {
+  try {
+    const response = await axios.get(`${process.env.api_host}/courses/getSemester`)
+    console.log(response.data[0].semester)
+    semester.value = response.data[0].semester
+    semesterData.value = response.data
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+async function changeSemster() {
+  try {
+    const id = semesterData.value[0]._id
+
+    const response = await axios.post(`${process.env.api_host}/courses/changeSemester/${id}`)
+    getSemester()
+  } catch (err) {
+    console.error(err)
+  }
+}
+
 async function getAllStudents() {
   tableLoading.value = true
   try {
@@ -664,8 +702,6 @@ async function getAllStudents() {
         Authorization: token,
       },
     })
-
-    console.log(userResponse.data.year)
 
     if (
       userResponse.data.role === 'admin' ||
@@ -789,6 +825,7 @@ function openDeleteDialog(studentId) {
   selectedStudentId.value = studentId
   deletePopUp.value = true
 }
+
 async function confirmDelete() {
   if (!selectedStudentId.value) return
   loading.value = true
@@ -860,7 +897,31 @@ async function resetPassword(studentId) {
 
 async function enrollCourse(studentId) {
   loading.value = true
-  router.push(`/queueCourse/` + `${studentId}`)
+  try {
+    const userResponse = await axios.get(`${process.env.api_host}/users?query=${studentId}`)
+
+    if (userResponse.data[0].isRegular) {
+      const enroll = await axios.post(`${process.env.api_host}/users/enrollRegular/${studentId}`, {
+        semester: semester.value,
+      })
+      Notify.create({
+        type: 'positive',
+        message: 'Student successfully enrolled in the ' + semester.value + ' semester',
+      })
+      sendEmail(studentId)
+      return
+    } else {
+      router.push(`/queueCourse/` + `${studentId}`)
+    }
+  } catch (err) {
+    console.error(err)
+    Notify.create({
+      type: 'negative',
+      message: 'Failed to enroll course',
+    })
+  } finally {
+    loading.value = false
+  }
 }
 
 async function sendEmail(studentId) {
@@ -1032,6 +1093,7 @@ onMounted(() => {
   userInfo()
   getAllStudents()
   fetchPrograms()
+  getSemester()
 })
 </script>
 
