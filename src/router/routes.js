@@ -20,6 +20,7 @@ const routes = [
       { path: 'queueCourse/:studentId', component: () => import('src/pages/queueCourse.vue') },
       { path: 'queueSummary/:queueId', component: () => import('src/pages/queueSummary.vue') },
       { path: 'textToSpeechPage', component: () => import('src/pages/textToSpeechPage.vue') },
+      { path: 'testPage', component: () => import('src/pages/testPage.vue') },
     ],
   },
   {

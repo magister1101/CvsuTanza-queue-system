@@ -13,11 +13,22 @@
             <q-btn
               label="Add Student"
               no-caps
+              @click="addStudentPopUp = true"
               flat
               class="action-button"
-              @click="addStudentPopUp = true"
             />
           </q-card-section>
+
+          <q-card-section class="button-section">
+            <q-btn
+              :label="'Import CSV'"
+              no-caps
+              @click="importStudentDialog = true"
+              flat
+              class="action-button"
+            />
+          </q-card-section>
+
           <q-card-section class="button-section">
             <q-btn label="Export CSV" no-caps @click="exportTable" flat class="action-button" />
           </q-card-section>
@@ -160,6 +171,59 @@
             </q-card>
           </q-dialog>
         </div>
+        <!-- import dialog -->
+        <div>
+          <q-dialog v-model="importStudentDialog" persistent>
+            <q-card class="q-pa-md" style="min-width: 350px; max-width: 40vw; width: 100%">
+              <q-card-section>
+                <div class="text-h6">Import Students</div>
+                <div class="text-subtitle2 text-grey">Upload an Excel file (.xlsx or .xls)</div>
+              </q-card-section>
+
+              <q-separator />
+
+              <q-card-section>
+                <q-file
+                  v-model="file"
+                  @change="handleFileChange"
+                  accept=".xlsx,.xls"
+                  label="Choose Excel File"
+                  filled
+                  dense
+                  bottom-slots
+                  :clearable="!!file"
+                  style="width: 100%"
+                >
+                  <template v-slot:append>
+                    <q-icon name="upload" />
+                  </template>
+                </q-file>
+
+                <div class="q-mt-md">
+                  <q-btn
+                    label="Upload"
+                    color="primary"
+                    :disable="!file || loadingImport"
+                    @click="uploadFile"
+                    class="full-width"
+                  />
+                </div>
+
+                <div v-if="loadingImport" class="q-mt-md text-center">
+                  <q-spinner-dots color="primary" size="md" />
+                  <div class="text-caption q-mt-xs">Uploading...</div>
+                </div>
+              </q-card-section>
+
+              <q-separator />
+
+              <q-card-actions align="right">
+                <q-btn flat label="Close" @click="cancelImport" color="negative" />
+              </q-card-actions>
+            </q-card>
+          </q-dialog>
+        </div>
+
         <!-- table -->
         <div class="q-mt-lg">
           <q-table
@@ -179,6 +243,7 @@
                 <q-spinner-dots size="50px" />
               </q-inner-loading>
             </template>
+
             <template v-slot:body="props">
               <q-tr :props="props">
                 <q-td
@@ -190,6 +255,7 @@
                   <template v-if="col.name === '#'">
                     {{ props.rowIndex + 1 }}
                   </template>
+
                   <template v-else-if="col.name === 'action'">
                     <div class="row q-gutter-x-sm">
                       <q-btn-dropdown flat dropdown-icon="more_vert">
@@ -258,10 +324,12 @@
                       </q-btn-dropdown>
                     </div>
                   </template>
+
                   <template v-else-if="col.name === 'courses'">
                     <!-- Display course codes as a comma-separated string -->
-                    {{ props.row.courses?.map((course) => course.code).join(', ') }}
+                    {{ props.row.courses?.map((course) => course.courseId?.code).join(', ') }}
                   </template>
+
                   <template v-else>
                     {{
                       typeof col.field === 'function' ? col.field(props.row) : props.row[col.name]
@@ -270,6 +338,7 @@
                 </q-td>
               </q-tr>
             </template>
+
             <template v-slot:top-left>
               <q-input borderless dense debounce="300" v-model="filter" placeholder="Search">
                 <template v-slot:append>
@@ -430,6 +499,7 @@ const semesterData = ref([])
 
 // popup
 const addStudentPopUp = ref(false)
+const importStudentDialog = ref(false)
 const editStudentInfo = ref(false)
 const deletePopUp = ref(false)
 // Form fields
@@ -465,6 +535,10 @@ const editForm = ref({
   section: '',
   status: '',
 })
+//file
+const file = ref(null)
+const loadingImport = ref(false)
+
 const roleValidation = ref('')
 const isAdmin = ref('true')
 const editYearOption = ref({
@@ -490,6 +564,11 @@ async function cancelAdd() {
     (section.value = ''),
     (status.value = '')
   addStudentPopUp.value = false
+}
+
+async function cancelImport() {
+  file.value = ''
+  importStudentDialog.value = false
 }
 
 async function addStudent() {
@@ -586,6 +665,43 @@ async function addStudent() {
   }
 }
 
+const handleFileChange = (event) => {
+  // Capture the selected file
+  file.value = event.target.files[0]
+}
+
+const uploadFile = async () => {
+  if (!file.value) return
+
+  const formData = new FormData()
+  formData.append('file', file.value)
+
+  try {
+    loadingImport.value = true
+
+    const response = await axios.post(
+      `${process.env.api_host}/users/excel/insertStudents`, // Replace with your backend URL
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } },
+    )
+
+    Notify.create({
+      type: 'positive',
+      message: 'File uploaded successfully',
+    })
+    getAllStudents()
+  } catch (error) {
+    Notify.create({
+      type: 'negative',
+      message: 'Failed to upload file',
+    })
+  } finally {
+    importStudentDialog.value = false
+    loadingImport.value = false
+    file.value = null
+  }
+}
+
 // table
 const filter = ref('')
 const columns = ref([
@@ -600,7 +716,7 @@ const columns = ref([
   {
     name: 'studentNumber',
     required: true,
-    label: 'Student ID',
+    label: 'Student Number',
     align: 'left',
     field: (row) => row.studentNumber,
     sortable: true,
@@ -657,10 +773,18 @@ const columns = ref([
     name: 'courses',
     align: 'left',
     label: 'Course Taken',
-    field: (row) => row.courses?.map((course) => course.code).join(', '),
+    field: (row) =>
+      Array.isArray(row.courses)
+        ? row.courses
+            .map((course) =>
+              course.courseId && typeof course.courseId === 'object'
+                ? course.courseId.code || 'N/A' // Accessing the courseId and getting the code
+                : 'N/A',
+            )
+            .join(', ')
+        : 'None',
     sortable: false,
   },
-
   {
     name: 'action',
     align: 'left',
