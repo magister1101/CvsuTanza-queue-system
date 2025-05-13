@@ -136,12 +136,12 @@ const columns = ref([
     field: 'section',
     sortable: true,
   },
-  {
-    name: 'courses',
-    align: 'left',
-    label: 'Course Taken',
-    field: 'courses',
-  },
+  // {
+  //   name: 'courses',
+  //   align: 'left',
+  //   label: 'Course Taken',
+  //   field: 'courses',
+  // },
   {
     name: 'status',
     align: 'left',

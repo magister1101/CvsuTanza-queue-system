@@ -1,1 +1,0 @@
-import{y as e,a4 as r,a5 as c,z as n,s as l,A as i}from"./index-BMhglyKV.js";const d=e({name:"QCardActions",props:{...r,vertical:Boolean},setup(a,{slots:s}){const o=c(a),t=n(()=>`q-card__actions ${o.value} q-card__actions--${a.vertical===!0?"vert column":"horiz row"}`);return()=>l("div",{class:t.value},i(s.default))}});export{d as Q};

@@ -19,7 +19,7 @@
             />
           </q-card-section>
 
-          <q-card-section class="button-section">
+          <q-card-section class="button-section" v-if="isAdmin">
             <q-btn
               :label="'Import CSV'"
               no-caps
@@ -272,6 +272,7 @@
                           </div>
                           <div>
                             <q-btn
+                              v-if="!props.row.isRegular"
                               @click="enrollCourse(props.row._id)"
                               style="width: 100%"
                               :loading="loading"
