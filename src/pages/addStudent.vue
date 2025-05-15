@@ -546,7 +546,7 @@ const editYearOption = ref({
   options: ['First', 'Second', 'Third', 'Fourth'],
 })
 const editSectionOption = ref({
-  options: ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+  options: ['1', '2', '3', '4', '5', '6', '7'],
 })
 const editStatusOption = ref(['Regular', 'Irregular'])
 
