@@ -3,7 +3,7 @@
     <div>
       <div
         style="
-          background: url('https://res.cloudinary.com/dqaw6ndtn/image/upload/v1737617278/assets/queing/q5xrh22iplhm2bndvvru.jpg')
+          background: url('https://res.cloudinary.com/drv1z32zg/image/upload/v1747746555/Screenshot_20250428_204509_Facebook_fazdlr.jpg')
             no-repeat center center;
           background-size: cover;
           width: 100%;
@@ -270,7 +270,6 @@ async function confirmBtn() {
 const onSelectAllClick = (val) => {
   selected.value = val ? [...myGradesRow.value] : []
 }
-
 
 watch(selected, (newVal) => {
   console.log('Selected rows:', newVal)

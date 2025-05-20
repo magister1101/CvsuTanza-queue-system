@@ -3,7 +3,7 @@
     <div>
       <div
         style="
-          background: url('https://res.cloudinary.com/dqaw6ndtn/image/upload/v1737617278/assets/queing/q5xrh22iplhm2bndvvru.jpg')
+          background: url('https://res.cloudinary.com/drv1z32zg/image/upload/v1747746555/Screenshot_20250428_204509_Facebook_fazdlr.jpg')
             no-repeat center center;
           background-size: cover;
           width: 100%;
@@ -102,12 +102,12 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { ref } from 'vue'
-import { Notify } from 'quasar';
+import { Notify } from 'quasar'
 
 // router
 const router = useRouter()
 // loading
-const loading = ref(false);
+const loading = ref(false)
 // input info
 const firstName = ref('')
 const surName = ref('')
@@ -123,18 +123,26 @@ async function backBtn() {
 
 async function submitStudentInfo() {
   loading.value = true
-  try{
-    if(!firstName.value || !surName.value || !middleName.value || !program.value || !section.value || !studentNo.value || !year.value){
+  try {
+    if (
+      !firstName.value ||
+      !surName.value ||
+      !middleName.value ||
+      !program.value ||
+      !section.value ||
+      !studentNo.value ||
+      !year.value
+    ) {
       Notify.create({
         type: 'warning',
-        message: 'please filled all the required filleds'
+        message: 'please filled all the required filleds',
       })
       return
     }
     router.replace(`/courseInfo`)
-  }catch(err){
+  } catch (err) {
     console.error(err)
-  }finally{
+  } finally {
     loading.value = false
   }
 }

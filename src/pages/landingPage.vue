@@ -4,7 +4,7 @@
     <div>
       <div
         style="
-          background: url('https://res.cloudinary.com/dqaw6ndtn/image/upload/v1737617278/assets/queing/q5xrh22iplhm2bndvvru.jpg')
+          background: url('https://res.cloudinary.com/drv1z32zg/image/upload/v1747746555/Screenshot_20250428_204509_Facebook_fazdlr.jpg')
             no-repeat center center;
           background-size: cover;
           width: 100%;
@@ -17,20 +17,20 @@
             <div class="divBtn">
               <q-btn
                 label="Login"
-                style="width: 100%; height: 100%; color: #ffffff;border-radius: 14px;"
+                style="width: 100%; height: 100%; color: #ffffff; border-radius: 14px"
                 class="text-h5 text-weight-medium"
                 no-caps
                 @click="toLoginPage"
-                />
+              />
             </div>
             <div class="divBtn">
               <q-btn
                 label="Transaction"
-                style="width: 100%; height: 100%; color: #ffffff;border-radius: 14px;"
+                style="width: 100%; height: 100%; color: #ffffff; border-radius: 14px"
                 class="text-h5 text-weight-medium"
                 no-caps
                 @click="toTransactionPage"
-                />
+              />
             </div>
           </q-card-section>
         </div>
@@ -40,7 +40,7 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 

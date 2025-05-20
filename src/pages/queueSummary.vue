@@ -1,9 +1,7 @@
 <template>
   <q-page>
     <div>
-      <div
-        class="background-container"
-      >
+      <div class="background-container">
         <q-card-section class="flex flex-center">
           <div class="content-width">
             <q-card-section class="text-center page-header">
@@ -29,15 +27,33 @@
                     <div class="section-header">Student Information</div>
                     <div class="scroll-container">
                       <div class="info-grid student-info">
-                        <div class="info-cell"><strong>Username:</strong> {{ queueDetails.student.username }}</div>
-                        <div class="info-cell"><strong>Email:</strong> {{ queueDetails.student.email }}</div>
-                        <div class="info-cell"><strong>First Name:</strong> {{ queueDetails.student.firstName }}</div>
-                        <div class="info-cell"><strong>Middle Name:</strong> {{ queueDetails.student.middleName }}</div>
-                        <div class="info-cell"><strong>Last Name:</strong> {{ queueDetails.student.lastName }}</div>
-                        <div class="info-cell"><strong>Course:</strong> {{ queueDetails.student.course }}</div>
-                        <div class="info-cell"><strong>Year:</strong> {{ queueDetails.student.year }}</div>
-                        <div class="info-cell"><strong>Section:</strong> {{ queueDetails.student.section }}</div>
-                        <div class="info-cell"><strong>Regular:</strong> {{ queueDetails.student.isRegular }}</div>
+                        <div class="info-cell">
+                          <strong>Username:</strong> {{ queueDetails.student.username }}
+                        </div>
+                        <div class="info-cell">
+                          <strong>Email:</strong> {{ queueDetails.student.email }}
+                        </div>
+                        <div class="info-cell">
+                          <strong>First Name:</strong> {{ queueDetails.student.firstName }}
+                        </div>
+                        <div class="info-cell">
+                          <strong>Middle Name:</strong> {{ queueDetails.student.middleName }}
+                        </div>
+                        <div class="info-cell">
+                          <strong>Last Name:</strong> {{ queueDetails.student.lastName }}
+                        </div>
+                        <div class="info-cell">
+                          <strong>Course:</strong> {{ queueDetails.student.course }}
+                        </div>
+                        <div class="info-cell">
+                          <strong>Year:</strong> {{ queueDetails.student.year }}
+                        </div>
+                        <div class="info-cell">
+                          <strong>Section:</strong> {{ queueDetails.student.section }}
+                        </div>
+                        <div class="info-cell">
+                          <strong>Regular:</strong> {{ queueDetails.student.isRegular }}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -46,7 +62,11 @@
                 <div class="course-container">
                   <div class="section-header">Courses to Take</div>
                   <div class="course-grid">
-                    <div v-for="course in queueDetails.courseToTake" :key="course._id" class="course-cell">
+                    <div
+                      v-for="course in queueDetails.courseToTake"
+                      :key="course._id"
+                      class="course-cell"
+                    >
                       <div><strong>Course Code:</strong> {{ course.code }}</div>
                       <div><strong>Course Name:</strong> {{ course.name }}</div>
                       <div><strong>Course:</strong> {{ course.course }}</div>
@@ -90,7 +110,7 @@ onMounted(() => {
 
 <style lang="sass" scoped>
 .background-container
-  background: url('https://res.cloudinary.com/dqaw6ndtn/image/upload/v1737617278/assets/queing/q5xrh22iplhm2bndvvru.jpg') no-repeat center center
+  background: url('https://res.cloudinary.com/drv1z32zg/image/upload/v1747746555/Screenshot_20250428_204509_Facebook_fazdlr.jpg') no-repeat center center
   background-size: cover
   width: 100%
   min-height: 100vh

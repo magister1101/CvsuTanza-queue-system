@@ -520,7 +520,7 @@ const yearOption = ref({
 })
 const section = ref('')
 const sectionOption = ref({
-  options: ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+  options: ['1', '2', '3', '4', '5', '6', '7'],
 })
 const statusOption = ref(['Regular', 'Irregular'])
 const status = ref('Regular')
