@@ -5,7 +5,7 @@
         <!-- box 1 -->
         <q-card-section class="left-section">
           <div class="header-container">
-            <div clickable style="cursor: pointer;" @click="backBtn">
+            <div clickable style="cursor: pointer" @click="backBtn">
               <q-img
                 src="https://res.cloudinary.com/dqaw6ndtn/image/upload/v1737617283/assets/queing/ja3s742lgdzsca55fu1w.png"
                 class="logo-img"
@@ -21,7 +21,7 @@
           <div class="banner-container">
             <q-img
               class="banner-img"
-              src="https://res.cloudinary.com/dqaw6ndtn/image/upload/v1737617288/assets/queing/rdv7tsdjfeavayc4ca5p.jpg"
+              src="https://res.cloudinary.com/drv1z32zg/image/upload/v1747746555/Screenshot_20250428_204509_Facebook_fazdlr.jpg"
             />
           </div>
         </q-card-section>
@@ -66,9 +66,9 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router'
 import axios from 'axios'
-import { ref, onMounted,onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 const currentQueue = ref({})
 const router = useRouter()
@@ -92,34 +92,32 @@ async function getCurrentQueue() {
         Authorization: token,
       },
     })
-    if(registrarQueue.data.currentQueue.length > 0){
+    if (registrarQueue.data.currentQueue.length > 0) {
       currentRegistrar.value = registrarQueue.data.currentQueue[0].queueNumber
-    }
-    else{
-      currentRegistrar.value = "None"
+    } else {
+      currentRegistrar.value = 'None'
     }
     const osasQueue = await axios.get(`${process.env.api_host}/queues/current/osas`, {
       headers: {
         Authorization: token,
       },
     })
-    if(osasQueue.data.currentQueue.length > 0){
+    if (osasQueue.data.currentQueue.length > 0) {
       currentOsas.value = osasQueue.data.currentQueue[0].queueNumber
-    }else{
-      currentOsas.value = "None"
+    } else {
+      currentOsas.value = 'None'
     }
     const cashierQueue = await axios.get(`${process.env.api_host}/queues/current/cashier`, {
       headers: {
         Authorization: token,
       },
     })
-    if(cashierQueue.data.currentQueue.length > 0){
+    if (cashierQueue.data.currentQueue.length > 0) {
       currentCashier.value = cashierQueue.data.currentQueue[0].queueNumber
-    } else{
-      currentCashier.value = "None"
+    } else {
+      currentCashier.value = 'None'
     }
     console.log(currentQueue.value)
-
   } catch (err) {
     console.error(err)
   }
@@ -127,7 +125,6 @@ async function getCurrentQueue() {
 
 function updateDateTime() {
   const now = new Date()
-
 
   const hours = now.getHours()
   const minutes = now.getMinutes()
@@ -139,9 +136,20 @@ function updateDateTime() {
 
   currentTime.value = `${formattedHours}:${formattedMinutes} ${ampm} | ${dayName}`
 
-
-  const months = ['January', 'February', 'March', 'April', 'May', 'June',
-                  'July', 'August', 'September', 'October', 'November', 'December']
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ]
   const date = now.getDate().toString().padStart(2, '0')
   const month = months[now.getMonth()]
   const year = now.getFullYear()
@@ -149,19 +157,16 @@ function updateDateTime() {
   currentDate.value = `${date} ${month} ${year}`
 }
 
-
 onMounted(() => {
   getCurrentQueue()
   updateDateTime()
   setInterval(updateDateTime, 1000)
 
-  const interval = setInterval(getCurrentQueue, 10000);
+  const interval = setInterval(getCurrentQueue, 10000)
   onBeforeUnmount(() => {
-    clearInterval(interval);
-  });
+    clearInterval(interval)
+  })
 })
-
-
 </script>
 
 <style lang="sass" scoped>

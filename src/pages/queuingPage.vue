@@ -38,8 +38,8 @@
                       Estimated Time:
                       <div style="color: green">{{ queueData.estimatedTime }} Mins</div>
                       <br />
-                      Release of Certificate <br />
-                      of Registration
+                      <!-- Release of Certificate <br />
+                      of Registration -->
                     </div>
                   </q-card-section>
                   <q-card-section class="q-py-none flex flex-center">

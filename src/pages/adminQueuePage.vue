@@ -104,7 +104,10 @@
         </q-card-section>
         <!-- buttons -->
         <q-card-section class="row justify-around q-col-gutter-md">
-          <div class="action-button-container ellipsis">
+          <div
+            class="action-button-container ellipsis"
+            style="display: flex; flex-direction: column; align-items: center; gap: 12px"
+          >
             <q-btn
               @click="queueDetailsDialog = true"
               class="action-button"
@@ -115,6 +118,12 @@
                 <div class="text-h4 text-weight-medium">VIEW</div>
               </div>
             </q-btn>
+
+            <div style="display: flex; justify-content: center; gap: 8px">
+              <q-btn label="Clock in" style="background-color: #b7faff" @click="clockIn()" />
+              <q-btn label="View" style="background-color: #fffeb8" @click="showDialog = true" />
+              <q-btn label="Clock out" style="background-color: #fe7e7f" @click="clockOut()" />
+            </div>
           </div>
           <div
             class="action-button-container ellipsis"
@@ -361,6 +370,54 @@
         </q-dialog>
       </div>
     </div>
+
+    <q-page padding>
+      <q-btn label="Show Transaction History" @click="showDialog = true" />
+
+      <q-dialog v-model="showDialog" persistent>
+        <q-card class="q-pa-md" style="min-width: 850px; max-height: 80vh">
+          <q-card-section class="text-h6"> Transaction History </q-card-section>
+
+          <q-separator />
+
+          <q-card-section class="q-pa-none scroll" style="max-height: 60vh">
+            <q-table
+              flat
+              dense
+              :rows="transactions"
+              :columns="columns"
+              row-key="_id"
+              :pagination="{ rowsPerPage: 10 }"
+            >
+              <!-- Clock In -->
+              <template v-slot:body-cell-clockIn="props">
+                <q-td :props="props">
+                  {{ formatDateTime(props.row.clockIn) }}
+                </q-td>
+              </template>
+
+              <!-- Clock Out -->
+              <template v-slot:body-cell-clockOut="props">
+                <q-td :props="props">
+                  {{ props.row.clockOut ? formatDateTime(props.row.clockOut) : '---' }}
+                </q-td>
+              </template>
+
+              <!-- Duration -->
+              <template v-slot:body-cell-duration="props">
+                <q-td :props="props">
+                  {{ formatDuration(props.row.clockIn, props.row.clockOut) }}
+                </q-td>
+              </template>
+            </q-table>
+          </q-card-section>
+
+          <q-card-actions align="right">
+            <q-btn flat label="Close" color="primary" v-close-popup />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+    </q-page>
   </q-page>
 </template>
 
@@ -377,16 +434,122 @@ const loading = ref(false)
 const loadingWindow = ref(false)
 const inputWindow = ref('')
 const inputWindowDialog = ref(false)
+const clockInLoading = ref(false)
+const clockOutLoading = ref(false)
 const queueInfo = ref(null)
 const waitingQueue = ref(null)
 const currentQueue = ref(null)
+const showDialog = ref(true)
+const transactions = ref([])
 const router = useRouter()
 const userId = ref(null)
 const queueDetailsDialog = ref(false)
 const synth = window.speechSynthesis
+const columns = [
+  {
+    name: 'user',
+    label: 'User',
+    field: (row) => `${row.userId.lastName}`,
+    sortable: true,
+    align: 'left',
+  },
+  {
+    name: 'role',
+    label: 'Role',
+    field: (row) => row.userId.role,
+    sortable: true,
+    align: 'left',
+  },
+  {
+    name: 'clockIn',
+    label: 'Clock In',
+    field: 'clockIn',
+    sortable: true,
+    align: 'left',
+  },
+  {
+    name: 'clockOut',
+    label: 'Clock Out',
+    field: 'clockOut',
+    sortable: true,
+    align: 'left',
+  },
+  {
+    name: 'duration',
+    label: 'Duration',
+    field: () => '', // handled by slot
+    sortable: false,
+    align: 'left',
+  },
+]
+
+const formatDateTime = (dateStr) => {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  return date.toLocaleString()
+}
+const formatDuration = (clockIn, clockOut) => {
+  if (!clockIn || !clockOut) return '---'
+  const ms = new Date(clockOut) - new Date(clockIn)
+  const minutes = Math.floor(ms / 60000)
+  const seconds = Math.floor((ms % 60000) / 1000)
+  return `${minutes}m ${seconds}s`
+}
+
+const fetchTransactions = async () => {
+  try {
+    console.log(userId.value, 'here')
+    const res = await axios.get(
+      `${process.env.api_host}/users/getTransactionLogs?userId=${userId.value}`,
+    ) // Adjust this to your route
+    transactions.value = res.data
+  } catch (err) {
+    console.error('Failed to fetch transactions:', err)
+  }
+}
 
 async function queueListPage() {
   router.push('/new/queueList')
+}
+
+async function log(action) {
+  console.log(userId.value, action)
+}
+
+async function clockIn() {
+  clockInLoading.value = true
+  try {
+    console.log(userId.value, 'clock in')
+    const response = await axios.post(`${process.env.api_host}/users/clockIn`, {
+      userId: userId.value,
+    })
+  } catch (err) {
+    console.error(err)
+    Notify.create({
+      type: 'negative',
+      message: 'Something went wrong',
+    })
+  } finally {
+    clockInLoading.value = false
+  }
+}
+
+async function clockOut() {
+  clockOutLoading.value = true
+  try {
+    console.log(userId.value, 'clock out')
+    const response = await axios.post(`${process.env.api_host}/users/clockOut`, {
+      userId: userId.value,
+    })
+  } catch (err) {
+    console.error(err)
+    Notify.create({
+      type: 'negative',
+      message: 'Something went wrong',
+    })
+  } finally {
+    clockOutLoading.value = false
+  }
 }
 
 async function userInfo() {
@@ -634,6 +797,7 @@ const stopSpeech = () => {
 
 onMounted(async () => {
   await userInfo()
+  await fetchTransactions()
 
   const interval = setInterval(() => {
     if (queueInfo.value?.role) {
