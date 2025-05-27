@@ -439,7 +439,7 @@ const clockOutLoading = ref(false)
 const queueInfo = ref(null)
 const waitingQueue = ref(null)
 const currentQueue = ref(null)
-const showDialog = ref(true)
+const showDialog = ref(false)
 const transactions = ref([])
 const router = useRouter()
 const userId = ref(null)
@@ -498,7 +498,6 @@ const formatDuration = (clockIn, clockOut) => {
 
 const fetchTransactions = async () => {
   try {
-    console.log(userId.value, 'here')
     const res = await axios.get(
       `${process.env.api_host}/users/getTransactionLogs?userId=${userId.value}`,
     ) // Adjust this to your route
@@ -523,6 +522,12 @@ async function clockIn() {
     const response = await axios.post(`${process.env.api_host}/users/clockIn`, {
       userId: userId.value,
     })
+
+    Notify.create({
+      type: 'positive',
+      message: 'Clocked in successfully',
+    })
+    fetchTransactions()
   } catch (err) {
     console.error(err)
     Notify.create({
@@ -541,6 +546,11 @@ async function clockOut() {
     const response = await axios.post(`${process.env.api_host}/users/clockOut`, {
       userId: userId.value,
     })
+    Notify.create({
+      type: 'positive',
+      message: 'Clocked out successfully',
+    })
+    fetchTransactions()
   } catch (err) {
     console.error(err)
     Notify.create({
