@@ -35,12 +35,12 @@
               </div>
               <div class="divBtn">
                 <q-btn
-                  label="Osas"
+                  label="admission"
                   style="width: 100%; height: 100%; color: #ffffff; border-radius: 14px"
                   class="text-h5 text-weight-medium"
                   no-caps
-                  @click="toOsas"
-                  :loading="osasLoading"
+                  @click="toAdmission"
+                  :loading="admissionLoading"
                 />
               </div>
               <div class="divBtn">
@@ -67,7 +67,7 @@ import { useRouter } from 'vue-router'
 import { Notify } from 'quasar'
 import { ref } from 'vue'
 const registrarLoading = ref(false)
-const osasLoading = ref(false)
+const admissionLoading = ref(false)
 const cashierLoading = ref(false)
 
 const router = useRouter()
@@ -101,13 +101,13 @@ async function toRegistrar() {
     registrarLoading.value = false
   }
 }
-async function toOsas() {
-  osasLoading.value = true
+async function toAdmission() {
+  admissionLoading.value = true
   try {
     const response = await axios.post(
       `${process.env.api_host}/queues/createTransaction`,
       {
-        destination: 'osas',
+        destination: 'admission',
       },
       {
         headers: {
@@ -127,7 +127,7 @@ async function toOsas() {
       message: 'Failed to create Queue',
     })
   } finally {
-    osasLoading.value = false
+    admissionLoading.value = false
   }
 }
 async function toCashier() {

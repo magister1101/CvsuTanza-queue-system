@@ -45,7 +45,7 @@
               </div>
             </div>
             <div class="queue-item">
-              <div class="queue-number">{{ currentOsas }}</div>
+              <div class="queue-number">{{ currentAdmission }}</div>
               <div class="counter-container">
                 <div class="counter-label">COUNTER</div>
                 <div class="counter-number">02</div>
@@ -74,7 +74,7 @@ const currentQueue = ref({})
 const router = useRouter()
 
 const currentRegistrar = ref('')
-const currentOsas = ref('')
+const currentAdmission = ref('')
 const currentCashier = ref('')
 
 const currentTime = ref('')
@@ -97,15 +97,15 @@ async function getCurrentQueue() {
     } else {
       currentRegistrar.value = 'None'
     }
-    const osasQueue = await axios.get(`${process.env.api_host}/queues/current/osas`, {
+    const admissionQueue = await axios.get(`${process.env.api_host}/queues/current/admission`, {
       headers: {
         Authorization: token,
       },
     })
-    if (osasQueue.data.currentQueue.length > 0) {
-      currentOsas.value = osasQueue.data.currentQueue[0].queueNumber
+    if (admissionQueue.data.currentQueue.length > 0) {
+      currentAdmission.value = admissionQueue.data.currentQueue[0].queueNumber
     } else {
-      currentOsas.value = 'None'
+      currentAdmission.value = 'None'
     }
     const cashierQueue = await axios.get(`${process.env.api_host}/queues/current/cashier`, {
       headers: {

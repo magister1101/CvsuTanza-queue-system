@@ -111,7 +111,7 @@
             <q-btn
               @click="queueDetailsDialog = true"
               class="action-button"
-              style="background-color: #b7faff"
+              style="background-color: #aafeab"
             >
               <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
                 <q-icon name="wysiwyg" size="80px" />
@@ -133,7 +133,7 @@
               @click="transferredQueue(currentQueue._id)"
               :loading="loading"
               class="action-button"
-              style="background-color: #fcffc2; width: 200px"
+              style="background-color: #aafeab; width: 200px"
             >
               <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
                 <q-icon name="sync_alt" size="80px" />
@@ -148,9 +148,9 @@
                 @click="updateQueue(currentQueue._id, 'registrar')"
               />
               <q-btn
-                label="OSAS"
+                label="Admission"
                 style="background-color: #fffeb8"
-                @click="updateQueue(currentQueue._id, 'osas')"
+                @click="updateQueue(currentQueue._id, 'admission')"
               />
               <q-btn
                 label="Cashier"
@@ -178,7 +178,7 @@
               @click="cancelQueue(currentQueue._id)"
               :loading="loading"
               class="action-button"
-              style="background-color: #fe7e7f"
+              style="background-color: #aafeab"
             >
               <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
                 <q-icon name="close" size="80px" />
@@ -191,7 +191,7 @@
               :loading="loading"
               @click="refreshQueue"
               class="action-button"
-              style="background-color: #b7d0ff"
+              style="background-color: #aafeab"
             >
               <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
                 <q-icon name="refresh" size="80px" />
@@ -204,7 +204,7 @@
               :loading="loading"
               @click="resetQueue"
               class="action-button"
-              style="background-color: #b7d0ff"
+              style="background-color: #aafeab"
             >
               <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
                 <q-icon name="restart_alt" size="80px" />
@@ -371,53 +371,49 @@
       </div>
     </div>
 
-    <q-page padding>
-      <q-btn label="Show Transaction History" @click="showDialog = true" />
+    <q-dialog v-model="showDialog" persistent>
+      <q-card class="q-pa-md" style="min-width: 850px; max-height: 80vh">
+        <q-card-section class="text-h6"> Transaction History </q-card-section>
 
-      <q-dialog v-model="showDialog" persistent>
-        <q-card class="q-pa-md" style="min-width: 850px; max-height: 80vh">
-          <q-card-section class="text-h6"> Transaction History </q-card-section>
+        <q-separator />
 
-          <q-separator />
+        <q-card-section class="q-pa-none scroll" style="max-height: 60vh">
+          <q-table
+            flat
+            dense
+            :rows="transactions"
+            :columns="columns"
+            row-key="_id"
+            :pagination="{ rowsPerPage: 10 }"
+          >
+            <!-- Clock In -->
+            <template v-slot:body-cell-clockIn="props">
+              <q-td :props="props">
+                {{ formatDateTime(props.row.clockIn) }}
+              </q-td>
+            </template>
 
-          <q-card-section class="q-pa-none scroll" style="max-height: 60vh">
-            <q-table
-              flat
-              dense
-              :rows="transactions"
-              :columns="columns"
-              row-key="_id"
-              :pagination="{ rowsPerPage: 10 }"
-            >
-              <!-- Clock In -->
-              <template v-slot:body-cell-clockIn="props">
-                <q-td :props="props">
-                  {{ formatDateTime(props.row.clockIn) }}
-                </q-td>
-              </template>
+            <!-- Clock Out -->
+            <template v-slot:body-cell-clockOut="props">
+              <q-td :props="props">
+                {{ props.row.clockOut ? formatDateTime(props.row.clockOut) : '---' }}
+              </q-td>
+            </template>
 
-              <!-- Clock Out -->
-              <template v-slot:body-cell-clockOut="props">
-                <q-td :props="props">
-                  {{ props.row.clockOut ? formatDateTime(props.row.clockOut) : '---' }}
-                </q-td>
-              </template>
+            <!-- Duration -->
+            <template v-slot:body-cell-duration="props">
+              <q-td :props="props">
+                {{ formatDuration(props.row.clockIn, props.row.clockOut) }}
+              </q-td>
+            </template>
+          </q-table>
+        </q-card-section>
 
-              <!-- Duration -->
-              <template v-slot:body-cell-duration="props">
-                <q-td :props="props">
-                  {{ formatDuration(props.row.clockIn, props.row.clockOut) }}
-                </q-td>
-              </template>
-            </q-table>
-          </q-card-section>
-
-          <q-card-actions align="right">
-            <q-btn flat label="Close" color="primary" v-close-popup />
-          </q-card-actions>
-        </q-card>
-      </q-dialog>
-    </q-page>
+        <q-card-actions align="right">
+          <q-btn flat label="Close" color="primary" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 

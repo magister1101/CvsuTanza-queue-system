@@ -15,7 +15,7 @@
             "
           >
             <div class="text-h5 text-weight-medium">DEPARTMENT</div>
-            <div class="text-h3 text-weight-medium">OSAS</div>
+            <div class="text-h3 text-weight-medium">Admission</div>
           </div>
           <div
             class="info-box q-py-md ellipsis"

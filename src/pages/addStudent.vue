@@ -263,6 +263,16 @@
                           <div>
                             <q-btn
                               v-if="isAdmin"
+                              @click="openViewDialog(props.row._id)"
+                              label="View"
+                              no-caps
+                              flat
+                              style="width: 100%"
+                            />
+                          </div>
+                          <div>
+                            <q-btn
+                              v-if="isAdmin"
                               @click="openEditDialog(props.row)"
                               label="Edit"
                               no-caps
@@ -351,9 +361,9 @@
         </div>
       </div>
     </div>
-    <!-- delete popup -->
+    <!-- delete dialog -->
     <template>
-      <q-dialog v-model="deletePopUp">
+      <q-dialog v-model="deleteDialog">
         <q-card style="min-width: 300px">
           <q-card-section class="text-h6">Confirm Delete</q-card-section>
           <q-card-section>Are you sure you want to delete this student?</q-card-section>
@@ -477,6 +487,131 @@
         </q-form>
       </q-card>
     </q-dialog>
+    <!-- Student info -->
+    <q-dialog v-model="studentInfoDialog" persistent>
+      <q-card style="min-width: 500px; max-width: 90vw; max-height: 90vh" class="q-pa-md scroll">
+        <q-card-section class="row items-center q-pb-none">
+          <q-icon name="person" class="q-mr-sm" />
+          <div class="text-h6">Student Information</div>
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-section>
+          <q-list bordered separator>
+            <q-item v-if="selectedStudent.studentNumber">
+              <q-item-section>
+                <q-item-label><strong>Student Number:</strong></q-item-label>
+                <q-item-label caption>{{ selectedStudent.studentNumber }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item>
+              <q-item-section>
+                <q-item-label><strong>Name:</strong></q-item-label>
+                <q-item-label caption>
+                  {{ selectedStudent.firstName }} {{ selectedStudent.middleName }}
+                  {{ selectedStudent.lastName }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item v-if="selectedStudent.username">
+              <q-item-section>
+                <q-item-label><strong>Username:</strong></q-item-label>
+                <q-item-label caption>{{ selectedStudent.username }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item v-if="selectedStudent.email">
+              <q-item-section>
+                <q-item-label><strong>Email:</strong></q-item-label>
+                <q-item-label caption>{{ selectedStudent.email }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item>
+              <q-item-section>
+                <q-item-label><strong>Course:</strong></q-item-label>
+                <q-item-label caption>{{ selectedStudent.course }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item>
+              <q-item-section>
+                <q-item-label><strong>Year:</strong></q-item-label>
+                <q-item-label caption>{{ selectedStudent.year }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item>
+              <q-item-section>
+                <q-item-label><strong>Section:</strong></q-item-label>
+                <q-item-label caption>{{ selectedStudent.section }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item>
+              <q-item-section>
+                <q-item-label><strong>Regular:</strong></q-item-label>
+                <q-item-label caption>{{ selectedStudent.isRegular ? 'Yes' : 'No' }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item>
+              <q-item-section>
+                <q-item-label><strong>Status:</strong></q-item-label>
+                <q-item-label caption>{{
+                  selectedStudent.isArchived ? 'Archived' : 'Active'
+                }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item v-if="selectedStudent.createdAt">
+              <q-item-section>
+                <q-item-label><strong>Created At:</strong></q-item-label>
+                <q-item-label caption>{{
+                  new Date(selectedStudent.createdAt).toLocaleString()
+                }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+
+          <!-- Courses and Grades -->
+          <div v-if="selectedStudent.courses?.length" class="q-mt-md">
+            <div class="text-subtitle1 q-mb-sm"><strong>Courses and Grades</strong></div>
+            <q-table
+              flat
+              dense
+              :rows="selectedStudent.courses"
+              :columns="[
+                {
+                  name: 'code',
+                  label: 'Course Code',
+                  field: (row) => row.courseId?.code || '',
+                  sortable: true,
+                },
+                {
+                  name: 'name',
+                  label: 'Course Name',
+                  field: (row) => row.courseId?.name || '',
+                  sortable: true,
+                },
+                { name: 'grade', label: 'Grade', field: 'grade', sortable: true },
+              ]"
+              row-key="courseId._id"
+              hide-bottom
+            />
+          </div>
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-actions align="right">
+          <q-btn flat label="Close" color="primary" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -497,12 +632,15 @@ const router = useRouter()
 //value
 const semester = ref('')
 const semesterData = ref([])
+const selectedStudent = ref('')
 
-// popup
+// dialogs
+const studentInfoDialog = ref(false)
 const addStudentPopUp = ref(false)
 const importStudentDialog = ref(false)
 const editStudentInfo = ref(false)
-const deletePopUp = ref(false)
+const deleteDialog = ref(false)
+
 // Form fields
 const username = ref('')
 const password = ref('')
@@ -770,22 +908,22 @@ const columns = ref([
     field: (row) => (row.isRegular ? 'Regular' : 'Irregular'),
     sortable: true,
   },
-  {
-    name: 'courses',
-    align: 'left',
-    label: 'Course Taken',
-    field: (row) =>
-      Array.isArray(row.courses)
-        ? row.courses
-            .map((course) =>
-              course.courseId && typeof course.courseId === 'object'
-                ? course.courseId.code || 'N/A' // Accessing the courseId and getting the code
-                : 'N/A',
-            )
-            .join(', ')
-        : 'None',
-    sortable: false,
-  },
+  // {
+  //   name: 'courses',
+  //   align: 'left',
+  //   label: 'Course Taken',
+  //   field: (row) =>
+  //     Array.isArray(row.courses)
+  //       ? row.courses
+  //           .map((course) =>
+  //             course.courseId && typeof course.courseId === 'object'
+  //               ? course.courseId.code || 'N/A' // Accessing the courseId and getting the code
+  //               : 'N/A',
+  //           )
+  //           .join(', ')
+  //       : 'None',
+  //   sortable: false,
+  // },
   {
     name: 'action',
     align: 'left',
@@ -830,7 +968,7 @@ async function getAllStudents() {
 
     if (
       userResponse.data.role === 'admin' ||
-      userResponse.data.role === 'osas' ||
+      userResponse.data.role === 'admission' ||
       userResponse.data.role === 'cashier' ||
       userResponse.data.role === 'registrar'
     ) {
@@ -948,7 +1086,7 @@ async function editStudent() {
 
 function openDeleteDialog(studentId) {
   selectedStudentId.value = studentId
-  deletePopUp.value = true
+  deleteDialog.value = true
 }
 
 async function confirmDelete() {
@@ -983,7 +1121,7 @@ async function confirmDelete() {
     })
   } finally {
     loading.value = false
-    deletePopUp.value = false
+    deleteDialog.value = false
     selectedStudentId.value = null
   }
 }
@@ -1015,6 +1153,21 @@ async function resetPassword(studentId) {
       type: 'negative',
       message: 'Something went Wrong',
     })
+  } finally {
+    loading.value = false
+  }
+}
+
+async function openViewDialog(studentId) {
+  loading.value = true
+  try {
+    studentInfoDialog.value = true
+
+    const response = await axios.get(`${process.env.api_host}/users?query=${studentId}`)
+    selectedStudent.value = response.data[0]
+    console.log(selectedStudent.value)
+  } catch (error) {
+    console.error(error)
   } finally {
     loading.value = false
   }
@@ -1146,7 +1299,7 @@ async function userInfo() {
     roleValidation.value = response.data.role
     if (
       roleValidation.value === 'registrar' ||
-      roleValidation.value === 'osas' ||
+      roleValidation.value === 'admission' ||
       roleValidation.value === 'cashier'
     ) {
       return (isAdmin.value = false)
@@ -1167,12 +1320,6 @@ function wrapCsvValue(val, formatFn, row) {
   formatted = formatted === void 0 || formatted === null ? '' : String(formatted)
 
   formatted = formatted.split('"').join('""')
-  /**
-   * Excel accepts \n and \r in strings, but some other CSV parsers do not
-   * Uncomment the next two lines to escape new lines
-   */
-  // .split('\n').join('\\n')
-  // .split('\r').join('\\r')
 
   return `"${formatted}"`
 }

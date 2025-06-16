@@ -11,13 +11,48 @@
         "
       >
         <q-card-section class="flex flex-center q-pa-md">
-          <div class="content-wrapper">
+          <div class="content-wrapper container-studentInfo">
+            <!-- Title -->
             <q-card-section class="text-center q-pt-lg">
               <div class="text-h4 text-weight-bold text-uppercase">Course to Take</div>
             </q-card-section>
+
+            <!-- Student Info -->
+            <q-card-section v-if="selectedStudent?.courses?.length > 0">
+              <div class="text-h6 q-mb-md">Course Grades</div>
+
+              <q-list bordered separator class="rounded-borders">
+                <q-item v-for="(course, index) in selectedStudent.courses" :key="index">
+                  <q-item-section>
+                    <q-item-label class="text-subtitle1 text-bold">
+                      {{ course.courseId.name }}
+                    </q-item-label>
+                    <q-item-label caption class="text-grey">
+                      {{ course.courseId.code }}
+                    </q-item-label>
+                  </q-item-section>
+
+                  <q-item-section side>
+                    <q-badge
+                      :color="getGradeColor(course.grade)"
+                      text-color="white"
+                      class="q-px-md"
+                    >
+                      {{ course.grade }}
+                    </q-badge>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-card-section>
+
+            <q-card-section v-else>
+              <q-banner class="bg-grey-2 text-grey-8" rounded dense>
+                No grades available.
+              </q-banner>
+            </q-card-section>
+
             <q-card-section class="container-courseInfo">
               <q-form @submit.prevent="checkCourse">
-                <!-- table -->
                 <q-table
                   class="courseTable"
                   :rows="rows"
@@ -69,10 +104,10 @@
                     </q-tr>
                   </template>
                 </q-table>
+
                 <div style="display: flex; width: 100%" class="q-mt-md">
                   <q-space />
                   <div class="q-ml-md">
-                    <!-- change @click to submit later -->
                     <q-btn
                       :loading="loading"
                       type="submit"
@@ -89,9 +124,11 @@
                   </div>
                 </div>
               </q-form>
+
               <q-card-section>
                 <div>Take Note, Select Course To Take.</div>
               </q-card-section>
+
               <q-card-section
                 style="border: 3px solid #606060; background-color: #ffffff"
                 v-if="prerequisitesMessage"
@@ -123,18 +160,17 @@
 </template>
 
 <script setup>
-/* eslint-disable no-unused-vars */
 import { ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
 import { Notify } from 'quasar'
-// router
+
 const route = useRoute()
 const router = useRouter()
+
 const tableLoading = ref(false)
 const studentId = route.params.studentId
-// input
-const userId = route.params.userId
+// const userId = route.params.userId
 const loading = ref(false)
 const selected = ref([])
 const selectAll = ref(false)
@@ -143,37 +179,21 @@ const selectedCourseIds = ref([])
 const prerequisitesMessage = ref(null)
 const filter = ref('')
 const rows = ref([])
+const selectedStudent = ref({})
+
+const getGradeColor = (grade) => {
+  if (grade <= 1.5) return 'green'
+  if (grade <= 2.5) return 'blue'
+  if (grade <= 3.0) return 'orange'
+  return 'red'
+}
+
 const columns = ref([
-  {
-    name: 'code',
-    label: 'Course Code',
-    align: 'left',
-    field: 'code',
-  },
-  {
-    name: 'name',
-    label: 'Course Name',
-    align: 'left',
-    field: 'name',
-  },
-  {
-    name: 'unit',
-    label: 'Units',
-    align: 'left',
-    field: 'unit',
-  },
-  {
-    name: 'course',
-    label: 'Program',
-    align: 'left',
-    field: 'course',
-  },
-  {
-    name: 'prerequisites',
-    label: 'Prerequisites',
-    align: 'left',
-    field: 'prerequisites',
-  },
+  { name: 'code', label: 'Course Code', align: 'left', field: 'code' },
+  { name: 'name', label: 'Course Name', align: 'left', field: 'name' },
+  { name: 'unit', label: 'Units', align: 'left', field: 'unit' },
+  { name: 'course', label: 'Program', align: 'left', field: 'course' },
+  { name: 'prerequisites', label: 'Prerequisites', align: 'left', field: 'prerequisites' },
   {
     name: 'description',
     label: 'Description',
@@ -185,18 +205,8 @@ const columns = ref([
 
 const prerequisitesRow = ref([])
 const prerequisitesColumn = ref([
-  {
-    name: 'course',
-    label: 'Selected Course',
-    align: 'left',
-    field: 'course',
-  },
-  {
-    name: 'prerequisites',
-    label: 'Missing Prerequisites',
-    align: 'left',
-    field: 'prerequisites',
-  },
+  { name: 'course', label: 'Selected Course', align: 'left', field: 'course' },
+  { name: 'prerequisites', label: 'Missing Prerequisites', align: 'left', field: 'prerequisites' },
 ])
 
 async function sendEmail() {
@@ -214,17 +224,11 @@ async function sendEmail() {
       },
     )
     if (response.status === 200) {
-      Notify.create({
-        type: 'positive',
-        message: 'Email sent successfully',
-      })
+      Notify.create({ type: 'positive', message: 'Email sent successfully' })
     }
   } catch (err) {
     console.error(err)
-    Notify.create({
-      type: 'negative',
-      message: 'Failed to send email',
-    })
+    Notify.create({ type: 'negative', message: 'Failed to send email' })
   } finally {
     loading.value = false
   }
@@ -234,10 +238,11 @@ async function getCourses() {
   tableLoading.value = true
   try {
     const studentProfile = await axios.get(`${process.env.api_host}/users?query=${studentId}`)
-    console.log(studentProfile.data[0].course)
+    selectedStudent.value = studentProfile.data[0]
+
     const token = localStorage.getItem('Authtoken')
     const response = await axios.get(
-      `${process.env.api_host}/courses?isArchived=false&program=${studentProfile.data[0].course}`,
+      `${process.env.api_host}/courses?isArchived=false&program=${selectedStudent.value.course}`,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -255,20 +260,13 @@ async function getCourses() {
             : 'None',
       }))
     } else {
-      console.error('Invalid response format:', response)
       rows.value = []
-      Notify.create({
-        type: 'negative',
-        message: 'Invalid data format received from server',
-      })
+      Notify.create({ type: 'negative', message: 'Invalid data format received from server' })
     }
   } catch (err) {
     console.error(err)
     rows.value = []
-    Notify.create({
-      type: 'negative',
-      message: 'Failed to fetch courses data',
-    })
+    Notify.create({ type: 'negative', message: 'Failed to fetch courses data' })
   } finally {
     tableLoading.value = false
   }
@@ -278,14 +276,11 @@ async function checkCourse() {
   loading.value = true
   try {
     if (selectedCourseIds.value.length <= 0) {
-      Notify.create({
-        type: 'warning',
-        message: 'Please select at least one course to take',
-      })
+      Notify.create({ type: 'warning', message: 'Please select at least one course to take' })
       return
     }
-    const token = localStorage.getItem('authToken') //UPDATE: replace this with id and bypass auth check
 
+    const token = localStorage.getItem('authToken')
     const response = await axios.post(
       `${process.env.api_host}/queues/checkPrerequisites`,
       {
@@ -299,6 +294,7 @@ async function checkCourse() {
         },
       },
     )
+
     if (response.data.missing) {
       prerequisitesRow.value = Object.entries(response.data.missingPrerequisites).map(
         ([course, prerequisites]) => ({
@@ -307,18 +303,12 @@ async function checkCourse() {
           prerequisites: prerequisites.map((prereq) => prereq.name).join(', '),
         }),
       )
-      Notify.create({
-        type: 'negative',
-        message: response.data.message,
-      })
+      Notify.create({ type: 'negative', message: response.data.message })
     } else {
       prerequisitesRow.value = []
-      Notify.create({
-        type: 'positive',
-        message: response.data.message,
-      })
+      Notify.create({ type: 'positive', message: response.data.message })
 
-      const createQueueResponse = await axios.post(
+      await axios.post(
         `${process.env.api_host}/queues/createQueue`,
         {
           selectedCourses: selectedCourseIds.value,
@@ -336,10 +326,7 @@ async function checkCourse() {
     prerequisitesMessage.value = response.data
   } catch (err) {
     console.error(err)
-    Notify.create({
-      type: 'negative',
-      message: 'Failed to update courses',
-    })
+    Notify.create({ type: 'negative', message: 'Failed to update courses' })
   } finally {
     loading.value = false
   }
@@ -377,6 +364,9 @@ onMounted(() => {
   height: auto
   padding: 1rem
   overflow-x: auto
+
+.container-studentInfo
+  background-color: #fcfedf
 
 .courseTable
   background-color: #fcfedf

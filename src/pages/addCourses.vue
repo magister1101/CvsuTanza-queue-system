@@ -319,7 +319,7 @@ async function getCourses() {
 
     if (
       userResponse.data.role === 'admin' ||
-      userResponse.data.role === 'osas' ||
+      userResponse.data.role === 'admission' ||
       userResponse.data.role === 'cashier' ||
       userResponse.data.role === 'registrar'
     ) {

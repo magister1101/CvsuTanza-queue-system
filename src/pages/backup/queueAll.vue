@@ -53,7 +53,7 @@
                 <div>
                   <q-icon class="q-mr-md" name="groups" size="50px"></q-icon>
                 </div>
-                <div class="text-h6 text-weight-medium">OSAS QUEUE</div>
+                <div class="text-h6 text-weight-medium">Admission QUEUE</div>
               </div>
             </div>
           </q-card-section>
@@ -141,7 +141,7 @@ const rows = ref([
     timeOut: '2:00pm',
   },
   {
-    departmentName: 'OSAS',
+    departmentName: 'ADMISSION',
     facilitator: 'Hela Brt',
     logStatus: 'In',
     timeIn: '5:00pm',

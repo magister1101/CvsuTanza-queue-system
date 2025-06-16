@@ -411,7 +411,7 @@
                               border-radius: 14px;
                             "
                           >
-                            <q-select v-model="role" :options="roleOptions" borderless />
+                            <q-select v-model="role" :options="roleOptions.option" borderless />
                           </div>
                           Year
                           <div
@@ -487,7 +487,7 @@ const notAdmin = ref('')
 
 const roleOptions = ref({})
 const yearOptions = ['First', 'Second', 'Third', 'Fourth']
-const extraOptions = ['registrar', 'osas', 'cashier', 'admin']
+const extraOptions = ['registrar', 'admission', 'cashier', 'admin']
 
 const statusOptions = ['Active', 'Inactive']
 
