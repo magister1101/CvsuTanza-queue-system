@@ -34,8 +34,8 @@ export default defineConfig((/* ctx */) => {
     build: {
       env: {
         // api_host: 'https://g188k323-3005.asse.devtunnels.ms',
-        // api_host: "https://pre-registration-and-queueing-system-be.vercel.app",
-        api_host: "http://localhost:3000",
+        api_host: "https://pre-registration-and-queueing-system-be.vercel.app",
+        // api_host: "http://localhost:3000",
       },
       target: {
         browser: ['es2022', 'firefox115', 'chrome115', 'safari14'],
