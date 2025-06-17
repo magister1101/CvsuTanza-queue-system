@@ -308,18 +308,18 @@ async function checkCourse() {
       prerequisitesRow.value = []
       Notify.create({ type: 'positive', message: response.data.message })
 
-      await axios.post(
-        `${process.env.api_host}/queues/createQueue`,
-        {
-          selectedCourses: selectedCourseIds.value,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            authorization: token,
-          },
-        },
-      )
+      // await axios.post(
+      //   `${process.env.api_host}/queues/createQueue`,
+      //   {
+      //     selectedCourses: selectedCourseIds.value,
+      //   },
+      //   {
+      //     headers: {
+      //       'Content-Type': 'application/json',
+      //       authorization: token,
+      //     },
+      //   },
+      // )
       sendEmail()
       router.replace(`/new/addStudent/`)
     }
