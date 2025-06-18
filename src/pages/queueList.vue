@@ -6,6 +6,10 @@
           <div class="text-weight-medium text-center">Queue List</div>
         </q-card-section>
 
+        <q-card-section>
+          <q-btn icon="undo" @click="router.push('/new/adminQueuePage')" />
+        </q-card-section>
+
         <q-card-section class="q-mt-xl">
           <q-table
             :loading="loading"
@@ -16,6 +20,8 @@
             flat
             bordered
             :filter="filter"
+            v-model:pagination="pagination"
+            :rows-per-page-options="[10]"
           >
             <template v-slot:top>
               <div class="table-header">
@@ -36,7 +42,11 @@
                 <q-td>{{ props.row.destination }}</q-td>
                 <q-td>{{ props.row.status }}</q-td>
                 <q-td>
-                  <q-btn label="View Details" class="details-btn" @click="specificQueueDetails(props.row.id)" />
+                  <q-btn
+                    label="View Details"
+                    class="details-btn"
+                    @click="specificQueueDetails(props.row.id)"
+                  />
                 </q-td>
               </q-tr>
             </template>
@@ -47,21 +57,38 @@
           <q-card class="dialog-card">
             <q-card-section v-if="queueSummary">
               <div class="dialog-header">Queue Details</div>
-              <div class="dialog-content">
-                <q-card-section class="student-details">
-                  <div class="section-title">Student Details:</div>
-                  <div class="details" v-for="(value, key) in studentDetails" :key="key">
-                    <span class="label">{{ key }}:</span> {{ value }}
-                  </div>
-                </q-card-section>
 
-                <q-card-section class="courses-section">
-                  <div class="section-title">Courses to Take:</div>
-                  <div class="course-item" v-for="course in queueSummary.courseToTake" :key="course.code">
-                    <div>{{ course.name }} ({{ course.code }}) - {{ course.unit }} Units</div>
-                  </div>
-                </q-card-section>
-              </div>
+              <!-- Sub Category Section -->
+              <q-card-section class="courses-section">
+                <div class="section-title">Sub Categories:</div>
+                <div
+                  class="subCategory-item"
+                  v-for="(sub, index) in queueSummary.subCategory"
+                  :key="index"
+                >
+                  <div>{{ sub }}</div>
+                </div>
+              </q-card-section>
+
+              <!-- Student Details Section -->
+              <q-card-section class="student-details">
+                <div class="section-title">Student Details:</div>
+                <div class="details" v-for="(value, key) in studentDetails" :key="key">
+                  <span class="label">{{ key }}:</span> {{ value }}
+                </div>
+              </q-card-section>
+
+              <!-- Course to Take Section -->
+              <q-card-section class="courses-section">
+                <div class="section-title">Courses to Take:</div>
+                <div
+                  class="course-item"
+                  v-for="course in queueSummary.courseToTake"
+                  :key="course.code"
+                >
+                  <div>{{ course.name }} ({{ course.code }}) - {{ course.unit }} Units</div>
+                </div>
+              </q-card-section>
             </q-card-section>
           </q-card>
         </q-dialog>
@@ -73,6 +100,9 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const queueDetailsDialog = ref(false)
 const loading = ref(false)
@@ -80,29 +110,40 @@ const filter = ref('')
 const rows = ref([])
 const queueSummary = ref(null)
 
+const pagination = ref({
+  page: 1,
+  rowsPerPage: 10,
+})
+
 const columns = [
   { name: 'queueNumber', field: 'queueNumber', label: 'Queue Number', align: 'left' },
   { name: 'student', field: 'student', label: 'Student', align: 'left' },
-  { name: 'destination', field: 'destination', label: 'Destination', align: 'left', sortable: true },
+  {
+    name: 'destination',
+    field: 'destination',
+    label: 'Destination',
+    align: 'left',
+    sortable: true,
+  },
   { name: 'status', field: 'status', label: 'Status', align: 'left', sortable: true },
-  { name: 'action', field: 'action', label: 'Action', align: 'left' }
+  { name: 'action', field: 'action', label: 'Action', align: 'left' },
 ]
 
 const studentDetails = computed(() => {
   if (!queueSummary.value) return {}
   return {
     'Queue Number': queueSummary.value.queueNumber,
-    'Username': queueSummary.value.student.username,
-    'Email': queueSummary.value.student.email,
+    Username: queueSummary.value.student.username,
+    Email: queueSummary.value.student.email,
     'First Name': queueSummary.value.student.firstName,
     'Middle Name': queueSummary.value.student.middleName,
     'Last Name': queueSummary.value.student.lastName,
-    'Course': queueSummary.value.student.course,
-    'Year': queueSummary.value.student.year,
-    'Section': queueSummary.value.student.section,
+    Course: queueSummary.value.student.course,
+    Year: queueSummary.value.student.year,
+    Section: queueSummary.value.student.section,
     'Is Regular': queueSummary.value.student.isRegular,
-    'Status': queueSummary.value.status,
-    'Destination': queueSummary.value.destination
+    Status: queueSummary.value.status,
+    Destination: queueSummary.value.destination,
   }
 })
 
@@ -120,15 +161,19 @@ async function getQueueList() {
   loading.value = true
   try {
     const response = await axios.get(`${process.env.api_host}/queues`, {
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     })
-    rows.value = response.data.map(queue => ({
-      id: queue._id,
-      queueNumber: queue.queueNumber,
-      student: formatStudentName(queue.student),
-      destination: queue.destination,
-      status: queue.status
-    }))
+
+    rows.value = response.data
+      .map((queue) => ({
+        id: queue._id,
+        queueNumber: queue.queueNumber,
+        student: formatStudentName(queue.student),
+        destination: queue.destination,
+        status: queue.status,
+        createdAt: queue.createdAt,
+      }))
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
   } catch (error) {
     console.error(error)
   } finally {

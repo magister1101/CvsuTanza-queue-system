@@ -99,6 +99,12 @@
                 style="background-color: #fffeb8; margin-left: 8px"
                 @click="queueListPage"
               />
+
+              <q-btn
+                label="RESET"
+                style="background-color: #fe7e7f; margin-left: 8px"
+                @click="resetDialog = true"
+              />
             </div>
           </q-card>
         </q-card-section>
@@ -120,9 +126,9 @@
             </q-btn>
 
             <div style="display: flex; justify-content: center; gap: 8px">
-              <q-btn label="Clock in" style="background-color: #b7faff" @click="clockIn()" />
-              <q-btn label="View" style="background-color: #fffeb8" @click="showDialog = true" />
-              <q-btn label="Clock out" style="background-color: #fe7e7f" @click="clockOut()" />
+              <q-btn label="Clock in" style="background-color: #aafeab" @click="clockIn()" />
+              <q-btn label="View" style="background-color: #aafeab" @click="showDialog = true" />
+              <q-btn label="Clock out" style="background-color: #aafeab" @click="clockOut()" />
             </div>
           </div>
           <div
@@ -144,17 +150,17 @@
             <div style="display: flex; justify-content: center; gap: 8px">
               <q-btn
                 label="Registrar"
-                style="background-color: #b7faff"
+                style="background-color: #aafeab"
                 @click="updateQueue(currentQueue._id, 'registrar')"
               />
               <q-btn
                 label="Admission"
-                style="background-color: #fffeb8"
+                style="background-color: #aafeab"
                 @click="updateQueue(currentQueue._id, 'admission')"
               />
               <q-btn
                 label="Cashier"
-                style="background-color: #fe7e7f"
+                style="background-color: #aafeab"
                 @click="updateQueue(currentQueue._id, 'cashier')"
               />
             </div>
@@ -202,7 +208,7 @@
           <div class="action-button-container ellipsis">
             <q-btn
               :loading="loading"
-              @click="resetQueue"
+              @click="resetUserQueue"
               class="action-button"
               style="background-color: #aafeab"
             >
@@ -414,11 +420,32 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <q-dialog v-model="resetDialog" persistent>
+      <q-card class="q-pa-md" style="min-width: 300px">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6 text-weight-medium">
+            ARE YOU SURE YOU WANT TO RESET THE ENTIRE QUEUE?
+          </div>
+        </q-card-section>
+        <q-separator class="q-my-sm" />
+
+        <q-card-actions align="right">
+          <q-btn label="Back" flat color="primary" @click="cashierDialog = false" />
+          <q-btn
+            label="RESET"
+            color="primary"
+            unelevated
+            @click="resetQueues"
+            :loading="resetQueuesLoading"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
 <script setup>
-/* eslint-disable no-unused-vars */
 import { useRouter } from 'vue-router'
 import { onMounted, ref, onBeforeUnmount } from 'vue'
 import axios from 'axios'
@@ -428,6 +455,8 @@ const ws = ref(null)
 const queues = ref([])
 const loading = ref(false)
 const loadingWindow = ref(false)
+const resetQueuesLoading = ref(false)
+
 const inputWindow = ref('')
 const inputWindowDialog = ref(false)
 const clockInLoading = ref(false)
@@ -440,6 +469,9 @@ const transactions = ref([])
 const router = useRouter()
 const userId = ref(null)
 const queueDetailsDialog = ref(false)
+
+const resetDialog = ref(false)
+
 const synth = window.speechSynthesis
 const columns = [
   {
@@ -648,6 +680,7 @@ async function updateQueue(queueId, destination) {
     })
   } finally {
     loading.value = false
+    refreshQueue()
   }
 }
 
@@ -674,10 +707,11 @@ async function doneQueue(queueId) {
     })
   } finally {
     loading.value = false
+    refreshQueue()
   }
 }
 
-async function resetQueue() {
+async function resetUserQueue() {
   loading.value = true
   const token = localStorage.getItem('authToken')
   try {
@@ -700,6 +734,33 @@ async function resetQueue() {
     })
   } finally {
     loading.value = false
+    refreshQueue()
+  }
+}
+
+async function resetQueues() {
+  resetQueuesLoading.value = true
+  const token = localStorage.getItem('authToken')
+  try {
+    const response = await axios.get(`${process.env.api_host}/queues/resetQueues`, {
+      headers: {
+        Authorization: token,
+      },
+    })
+    refreshQueue()
+    Notify.create({
+      type: 'positive',
+      message: 'Reset queue successfully',
+    })
+  } catch (err) {
+    console.error(err)
+    Notify.create({
+      type: 'negative',
+      message: 'Something went wrong',
+    })
+  } finally {
+    resetQueuesLoading.value = false
+    resetDialog.value = false
   }
 }
 
@@ -746,6 +807,7 @@ async function cancelQueue(queueId) {
     })
   } finally {
     loading.value = false
+    refreshQueue()
   }
 }
 

@@ -94,7 +94,7 @@
 </template>
 
 <script setup>
-/* eslint-disable no-unused-vars */
+
 import { ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'

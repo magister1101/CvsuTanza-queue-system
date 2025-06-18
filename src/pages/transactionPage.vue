@@ -18,7 +18,7 @@
         </q-card-section>
         <div class="main-container">
           <q-card-section style="text-align: center; font-size: 2rem">
-            <div style="color: #31572c" class="text-weight-bold">Transaction</div>
+            <div style="color: #ffffff" class="text-weight-bold">Transaction</div>
           </q-card-section>
           <q-card-section class="container-courseInfo">
             <!-- btn -->
@@ -29,8 +29,7 @@
                   style="width: 100%; height: 100%; color: #ffffff; border-radius: 14px"
                   class="text-h5 text-weight-medium"
                   no-caps
-                  @click="toRegistrar"
-                  :loading="registrarLoading"
+                  @click="registrarDialog = true"
                 />
               </div>
               <div class="divBtn">
@@ -39,8 +38,7 @@
                   style="width: 100%; height: 100%; color: #ffffff; border-radius: 14px"
                   class="text-h5 text-weight-medium"
                   no-caps
-                  @click="toAdmission"
-                  :loading="admissionLoading"
+                  @click="admissionDialog = true"
                 />
               </div>
               <div class="divBtn">
@@ -49,8 +47,7 @@
                   style="width: 100%; height: 100%; color: #ffffff; border-radius: 14px"
                   class="text-h5 text-weight-medium"
                   no-caps
-                  @click="toCashier"
-                  :loading="cashierLoading"
+                  @click="cashierDialog = true"
                 />
               </div>
             </div>
@@ -58,6 +55,113 @@
         </div>
       </div>
     </div>
+    <!-- registrar dialog -->
+    <q-dialog v-model="registrarDialog" persistent>
+      <q-card class="q-pa-md" style="min-width: 300px">
+        <q-card-section class="row items-center q-pb-none">
+          <q-icon name="assignment_ind" class="q-mr-sm" />
+          <div class="text-h6 text-weight-medium">Registrar Services</div>
+        </q-card-section>
+
+        <q-separator class="q-my-sm" />
+
+        <q-card-section>
+          <q-option-group
+            v-model="selectedRegistrarServices"
+            type="checkbox"
+            :options="[
+              { label: 'COR', value: 'COR' },
+              { label: 'COG', value: 'COG' },
+              { label: 'TOR', value: 'TOR' },
+              { label: 'CAV', value: 'CAV' },
+            ]"
+            color="primary"
+            class="q-gutter-sm"
+          />
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn label="Back" flat color="primary" @click="registrarDialog = false" />
+          <q-btn
+            label="Submit"
+            color="primary"
+            unelevated
+            @click="toRegistrar"
+            :disable="selectedRegistrarServices.length === 0"
+            :loading="registrarLoading"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- admission dialog -->
+    <q-dialog v-model="admissionDialog" persistent>
+      <q-card class="q-pa-md" style="min-width: 300px">
+        <!-- Title Section -->
+        <q-card-section class="row items-center q-pb-none">
+          <q-icon name="assignment_ind" class="q-mr-sm" />
+          <div class="text-h6 text-weight-medium">Admission Services</div>
+        </q-card-section>
+
+        <q-separator class="q-my-sm" />
+
+        <!-- Multiple Select Options -->
+        <q-card-section>
+          <q-option-group
+            v-model="selectedAdmissionServices"
+            type="checkbox"
+            :options="[
+              { label: 'Admission form', value: 'Admission form' },
+              { label: 'Form 137', value: 'Form 137' },
+              { label: 'Notice of admission', value: 'Notice of admission' },
+              { label: 'Medical', value: 'Medical' },
+              { label: 'Good moral', value: 'Good moral' },
+              { label: 'COR', value: 'COR' },
+              { label: 'Honorable dismissal', value: 'Honorable dismissal' },
+              { label: 'TOR', value: 'TOR' },
+            ]"
+            color="primary"
+            class="q-gutter-sm"
+          />
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn label="Back" flat color="primary" @click="admissionDialog = false" />
+          <q-btn
+            label="Submit"
+            color="primary"
+            unelevated
+            @click="toAdmission"
+            :disable="selectedAdmissionServices.length === 0"
+            :loading="admissionLoading"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- cashier dialog -->
+    <q-dialog v-model="cashierDialog" persistent>
+      <q-card class="q-pa-md" style="min-width: 300px">
+        <!-- Title Section -->
+        <q-card-section class="row items-center q-pb-none">
+          <q-icon name="assignment_ind" class="q-mr-sm" />
+          <div class="text-h6 text-weight-medium">Cashier Services</div>
+        </q-card-section>
+
+        <q-separator class="q-my-sm" />
+
+        <q-card-actions align="right">
+          <q-btn label="Back" flat color="primary" @click="cashierDialog = false" />
+          <q-btn
+            label="Continue"
+            color="primary"
+            unelevated
+            @click="toCashier"
+            :loading="cashierLoading"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -70,6 +174,13 @@ const registrarLoading = ref(false)
 const admissionLoading = ref(false)
 const cashierLoading = ref(false)
 
+const registrarDialog = ref(false)
+const admissionDialog = ref(false)
+const cashierDialog = ref(false)
+
+const selectedRegistrarServices = ref([])
+const selectedAdmissionServices = ref([])
+
 const router = useRouter()
 
 async function toRegistrar() {
@@ -79,6 +190,7 @@ async function toRegistrar() {
       `${process.env.api_host}/queues/createTransaction`,
       {
         destination: 'registrar',
+        subCategory: selectedRegistrarServices.value,
       },
       {
         headers: {
@@ -108,6 +220,7 @@ async function toAdmission() {
       `${process.env.api_host}/queues/createTransaction`,
       {
         destination: 'admission',
+        subCategory: selectedAdmissionServices.value,
       },
       {
         headers: {

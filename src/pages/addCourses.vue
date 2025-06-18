@@ -200,7 +200,6 @@
 </template>
 
 <script setup>
-/* eslint-disable no-unused-vars */
 import { ref, onMounted } from 'vue'
 import { is, Notify } from 'quasar'
 import axios from 'axios'
