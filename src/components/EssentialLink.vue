@@ -21,6 +21,16 @@
       </q-item>
     </div>
     <div class="q-py-sm">
+      <q-item clickable @click="router.replace(`/new/email`)">
+        <q-item-section avatar>
+          <q-icon name="email" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label>Email</q-item-label>
+        </q-item-section>
+      </q-item>
+    </div>
+    <div class="q-py-sm">
       <q-item clickable @click="router.replace(`/new/addProgram`)">
         <q-item-section avatar>
           <q-icon name="folder" />
@@ -58,6 +68,7 @@
         <q-item-section> Users </q-item-section>
       </q-item>
     </div>
+
     <div class="q-py-sm">
       <q-item clickable @click="router.replace(`/new/adminSettings`)">
         <q-item-section avatar>
@@ -164,7 +175,6 @@ const clearLocalStorage = () => {
   localStorage.clear()
 }
 
-
 const handleLogout = async () => {
   try {
     // Clear localStorage when logging out
@@ -194,9 +204,9 @@ async function userInfo() {
     roleValidation.value = response.data.role
     if (roleValidation.value === 'admin') {
       return (isAdmin.value = true)
-    } else if(roleValidation.value === 'student') {
+    } else if (roleValidation.value === 'student') {
       return (isStudent.value = true)
-    }else{
+    } else {
       return (notAdmin.value = true)
     }
   } catch (err) {
@@ -210,6 +220,5 @@ async function userInfo() {
 
 onMounted(() => {
   userInfo()
-
 })
 </script>

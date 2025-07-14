@@ -37,6 +37,7 @@ const routes = [
       { path: 'adminCreateAccount', component: () => import('src/pages/adminCreateAccount.vue') },
       { path: 'adminQueuePage', component: () => import('src/pages/adminQueuePage.vue') },
       { path: 'queueList', component: () => import('src/pages/queueList.vue') },
+      { path: 'email', component: () => import('src/pages/emailPage.vue') },
     ],
   },
 

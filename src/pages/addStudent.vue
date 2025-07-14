@@ -616,7 +616,6 @@
 </template>
 
 <script setup>
-
 import { ref, onMounted } from 'vue'
 import { Notify, exportFile, is } from 'quasar'
 import { useRouter, useRoute } from 'vue-router'
@@ -819,7 +818,7 @@ const uploadFile = async () => {
     loadingImport.value = true
 
     const response = await axios.post(
-      `${process.env.api_host}/users/excel/insertStudents`, // Replace with your backend URL
+      `${process.env.api_host}/users/excel/insertStudents`,
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } },
     )
@@ -1298,7 +1297,7 @@ async function userInfo() {
     })
     roleValidation.value = response.data.role
     if (
-      roleValidation.value === 'registrar' ||
+      // roleValidation.value === 'registrar' ||
       roleValidation.value === 'admission' ||
       roleValidation.value === 'cashier'
     ) {

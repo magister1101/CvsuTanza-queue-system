@@ -364,6 +364,7 @@
                   class="courses-section"
                   v-for="course in currentQueue.courseToTake"
                   :key="course"
+                  v-fo
                 >
                   <div class="section-title">Courses to Take:</div>
                   <div class="course-item">
