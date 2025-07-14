@@ -600,7 +600,6 @@
                 { name: 'grade', label: 'Grade', field: 'grade', sortable: true },
               ]"
               row-key="courseId._id"
-              hide-bottom
             />
           </div>
         </q-card-section>
