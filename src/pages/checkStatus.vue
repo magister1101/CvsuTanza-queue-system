@@ -7,11 +7,15 @@
             <q-icon name="arrow_back_ios" />
           </q-btn>
         </q-card-section>
+
         <q-card-section class="flex flex-center">
           <div class="content-width">
             <q-card-section class="text-center page-header">
               <div class="page-title text-weight-bold text-uppercase">Student Status</div>
             </q-card-section>
+            <div v-if="pageLoad" class="flex flex-center q-my-xl">
+              <q-spinner-dots color="primary" size="50px" />
+            </div>
             <q-card-section class="container-queuing q-pa-sm" v-if="userData">
               <!-- Student and Course Information Container -->
               <q-card-section class="info-container">
@@ -93,6 +97,7 @@ import axios from 'axios'
 const router = useRouter()
 
 const userData = ref(null)
+const pageLoad = ref(true)
 
 function redirect(path) {
   router.push(path)
@@ -111,6 +116,8 @@ async function getUser() {
     console.log(response.data)
   } catch (error) {
     console.error(error)
+  } finally {
+    pageLoad.value = false
   }
 }
 

@@ -10,6 +10,9 @@
       <q-card-section class="text-center">
         <div class="text-h4 text-weight-bold text-uppercase">COURSE TO TAKE</div>
       </q-card-section>
+      <div v-if="pageLoad" class="flex flex-center q-my-xl">
+        <q-spinner-dots color="primary" size="50px" />
+      </div>
       <div class="course-container">
         <div class="course-grid">
           <div v-for="course in courses" :key="course._id" class="course-cell">
@@ -22,7 +25,7 @@
         </div>
       </div>
       <div class="flex justify-center">
-        <div class="done-btn q-mt-lg">
+        <div class="done-btn q-mt-lg" v-if="!pageLoad">
           <q-btn
             class="primary"
             style="width: 100%; height: 100%"
@@ -47,6 +50,7 @@ const courses = ref({})
 const userData = ref({})
 
 const enrollLoading = ref(false)
+const pageLoad = ref(true)
 
 function redirect(path) {
   router.push(path)
@@ -77,6 +81,8 @@ async function getCourses(user) {
     courses.value = response.data
   } catch (error) {
     console.log(error)
+  } finally {
+    pageLoad.value = false
   }
 }
 
