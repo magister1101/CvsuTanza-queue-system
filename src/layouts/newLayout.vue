@@ -1,5 +1,4 @@
 <template>
-
   <q-layout view="hHh lpR fFf" class="bg-white">
     <q-header class="bg-secondary" style="position: fixed; z-index: 2000">
       <q-toolbar class="q-pa-sm">
@@ -11,7 +10,6 @@
           @click="toggleLeftDrawer"
           class="z-max"
         />
-
       </q-toolbar>
     </q-header>
 
@@ -39,7 +37,7 @@
     </q-drawer>
 
     <q-page-container>
-      <router-view />
+      <router-view class="main-container" />
     </q-page-container>
   </q-layout>
 </template>
@@ -54,3 +52,8 @@ function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
 }
 </script>
+<style lang="sass">
+.main-container
+
+  min-height: 100%
+</style>

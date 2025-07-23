@@ -1,17 +1,18 @@
 <template>
   <q-page class="page-background">
     <div class="main-container">
-      <q-card-section class="container-courseInfo">
+      <q-card-section class="container-courseInfo bg-white">
         <div class="divContent">
-          <p class="thank-you-text">
-            Thank you for registering, kindly wait for our email confirmation
+          <p class="thank-you-text text-uppercase">
+            Thank you for registering, kindly wait for an Adviser to evaluate your Courses, then
+            queue number will be assigned to you.
           </p>
           <div class="divBtn">
             <q-btn
-              label="Register Again"
+              label="Done"
               class="login-btn text-h5 text-weight-medium"
               no-caps
-              @click="toRegister"
+              @click="redirect('/')"
             />
           </div>
         </div>
@@ -25,8 +26,9 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-async function toRegister() {
-  router.push(`/studentRegister`)
+function redirect(path) {
+  localStorage.clear()
+  router.push(path)
 }
 </script>
 
@@ -51,7 +53,8 @@ async function toRegister() {
   display: flex
   justify-content: center
   align-items: center
-  width: 100%
+  width: 40%
+  box-shadow: 0px 10px 10px rgba(0, 0, 0, 0.2)
 
 .divContent
   width: 60%
@@ -84,4 +87,7 @@ async function toRegister() {
 
   .thank-you-text
     font-size: 1.1rem
+
+  .container-courseInfo
+    width: 90%
 </style>

@@ -23,15 +23,14 @@
             </q-card-section>
             <q-form @submit.prevent="login">
               <q-card-section style="width: 100%">
-                Username:
                 <div style="width: 100%">
-                  <q-input type="text" outlined v-model="username" />
+                  <q-input type="text" label="Student Number" outlined v-model="username" />
                 </div>
               </q-card-section>
               <q-card-section style="width: 100%">
-                Password:
+                <!-- Password: -->
                 <div style="width: 100%">
-                  <q-input type="password" outlined v-model="password" />
+                  <q-input type="password" outlined v-model="password" style="display: none" />
                 </div>
               </q-card-section>
               <!-- <q-card-section style="display: flex; justify-content: space-between; width: 100%">
@@ -82,7 +81,7 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const username = ref('')
-const password = ref('')
+const password = ref(username)
 const loading = ref(false)
 
 async function login() {
@@ -102,26 +101,28 @@ async function login() {
     )
 
     if (response.status === 200) {
-      const token = await response.data.token // Adjust based on your response structure
-      localStorage.setItem('authToken', 'Bearer ' + token) // Save token to local storage
+      const token = await response.data.token
+      localStorage.setItem('authToken', 'Bearer ' + token)
       Notify.create({ type: 'positive', message: 'Login successful!' })
       await new Promise((resolve) => setTimeout(resolve, 500))
 
-      const newToken = localStorage.getItem('authToken')
+      // const newToken = localStorage.getItem('authToken')
 
-      const createQueueResponse = await axios.post(
-        `${process.env.api_host}/queues/createQueue`,
-        {},
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            authorization: newToken,
-          },
-        },
-      )
-      router.replace(`/queuingPage/` + `${createQueueResponse.data.queue._id}`)
+      // const createQueueResponse = await axios.post(
+      //   `${process.env.api_host}/queues/createQueue`,
+      //   {},
+      //   {
+      //     headers: {
+      //       'Content-Type': 'application/json',
+      //       authorization: newToken,
+      //     },
+      //   },
+      // )
+      // router.replace(`/queuingPage/` + `${createQueueResponse.data.queue._id}`)
 
       // Handle successful login (e.g., redirect or store user info)
+
+      router.replace('/preRegCheck')
     } else {
       Notify.create({
         type: 'negative',

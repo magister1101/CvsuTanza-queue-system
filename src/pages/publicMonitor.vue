@@ -171,243 +171,191 @@ onMounted(() => {
 
 <style lang="sass" scoped>
 .monitor-page
-  height: 90vh
+  min-height: 100vh
 
+  overflow-x: hidden
 
 .main-container
   width: 100%
-  height: 100vh
+  min-height: 100vh
   border: 3px solid #606060
   display: flex
+  flex-wrap: wrap
 
+.left-section, .right-section
+  box-sizing: border-box
+  padding: 2rem
 
 .left-section
-  width: 60%
-  height: 100%
+  flex: 1 1 60%
   padding-left: 3rem !important
 
+.right-section
+  flex: 1 1 40%
+  background-color: #f2f7d5
 
 .header-container
-  margin-left: 3rem
   display: flex
   align-items: center
-
+  flex-wrap: wrap
+  margin-left: 3rem
 
 .logo-img
-  width: 150px
-
+  width: 120px
+  max-width: 25vw
 
 .title-container
-  width: 100%
-
+  flex: 1
 
 .university-title
   color: #30532f
-  font-size: 4em
-  font-weight: 500
-  margin-left: 3rem
-
+  font-size: 3vw
+  font-weight: 600
+  margin-left: 2rem
 
 .campus-title-wrapper
   display: flex
   justify-content: flex-end
 
-
 .campus-title
   color: #6a268d
-  font-size: 2rem
+  font-size: 1.5rem
   font-weight: 500
-  margin-right: 3rem
-
+  margin-right: 2rem
 
 .banner-container
   border: 10px solid #31582c
-  width: 57.3vw
-  height: auto
+  width: 100%
+  max-width: 100%
   margin-top: 1rem
 
-
 .banner-img
-  height: 700px
-
-
-.right-section
-  width: 30%
-  height: 100%
-  background-color: #f2f7d5
-  padding-left: 0 !important
-
+  width: 100%
+  height: auto
+  max-height: 60vh
+  object-fit: cover
 
 .datetime-container
   display: flex
   justify-content: center
   text-align: center
 
-
 .datetime-wrapper
   width: 100%
 
 .time-display
   color: red
-  font-size: 4em
-  font-weight: 500
-
+  font-size: 3vw
+  font-weight: 600
 
 .date-display
   color: #272923
-  font-size: 2rem
+  font-size: 1.8vw
   font-weight: 500
 
-
 .queue-section
-  padding-left: 0 !important
-
+  display: flex
+  flex-direction: column
+  gap: 1rem
+  margin-top: 1rem
 
 .queue-item
   display: flex
-  height: 240px
+  min-height: 140px
   border: 5px solid #d9dad9
-
+  flex-wrap: wrap
 
 .queue-number
   background-color: #31582c
-  width: 60%
+  flex: 1 1 60%
   color: white
-  font-size: 2em
+  font-size: 2vw
   font-weight: 700
   display: flex
   justify-content: center
   align-items: center
+  padding: 1rem
 
 .counter-container
-  width: 40%
-
+  flex: 1 1 40%
+  display: flex
+  flex-direction: column
+  justify-content: center
+  align-items: center
 
 .counter-label
-  font-size: 2em
-  justify-self: flex-end
+  font-size: 1.5vw
   color: #481a6b
   font-weight: 500
 
-
 .counter-number
-  font-size: 6em
-  justify-self: flex-end
+  font-size: 4vw
   color: #31582c
-
-
-@media (max-width: 1440px)
-  .university-title
-    font-size: 2.8em
-  .campus-title
-    font-size: 1.4rem
-  .time-display
-    font-size: 2.8em
-
-  .queue-number, .counter-number
-    font-size: 1.5em
-
-  .counter-label
-    font-size: 1.4em
-
-  .queue-item
-    height: 160px
-
-  .banner-img
-    height: 450px
-
-  .banner-container
-    width: 55vw
+  font-weight: 700
 
 @media (max-width: 1024px)
   .main-container
     flex-direction: column
 
   .left-section, .right-section
-    width: 100%
+    flex: 1 1 100%
     padding: 1rem !important
 
-  .banner-container
-    width: 90vw
-    margin: 1rem auto
+  .banner-img
+    max-height: 300px
 
-  .queue-item
-    height: 110px
+  .time-display
+    font-size: 2rem
+
+  .date-display
+    font-size: 1.2rem
 
   .queue-number, .counter-number
-    font-size: 3em
+    font-size: 1.5rem
 
   .counter-label
-    font-size: 1.1em
-
-  .header-container
-    margin-left: 1rem
-
-  .university-title
-    margin-left: 1.5rem
-    font-size: 2.5em
+    font-size: 1.1rem
 
 @media (max-width: 768px)
   .university-title
-    font-size: 1.8em
+    font-size: 1.8rem
     margin-left: 1rem
 
   .campus-title
-    font-size: 1.2rem
+    font-size: 1.1rem
     margin-right: 1rem
 
   .logo-img
     width: 80px
 
-  .header-container
-    margin-left: 0.5rem
-
-  .time-display
-    font-size: 1.8em
-
-  .date-display
-    font-size: 1.3rem
-
   .banner-img
-    height: 350px
+    max-height: 250px
 
   .queue-item
-    height: 90px
-
-  .queue-number, .counter-number
-    font-size: 2em
-
-  .counter-label
-    font-size: 1em
+    min-height: 100px
 
 @media (max-width: 480px)
   .university-title
-    font-size: 1.2em
+    font-size: 1.5rem
 
   .campus-title
-    font-size: 0.9rem
-
-  .banner-img
-    height: 250px
-
-  .queue-item
-    height: 80px
+    font-size: 1rem
 
   .queue-number, .counter-number
-    font-size: 1.5em
+    font-size: 1.2rem
 
   .counter-label
-    font-size: 0.9em
+    font-size: 0.9rem
 
   .time-display
-    font-size: 1.5em
+    font-size: 1.3rem
 
   .date-display
-    font-size: 1.1rem
+    font-size: 1rem
 
 @media (max-width: 360px)
   .university-title
-    font-size: 1em
+    font-size: 1.2rem
 
   .campus-title
     font-size: 0.8rem
@@ -416,17 +364,17 @@ onMounted(() => {
     width: 60px
 
   .queue-item
-    height: 70px
+    min-height: 80px
 
   .queue-number, .counter-number
-    font-size: 1em
+    font-size: 1rem
 
   .counter-label
-    font-size: 0.8em
+    font-size: 0.8rem
 
   .time-display
-    font-size: 1.3em
+    font-size: 1rem
 
   .date-display
-    font-size: 1rem
+    font-size: 0.9rem
 </style>

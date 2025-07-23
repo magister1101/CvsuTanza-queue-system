@@ -60,7 +60,15 @@
         </q-item-section>
       </q-item>
     </div>
-    <div>
+    <div class="q-py-sm">
+      <q-item clickable @click="router.replace(`/new/verifyStudent`)">
+        <q-item-section avatar>
+          <q-icon name="confirmation_number" />
+        </q-item-section>
+        <q-item-section> Verify </q-item-section>
+      </q-item>
+    </div>
+    <div class="q-py-sm">
       <q-item clickable @click="router.replace(`/new/adminCreateAccount`)">
         <q-item-section avatar>
           <q-icon name="people" />
