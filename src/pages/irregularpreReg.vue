@@ -114,9 +114,14 @@ async function fetchCourses() {
         scheduleMap[courseId] = []
       }
 
+      // Convert multiple schedule entries to a readable string
+      const scheduleText = sched.schedule
+        .map((s) => `${s.day} (${s.startTime} - ${s.endTime})`)
+        .join(', ')
+
       scheduleMap[courseId].push({
         ...sched,
-        dayTime: `${sched.day} (${sched.startTime} - ${sched.endTime})`,
+        dayTime: scheduleText,
       })
     }
 
@@ -136,6 +141,7 @@ async function fetchCourses() {
     tableLoading.value = false
   }
 }
+
 
 // When a schedule is selected
 function onScheduleSelected(course, scheduleId) {

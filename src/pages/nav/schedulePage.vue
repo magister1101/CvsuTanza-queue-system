@@ -6,7 +6,7 @@
 
     <!-- Dialog Form -->
     <q-dialog v-model="showDialog" persistent>
-      <q-card style="max-width: 500px; width: 100%">
+      <q-card style="max-width: 600px; width: 100%">
         <q-card-section>
           <div class="text-h6">Create Schedule</div>
         </q-card-section>
@@ -26,34 +26,44 @@
               :loading="loadingCourses"
             />
 
-            <!-- Day Selector -->
             <q-select
-              v-model="scheduleDay"
-              :options="dayOptions"
-              option-label="label"
-              option-value="value"
-              label="Day"
+              v-model="scheduleSection"
+              :options="sectionOptions"
+              label="Select Section"
               filled
-              class="q-mt-md"
               emit-value
               map-options
+              :loading="loadingCourses"
             />
 
-            <!-- Time Inputs -->
-            <q-input
-              v-model="scheduleStartTime"
-              label="Start Time"
-              filled
-              class="q-mt-md"
-              type="time"
-            />
-            <q-input
-              v-model="scheduleEndTime"
-              label="End Time"
-              filled
-              class="q-mt-md"
-              type="time"
-            />
+            <!-- Repeatable Schedule Entries -->
+            <div class="q-mt-md" v-for="(entry, index) in scheduleEntries" :key="index">
+              <div class="row q-col-gutter-sm items-center">
+                <div class="col">
+                  <q-select
+                    v-model="entry.day"
+                    :options="dayOptions"
+                    label="Day"
+                    filled
+                    emit-value
+                    map-options
+                  />
+                </div>
+                <div class="col">
+                  <q-input v-model="entry.startTime" label="Start Time" type="time" filled />
+                </div>
+                <div class="col">
+                  <q-input v-model="entry.endTime" label="End Time" type="time" filled />
+                </div>
+                <div class="col-auto">
+                  <q-btn round icon="close" color="negative" @click="removeEntry(index)" />
+                </div>
+              </div>
+            </div>
+
+            <div class="q-mt-md">
+              <q-btn flat color="primary" icon="add" label="Add Day" @click="addEntry" />
+            </div>
           </q-card-section>
 
           <q-card-actions align="right">
@@ -75,7 +85,6 @@
     />
   </q-page>
 </template>
-
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
@@ -83,20 +92,16 @@ import axios from 'axios'
 
 const $q = useQuasar()
 
-// Dialog toggle
+// Dialog and states
 const showDialog = ref(false)
-
-// Loading states
 const loadingCourses = ref(true)
 const submitting = ref(false)
 
 // Form data
 const scheduleCourse = ref('')
-const scheduleDay = ref('')
-const scheduleStartTime = ref('')
-const scheduleEndTime = ref('')
+const scheduleSection = ref('')
+const scheduleEntries = ref([{ day: '', startTime: '', endTime: '' }])
 
-// Day options
 const dayOptions = ref([
   { label: 'Monday', value: 'Monday' },
   { label: 'Tuesday', value: 'Tuesday' },
@@ -106,21 +111,36 @@ const dayOptions = ref([
   { label: 'Saturday', value: 'Saturday' },
   { label: 'Sunday', value: 'Sunday' },
 ])
+const sectionOptions = ref([
+  { label: '1', value: '1' },
+  { label: '2', value: '2' },
+  { label: '3', value: '3' },
+  { label: '4', value: '4' },
+  { label: '5', value: '5' },
+  { label: '6', value: '6' },
+  { label: '7', value: '7' },
+])
 
-// Courses
 const courseOptions = ref([])
-
-// Schedules
 const schedules = ref([])
 
 const columns = [
   { name: 'code', label: 'Code', field: 'code', align: 'left' },
-  { name: 'course', label: 'Course', field: (row) => row.course.name, align: 'left' },
-  { name: 'day', label: 'Day', field: 'day', align: 'left' },
-  { name: 'startTime', label: 'Start Time', field: 'startTime', align: 'left' },
-  { name: 'endTime', label: 'End Time', field: 'endTime', align: 'left' },
+  {
+    name: 'course',
+    label: 'Course',
+    field: (row) => row.course?.name || row.course,
+    align: 'left',
+  },
+  {
+    name: 'schedule',
+    label: 'Schedule',
+    field: (row) => row.schedule.map((s) => `${s.day} (${s.startTime}-${s.endTime})`).join(', '),
+    align: 'left',
+  },
 ]
 
+// Functions
 const getCourses = async () => {
   try {
     const res = await axios.get(`${process.env.api_host}/courses`)
@@ -136,7 +156,6 @@ const getSchedules = async () => {
   try {
     const res = await axios.get(`${process.env.api_host}/courses/getSchedule`)
     schedules.value = res.data
-    console.log(schedules.value)
   } catch (err) {
     $q.notify({ type: 'negative', message: 'Failed to load schedules' })
   }
@@ -148,10 +167,9 @@ const createSchedule = async () => {
 
     const payload = {
       course: scheduleCourse.value,
-      day: scheduleDay.value,
-      startTime: scheduleStartTime.value,
-      endTime: scheduleEndTime.value,
+      section: scheduleSection.value,
       code: generateCode(),
+      schedule: scheduleEntries.value,
     }
 
     await axios.post(`${process.env.api_host}/courses/createSchedule`, payload)
@@ -167,17 +185,23 @@ const createSchedule = async () => {
   }
 }
 
+function addEntry() {
+  scheduleEntries.value.push({ day: '', startTime: '', endTime: '' })
+}
+
+function removeEntry(index) {
+  scheduleEntries.value.splice(index, 1)
+}
+
 function resetForm() {
   scheduleCourse.value = ''
-  scheduleDay.value = ''
-  scheduleStartTime.value = ''
-  scheduleEndTime.value = ''
+  scheduleEntries.value = [{ day: '', startTime: '', endTime: '' }]
 }
 
 function generateCode() {
   const courseName =
-    courseOptions.value.find((c) => c._id === scheduleCourse.value)?.name || 'UNKNOWN'
-  return `${courseName}-${scheduleDay.value}-${scheduleStartTime.value.replace(':', '')}`
+    courseOptions.value.find((c) => c._id === scheduleCourse.value)?.code || 'UNKNOWN'
+  return `${courseName}-${Date.now()}`
 }
 
 onMounted(() => {

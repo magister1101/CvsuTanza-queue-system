@@ -112,21 +112,31 @@
         <q-separator spaced />
         <q-card-section>
           <div class="text-subtitle1 q-mb-sm">Schedule</div>
-          <div v-if="dialogSchedule.length">
+          <div v-if="groupedSchedule.length">
             <q-list bordered separator>
-              <q-item v-for="(sched, i) in dialogSchedule" :key="i" class="q-pa-sm">
+              <q-item v-for="(group, index) in groupedSchedule" :key="index" class="q-pa-sm column">
                 <q-item-section>
-                  <div>
-                    <strong>Day:</strong> {{ sched.day }}<br />
-                    <strong>Time:</strong> {{ sched.startTime }} - {{ sched.endTime }}<br />
+                  <!-- Header: Course, Section, Code -->
+                  <div class="text-subtitle1">
+                    <strong>Course:</strong> {{ group.course }}<br />
+                    <strong>Section:</strong> {{ group.section }}<br />
                     <strong>Code:</strong>
                     <q-badge
                       color="primary"
                       class="cursor-pointer"
-                      @click="copyToClipboard(sched.code)"
+                      @click="copyToClipboard(group.code)"
                     >
-                      {{ sched.code }}
+                      {{ group.code }}
                     </q-badge>
+                  </div>
+
+                  <!-- Schedule list -->
+                  <div class="q-ml-lg q-mt-sm">
+                    <div v-for="(sched, i) in group.schedules" :key="i">
+                      <strong>Day:</strong> {{ sched.day }}<br />
+                      <strong>Time:</strong> {{ sched.startTime }} - {{ sched.endTime }}
+                      <q-separator spaced />
+                    </div>
                   </div>
                 </q-item-section>
               </q-item>
@@ -144,7 +154,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import Axios from 'axios'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -165,6 +175,31 @@ const dialogSchedule = ref([])
 const preRegTotal = ref(0)
 const regTotal = ref(0)
 const appTotal = ref(0)
+
+const groupedSchedule = computed(() => {
+  const groups = {}
+
+  dialogSchedule.value.forEach((sched) => {
+    const key = sched.code // Code is still the key
+
+    if (!groups[key]) {
+      groups[key] = {
+        code: sched.code,
+        section: sched.section,
+        course: sched.courseName || sched.course, // fallback if courseName is not set
+        schedules: [],
+      }
+    }
+
+    groups[key].schedules.push({
+      day: sched.day,
+      startTime: sched.startTime,
+      endTime: sched.endTime,
+    })
+  })
+
+  return Object.values(groups)
+})
 
 const columns = [
   {
@@ -209,7 +244,19 @@ const pagination = ref({ rowsPerPage: 10 })
 
 function openDialog(row) {
   dialogCourseToTake.value = row.courseToTake || []
-  dialogSchedule.value = row.schedule || []
+
+  dialogSchedule.value = (row.schedule || []).flatMap((subject) => {
+    // Find course name from dialogCourseToTake
+    const courseInfo = dialogCourseToTake.value.find((c) => c._id === subject.course)
+
+    return (subject.schedule || []).map((sched) => ({
+      ...sched,
+      code: subject.code,
+      section: subject.section,
+      courseName: courseInfo ? courseInfo.name : 'Unknown Course',
+    }))
+  })
+
   dialogOpen.value = true
 }
 
