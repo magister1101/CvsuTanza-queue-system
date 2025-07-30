@@ -1,5 +1,25 @@
 <template>
   <q-page class="q-pa-md">
+    <div class="stats-container">
+      <div class="stat-card">
+        <q-card-section>
+          <div class="text-h4 text-weight-bold">{{ preRegTotal }}</div>
+          <div class="text-h6">Pre-Registered Students</div>
+        </q-card-section>
+      </div>
+      <div class="stat-card">
+        <q-card-section>
+          <div class="text-h4 text-weight-bold">{{ regTotal }}</div>
+          <div class="text-h6">Registered Students</div>
+        </q-card-section>
+      </div>
+      <div class="stat-card">
+        <q-card-section>
+          <div class="text-h4 text-weight-bold">{{ appTotal }}</div>
+          <div class="text-h6">Approved Students</div>
+        </q-card-section>
+      </div>
+    </div>
     <!-- Course Table -->
     <q-card>
       <q-card-section>
@@ -20,7 +40,18 @@
         <!-- View button per row -->
         <template v-slot:body-cell-actions="props">
           <q-td :props="props" class="text-center">
-            <q-btn dense flat color="primary" label="View" @click="openDialog(props.row)" />
+            <q-btn dense flat color="green" label="View" @click="openDialog(props.row)" />
+          </q-td>
+
+          <q-td :props="props" class="text-center">
+            <q-btn
+              dense
+              flat
+              color="red"
+              label="reject"
+              @click="reject(props.row._id)"
+              :loading="verifyLoading"
+            />
           </q-td>
 
           <q-td :props="props" class="text-center">
@@ -105,6 +136,10 @@ const tableLoading = ref(true)
 const dialogOpen = ref(false)
 const dialogCourseToTake = ref([])
 
+const preRegTotal = ref(0)
+const regTotal = ref(0)
+const appTotal = ref(0)
+
 function redirect(path) {
   router.push(path)
 }
@@ -163,8 +198,14 @@ const columns = [
   },
   {
     name: 'actions',
-    label: 'Action',
+    label: 'View',
     field: 'action',
+    align: 'center',
+  },
+  {
+    name: 'reject',
+    label: 'Reject',
+    field: 'reject',
     align: 'center',
   },
   {
@@ -189,6 +230,7 @@ async function getUser() {
     })
 
     userData.value = response.data
+    console.log(userData.value)
   } catch (err) {
     console.error('Error fetching user:', err)
   }
@@ -197,13 +239,37 @@ async function getUser() {
 async function fetchStudents() {
   try {
     const res = await Axios.get(
-      `${process.env.api_host}/users?role=student&isEnrolled=true&isApproved=false&program=${userData.value.course}`,
+      `${process.env.api_host}/users?isArchived=false&role=student&isEnrolled=true&isApproved=false&program=${userData.value.role}&year=${userData.value.year}`,
     )
     rows.value = res.data
   } catch (err) {
     console.error('Error fetching courses:', err)
   } finally {
     tableLoading.value = false
+  }
+}
+
+async function getTotalCounts() {
+  try {
+    const preRegRes = await Axios.get(
+      `${process.env.api_host}/users?isArchived=false&role=student&program=${userData.value.role}&year=${userData.value.year}&isEnrolled=false&isApproved=false`,
+    )
+
+    preRegTotal.value = preRegRes.data.length
+
+    const regRes = await Axios.get(
+      `${process.env.api_host}/users?isArchived=false&role=student&program=${userData.value.role}&year=${userData.value.year}&isEnrolled=true&isApproved=false`,
+    )
+
+    regTotal.value = regRes.data.length
+
+    const appRes = await Axios.get(
+      `${process.env.api_host}/users?isArchived=false&role=student&program=${userData.value.role}&year=${userData.value.year}&isEnrolled=true&isApproved=true`,
+    )
+
+    appTotal.value = appRes.data.length
+  } catch (err) {
+    console.error('Error fetching counts:', err)
   }
 }
 
@@ -219,8 +285,34 @@ async function verify(id) {
       studentId: id,
     })
 
-    $q.notify({ type: 'positive', message: 'Students verified successfully' })
+    $q.notify({ type: 'positive', message: 'Student verified successfully' })
     fetchStudents()
+    getTotalCounts()
+  } catch (error) {
+    console.error('Error enrolling:', error)
+    $q.notify({ type: 'negative', message: 'Enrollment failed' })
+  } finally {
+    verifyLoading.value = false
+  }
+}
+
+async function reject(id) {
+  try {
+    verifyLoading.value = true
+
+    const rejectStudent = await Axios.post(`${process.env.api_host}/users/update/${id}`, {
+      isApproved: false,
+      isEnrolled: false,
+    })
+
+    //send email of reject
+    const rejectEmail = await Axios.post(`${process.env.api_host}/queues/rejectEnrollment`, {
+      studentId: id,
+    })
+
+    $q.notify({ type: 'positive', message: 'Student rejected successfully' })
+    fetchStudents()
+    getTotalCounts()
   } catch (error) {
     console.error('Error enrolling:', error)
     $q.notify({ type: 'negative', message: 'Enrollment failed' })
@@ -231,6 +323,33 @@ async function verify(id) {
 
 onMounted(async () => {
   await getUser()
+  await getTotalCounts()
   await fetchStudents()
 })
 </script>
+
+<style lang="sass" scoped>
+
+.stats-container
+  display: flex
+  flex-wrap: wrap
+  gap: 20px
+  margin-top: 20px
+  justify-content: space-between
+
+.stat-card
+  color: #30582d
+
+  border-radius: 14px
+  flex: 1
+  min-width: 250px
+  max-width: calc(25% - 15px)
+
+@media (max-width: 1200px)
+  .stat-card
+    max-width: calc(50% - 10px)
+
+@media (max-width: 600px)
+  .stat-card
+    max-width: 100%
+</style>

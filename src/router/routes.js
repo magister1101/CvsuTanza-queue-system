@@ -43,7 +43,8 @@ const routes = [
       { path: 'adminQueuePage', component: () => import('src/pages/adminQueuePage.vue') },
       { path: 'queueList', component: () => import('src/pages/queueList.vue') },
       { path: 'email', component: () => import('src/pages/emailPage.vue') },
-      { path: 'verifyStudent', component: () => import('src/pages/verifyStudent.vue') },
+      { path: 'verifyStudent', component: () => import('src/pages/nav/verifyStudent.vue') },
+      { path: 'schedule', component: () => import('src/pages/nav/schedulePage.vue') },
     ],
   },
 
