@@ -9,13 +9,27 @@
 
     <!-- Course Table -->
     <q-card>
+      <!-- Single Search Bar -->
+      <div class="q-mb-md">
+        <q-input
+          filled
+          v-model="searchQuery"
+          label="Search by Program, Course Title, or Code"
+          debounce="300"
+          clearable
+        >
+          <template v-slot:append>
+            <q-icon name="search" />
+          </template>
+        </q-input>
+      </div>
       <q-card-section>
         <div class="text-h6">Course List</div>
       </q-card-section>
 
       <q-table
         title="Courses"
-        :rows="rows"
+        :rows="filteredRows"
         :columns="columns"
         row-key="_id"
         flat
@@ -55,7 +69,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import Axios from 'axios'
 import { useRouter } from 'vue-router'
 
@@ -66,21 +80,42 @@ const userData = ref({})
 const tableLoading = ref(true)
 const enrollLoading = ref(false)
 
-const selectedSchedules = ref({}) // { courseId: scheduleId }
-const scheduleOptions = ref({}) // { courseId: [schedules] }
-
+const selectedSchedules = ref({})
+const scheduleOptions = ref({})
 const pagination = ref({ rowsPerPage: 10 })
 
-// Table columns with added schedule column
+// Single search query
+const searchQuery = ref('')
+
+// Table columns
 const columns = [
-  { name: 'name', label: 'Course Title', field: 'name', sortable: true },
-  { name: 'code', label: 'Code', field: 'code', sortable: true },
-  { name: 'unit', label: 'Units', field: 'unit', sortable: true },
-  { name: 'course', label: 'Program', field: 'course', sortable: true },
-  { name: 'year', label: 'Year', field: 'year', sortable: true },
-  { name: 'semester', label: 'Semester', field: 'semester', sortable: true },
-  { name: 'schedule', label: 'Schedule', field: 'schedule' },
+  { name: 'schedule', label: 'Schedule', field: 'schedule', align: 'center' },
+  { name: 'name', label: 'Course Title', field: 'name', sortable: true, align: 'left' },
+  { name: 'code', label: 'Code', field: 'code', sortable: true, align: 'left' },
+  { name: 'unit', label: 'Units', field: 'unit', sortable: true, align: 'left' },
+  { name: 'course', label: 'Program', field: 'course', sortable: true, align: 'left' },
+  { name: 'year', label: 'Year', field: 'year', sortable: true, align: 'left' },
+  { name: 'semester', label: 'Semester', field: 'semester', sortable: true, align: 'left' },
 ]
+
+// Filtered rows
+const filteredRows = computed(() => {
+  if (!searchQuery.value) return rows.value
+  const query = searchQuery.value.toLowerCase()
+
+  return rows.value.filter(
+    (row) =>
+      String(row.name || '')
+        .toLowerCase()
+        .includes(query) ||
+      String(row.course || '')
+        .toLowerCase()
+        .includes(query) ||
+      String(row.code || '')
+        .toLowerCase()
+        .includes(query),
+  )
+})
 
 function redirect(path) {
   router.push(path)
@@ -106,22 +141,19 @@ async function fetchCourses() {
     const scheduleRes = await Axios.get(`${process.env.api_host}/courses/getSchedule`)
     const allSchedules = scheduleRes.data
 
-    const scheduleMap = {} // courseId -> schedules[]
+    const scheduleMap = {}
 
     for (const sched of allSchedules) {
       const courseId = typeof sched.course === 'string' ? sched.course : sched.course?._id
       if (!scheduleMap[courseId]) {
         scheduleMap[courseId] = []
       }
-
-      // Convert multiple schedule entries to a readable string
       const scheduleText = sched.schedule
         .map((s) => `${s.day} (${s.startTime} - ${s.endTime})`)
         .join(', ')
-
       scheduleMap[courseId].push({
         ...sched,
-        dayTime: scheduleText,
+        dayTime: `Section ${sched.section} - ${scheduleText}`, // now shows section
       })
     }
 
@@ -142,8 +174,6 @@ async function fetchCourses() {
   }
 }
 
-
-// When a schedule is selected
 function onScheduleSelected(course, scheduleId) {
   selectedSchedules.value[course._id] = scheduleId
 }
@@ -151,17 +181,14 @@ function onScheduleSelected(course, scheduleId) {
 async function enroll() {
   try {
     enrollLoading.value = true
-
     const courseToTakeIds = Object.keys(selectedSchedules.value)
     const scheduleIds = Object.values(selectedSchedules.value)
-
     await Axios.post(`${process.env.api_host}/users/update/${userData.value._id}`, {
       courseToTake: courseToTakeIds,
       schedule: scheduleIds,
       isEnrolled: true,
       isApproved: false,
     })
-
     redirect('/thankYou')
   } catch (err) {
     console.error('Error during enrollment:', err)
@@ -170,7 +197,6 @@ async function enroll() {
   }
 }
 
-// Run on page load
 onMounted(async () => {
   await getUser()
   await fetchCourses()

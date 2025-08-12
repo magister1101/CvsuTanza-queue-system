@@ -9,7 +9,7 @@
         </q-card-section>
         <!-- buttons add student/export -->
         <div class="button-container">
-          <q-card-section class="button-section" v-if="isAdmin">
+          <!-- <q-card-section class="button-section" v-if="isAdmin">
             <q-btn
               label="Add Student"
               no-caps
@@ -17,7 +17,7 @@
               flat
               class="action-button"
             />
-          </q-card-section>
+          </q-card-section> -->
 
           <q-card-section class="button-section" v-if="isAdmin">
             <q-btn

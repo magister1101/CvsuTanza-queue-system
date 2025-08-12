@@ -72,6 +72,30 @@
                     </div>
                   </div>
                 </div>
+                <!-- Schedule Section -->
+                <div
+                  class="schedule-container"
+                  v-if="userData.schedule && userData.schedule.length"
+                >
+                  <div class="section-header">Schedule</div>
+                  <div class="schedule-grid">
+                    <div v-for="sched in userData.schedule" :key="sched._id" class="schedule-cell">
+                      <div><strong>Code:</strong> {{ sched.code }}</div>
+                      <div><strong>Section:</strong> {{ sched.section }}</div>
+                      <div class="days">
+                        <div
+                          v-for="daySched in sched.schedule"
+                          :key="daySched._id"
+                          class="day-cell"
+                        >
+                          <strong>{{ daySched.day }}:</strong>
+                          {{ daySched.startTime }} - {{ daySched.endTime }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="divBtn">
                   <q-btn
                     label="Done"
@@ -205,6 +229,34 @@ onMounted(async () => {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1)
   border: 2px solid #ccc
   word-wrap: break-word
+  .schedule-container
+  margin-top: 20px
+  text-align: center
+
+.schedule-grid
+  display: grid
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr))
+  gap: 15px
+  padding: 20px
+
+.schedule-cell
+  padding: 10px
+  background: #fff
+  border-radius: 8px
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1)
+  border: 2px solid #ccc
+  word-wrap: break-word
+
+.day-time-list
+  margin-top: 8px
+  text-align: left
+
+.day-time
+  background: #f7f7f7
+  border-radius: 6px
+  padding: 5px
+  margin-bottom: 4px
+
 
 @media (max-width: 400px)
   .content-width
