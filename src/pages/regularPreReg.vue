@@ -85,20 +85,15 @@ async function getCourses(user) {
     pageLoad.value = false
   }
 }
-
 async function enroll() {
   try {
     enrollLoading.value = true
-    const response = await Axios.post(
-      `${process.env.api_host}/users/update/${userData.value._id}`,
-      {
-        courseToTake: courses.value,
-        isEnrolled: true,
-        isApproved: false,
-      },
-    )
+    const semesterRes = await Axios.get(`${process.env.api_host}/courses/getSemester`)
 
-    redirect('/thankYou')
+    await Axios.post(`${process.env.api_host}/users/enroll/${userData.value._id}`, {
+      courseToTake: courses.value,
+      semester: semesterRes.data[0].semester, // ✅ only send the string
+    })
   } catch (error) {
     console.error(error)
   } finally {

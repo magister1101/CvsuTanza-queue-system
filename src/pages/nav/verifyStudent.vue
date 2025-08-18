@@ -1,5 +1,6 @@
 <template>
   <q-page class="q-pa-md">
+    <!-- Stats -->
     <div class="stats-container">
       <div class="stat-card">
         <q-card-section>
@@ -42,35 +43,67 @@
           <q-td :props="props" class="text-center">
             <q-btn dense flat color="green" label="View" @click="openDialog(props.row)" />
           </q-td>
-
-          <q-td :props="props" class="text-center">
-            <q-btn
-              dense
-              flat
-              color="red"
-              label="Reject"
-              @click="reject(props.row._id)"
-              :loading="verifyLoading"
-            />
-          </q-td>
-
-          <q-td :props="props" class="text-center">
-            <q-btn
-              dense
-              flat
-              color="primary"
-              label="Verify"
-              @click="verify(props.row._id)"
-              :loading="verifyLoading"
-            />
-          </q-td>
         </template>
       </q-table>
     </q-card>
 
     <!-- Dialog -->
     <q-dialog v-model="dialogOpen">
-      <q-card style="min-width: 300px; max-width: 600px">
+      <q-card style="min-width: 300px; max-width: 800px">
+        <q-card-section>
+          <div class="text-subtitle1 q-mb-sm">Stud</div>
+          <q-card-section>
+            <div class="text-subtitle1 q-mb-sm">
+              Name: {{ dialogStudent.lastName }}, {{ dialogStudent.firstName }}
+            </div>
+            <div class="text-subtitle1 q-mb-sm">
+              Student Number: {{ dialogStudent.studentNumber }}
+            </div>
+            <div class="text-subtitle1 q-mb-sm">
+              Year & Section: {{ dialogStudent.year }} - {{ dialogStudent.section }}
+            </div>
+          </q-card-section>
+        </q-card-section>
+
+        <q-separator spaced />
+
+        <!-- Courses with Grades -->
+        <q-card-section>
+          <div class="text-subtitle1 q-mb-sm">Courses & Grades</div>
+          <div v-if="dialogCourses.length" class="scroll-section">
+            <q-list bordered separator>
+              <q-item v-for="(course, index) in dialogCourses" :key="index">
+                <q-item-section>
+                  <strong>{{ course.courseId?.name }}</strong> ({{ course.courseId?.code }})<br />
+                  Grade: {{ course.grade }}
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </div>
+          <div v-else>No grades found.</div>
+        </q-card-section>
+
+        <q-separator spaced />
+
+        <!-- Course To Take -->
+        <q-card-section>
+          <div class="text-subtitle1 q-mb-sm">Course To Take</div>
+          <div v-if="dialogCourseToTake.length">
+            <q-list bordered separator>
+              <q-item v-for="(course, index) in dialogCourseToTake" :key="index">
+                <q-item-section>
+                  <strong>{{ course.name }}</strong> ({{ course.code }})<br />
+                  Unit: {{ course.unit }} | Semester: {{ course.semester }}
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </div>
+          <div v-else>No course to take found.</div>
+        </q-card-section>
+
+        <q-separator spaced />
+
+        <!-- Schedule List -->
         <!-- Add Schedule Form -->
         <q-card-section>
           <div class="text-subtitle1 q-mb-sm">Add Schedule</div>
@@ -99,12 +132,9 @@
             </div>
           </div>
         </q-card-section>
-
-        <q-separator spaced />
-
-        <!-- Schedule List -->
         <q-card-section>
           <div class="text-subtitle1 q-mb-sm">Schedule</div>
+
           <div v-if="groupedSchedule.length">
             <q-list bordered separator>
               <q-item
@@ -151,8 +181,23 @@
           <div v-else>No schedule found.</div>
         </q-card-section>
 
+        <!-- Actions inside dialog -->
         <q-card-actions align="right">
-          <q-btn flat label="Close" color="primary" v-close-popup @click="fetchStudents" />
+          <q-btn
+            flat
+            label="Reject"
+            color="red"
+            @click="reject(currentUserId)"
+            :loading="verifyLoading"
+          />
+          <q-btn
+            flat
+            label="Verify"
+            color="primary"
+            @click="verify(currentUserId)"
+            :loading="verifyLoading"
+          />
+          <q-btn flat label="Close" color="grey" v-close-popup @click="fetchStudents" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -175,38 +220,29 @@ const verifyLoading = ref(false)
 const tableLoading = ref(true)
 
 const dialogOpen = ref(false)
-// dialogCourseToTake used to find course name for flattened UI
 const dialogCourseToTake = ref([])
-// Raw schedule array in DB shape (array of subjects with schedule arrays)
+const dialogCourses = ref([])
 const dialogScheduleRaw = ref([])
-// Flattened schedule used for UI (one entry per day/time + code/section/courseName)
 const dialogSchedule = ref([])
 const currentUserId = ref(null)
+
+const dialogStudent = ref()
 
 const preRegTotal = ref(0)
 const regTotal = ref(0)
 const appTotal = ref(0)
 
-// Schedules from API for adding
 const selectedSchedule = ref(null)
 const scheduleOptions = ref([])
 
-// loading flags
 const removeLoading = ref(false)
 const addLoading = ref(false)
 
-//
-// Helpers
-//
 function flattenFromRaw(raw) {
-  // raw: [{ course: <id|obj>, code, section, schedule: [{day,startTime,endTime}] , ... }, ...]
   return (raw || []).flatMap((subject) => {
-    // resolve courseName:
     let courseName = 'Unknown Course'
-    // first try dialogCourseToTake (student's enrolled courses)
     if (dialogCourseToTake.value && dialogCourseToTake.value.length) {
       const found = dialogCourseToTake.value.find((c) => {
-        // subject.course might be id string or an object
         if (!c || !subject.course) return false
         const subjCourseId =
           typeof subject.course === 'string'
@@ -216,19 +252,15 @@ function flattenFromRaw(raw) {
       })
       if (found && found.name) courseName = found.name
     }
-    // fallback if subject.course itself contains name
     if (subject.course && subject.course.name && typeof subject.course === 'object') {
       courseName = subject.course.name
     }
-    // if subject has courseName property (we set it when adding), use it
     if (subject.courseName) courseName = subject.courseName
 
     return (subject.schedule || []).map((s) => ({
-      // copy day/time
       day: s.day,
       startTime: s.startTime,
       endTime: s.endTime,
-      // meta
       code: subject.code,
       section: subject.section,
       courseName,
@@ -275,8 +307,6 @@ const columns = [
     format: (val) => (val ? 'Yes' : 'No'),
   },
   { name: 'actions', label: 'View', field: 'action', align: 'center' },
-  { name: 'reject', label: 'Reject', field: 'reject', align: 'center' },
-  { name: 'verify', label: 'Verify', field: 'verify', align: 'center' },
 ]
 
 const pagination = ref({ rowsPerPage: 10 })
@@ -284,11 +314,11 @@ const pagination = ref({ rowsPerPage: 10 })
 function openDialog(row) {
   currentUserId.value = row._id
   dialogCourseToTake.value = row.courseToTake || []
-  // store raw schedule as-is (expected DB shape)
+  dialogCourses.value = row.courses || []
   dialogScheduleRaw.value = JSON.parse(JSON.stringify(row.schedule || []))
-  // build flattened UI schedule
   dialogSchedule.value = flattenFromRaw(dialogScheduleRaw.value)
   dialogOpen.value = true
+  dialogStudent.value = row
 }
 
 async function fetchSchedules() {
@@ -305,11 +335,11 @@ async function fetchSchedules() {
     console.error('Error fetching schedules:', err)
   }
 }
+
 async function addSchedule() {
   const selected = scheduleOptions.value.find((opt) => opt._id === selectedSchedule.value)
   if (!selected || !currentUserId.value) return
 
-  // For UI display — keep the subject object in dialogScheduleRaw
   const subject = {
     course: selected.data.course._id || selected.data.course,
     code: selected.data.code,
@@ -322,21 +352,19 @@ async function addSchedule() {
     courseName: selected.data.course.name,
   }
 
-  // Optimistic update for UI
   dialogScheduleRaw.value.push(subject)
   dialogSchedule.value = flattenFromRaw(dialogScheduleRaw.value)
 
   addLoading.value = true
+  verifyLoading.value = true
   try {
     await Axios.post(`${process.env.api_host}/users/addSchedule`, {
       userId: currentUserId.value,
       scheduleId: selected._id,
     })
-
     $q.notify({ type: 'positive', message: 'Schedule added successfully' })
     selectedSchedule.value = null
   } catch (err) {
-    // Rollback optimistic update
     dialogScheduleRaw.value = dialogScheduleRaw.value.filter(
       (s) => s.code !== subject.code || s.section !== subject.section,
     )
@@ -345,16 +373,14 @@ async function addSchedule() {
     $q.notify({ type: 'negative', message: 'Failed to save schedule' })
   } finally {
     addLoading.value = false
+    verifyLoading.value = false
   }
 }
 
-// remove whole subject group (by grouped index)
 async function removeSchedule(index) {
   const groups = groupedSchedule.value
   if (!groups[index]) return
-
   const codeToRemove = groups[index].code
-  // optimistic: filter out subjects with that code
   const previousRaw = JSON.parse(JSON.stringify(dialogScheduleRaw.value))
   dialogScheduleRaw.value = dialogScheduleRaw.value.filter((s) => s.code !== codeToRemove)
   dialogSchedule.value = flattenFromRaw(dialogScheduleRaw.value)
@@ -366,7 +392,6 @@ async function removeSchedule(index) {
     })
     $q.notify({ type: 'positive', message: 'Schedule removed successfully' })
   } catch (err) {
-    // rollback
     dialogScheduleRaw.value = previousRaw
     dialogSchedule.value = flattenFromRaw(dialogScheduleRaw.value)
     console.error('Error removing schedule:', err)
@@ -465,6 +490,7 @@ async function verify(id) {
     $q.notify({ type: 'positive', message: 'Student verified successfully' })
     fetchStudents()
     getTotalCounts()
+    dialogOpen.value = false
   } catch (err) {
     console.error('Error verifying:', err)
     $q.notify({ type: 'negative', message: 'Verification failed' })
@@ -484,6 +510,7 @@ async function reject(id) {
     $q.notify({ type: 'positive', message: 'Student rejected successfully' })
     fetchStudents()
     getTotalCounts()
+    dialogOpen.value = false
   } catch (err) {
     console.error('Error rejecting:', err)
     $q.notify({ type: 'negative', message: 'Rejection failed' })
@@ -514,6 +541,11 @@ onMounted(async () => {
   flex: 1
   min-width: 250px
   max-width: calc(25% - 15px)
+
+.scroll-section
+  max-height: 200px
+  overflow-y: auto
+
 
 @media (max-width: 1200px)
   .stat-card

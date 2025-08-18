@@ -80,6 +80,7 @@
                   <div class="section-header">Schedule</div>
                   <div class="schedule-grid">
                     <div v-for="sched in userData.schedule" :key="sched._id" class="schedule-cell">
+                      <div><strong>Name:</strong> {{ sched.course.name }}</div>
                       <div><strong>Code:</strong> {{ sched.code }}</div>
                       <div><strong>Section:</strong> {{ sched.section }}</div>
                       <div class="days">
@@ -229,7 +230,7 @@ onMounted(async () => {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1)
   border: 2px solid #ccc
   word-wrap: break-word
-  .schedule-container
+.schedule-container
   margin-top: 20px
   text-align: center
 

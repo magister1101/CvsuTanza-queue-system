@@ -17,7 +17,7 @@
             <q-select
               v-model="scheduleCourse"
               :options="courseOptions"
-              option-label="name"
+              :option-label="(opt) => (opt ? `${opt.name} (${opt.course})` : '')"
               option-value="_id"
               label="Select Course"
               filled
@@ -50,10 +50,22 @@
                   />
                 </div>
                 <div class="col">
-                  <q-input v-model="entry.startTime" label="Start Time" type="time" filled />
+                  <q-input
+                    v-model="entry.startTime"
+                    label="Start Time"
+                    type="time"
+                    filled
+                    :readonly="entry.day === 'TBA'"
+                  />
                 </div>
                 <div class="col">
-                  <q-input v-model="entry.endTime" label="End Time" type="time" filled />
+                  <q-input
+                    v-model="entry.endTime"
+                    label="End Time"
+                    type="time"
+                    filled
+                    :readonly="entry.day === 'TBA'"
+                  />
                 </div>
                 <div class="col-auto">
                   <q-btn round icon="close" color="negative" @click="removeEntry(index)" />
@@ -80,13 +92,16 @@
       :rows="schedules"
       :columns="columns"
       row-key="_id"
+      :pagination="{ rowsPerPage: 10 }"
       flat
+      :loading="tableLoading"
       bordered
     />
   </q-page>
 </template>
+
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import axios from 'axios'
 
@@ -96,13 +111,16 @@ const $q = useQuasar()
 const showDialog = ref(false)
 const loadingCourses = ref(true)
 const submitting = ref(false)
+const tableLoading = ref(true)
 
 // Form data
 const scheduleCourse = ref('')
+const scheduleProgram = ref('')
 const scheduleSection = ref('')
 const scheduleEntries = ref([{ day: '', startTime: '', endTime: '' }])
 
 const dayOptions = ref([
+  { label: 'TBA', value: 'TBA' },
   { label: 'Monday', value: 'Monday' },
   { label: 'Tuesday', value: 'Tuesday' },
   { label: 'Wednesday', value: 'Wednesday' },
@@ -133,12 +151,41 @@ const columns = [
     align: 'left',
   },
   {
+    name: 'program',
+    label: 'Program',
+    field: (row) => row.program || '',
+    align: 'left',
+  },
+  {
     name: 'schedule',
     label: 'Schedule',
     field: (row) => row.schedule.map((s) => `${s.day} (${s.startTime}-${s.endTime})`).join(', '),
     align: 'left',
   },
 ]
+
+// Auto-set TBA times
+watch(
+  scheduleEntries,
+  (entries) => {
+    entries.forEach((entry) => {
+      if (entry.day === 'TBA') {
+        entry.startTime = 'TBA'
+        entry.endTime = 'TBA'
+      } else {
+        if (entry.startTime === 'TBA') entry.startTime = ''
+        if (entry.endTime === 'TBA') entry.endTime = ''
+      }
+    })
+  },
+  { deep: true },
+)
+
+// Watch course change to auto-fill program
+watch(scheduleCourse, (courseId) => {
+  const selected = courseOptions.value.find((c) => c._id === courseId)
+  scheduleProgram.value = selected?.program || ''
+})
 
 // Functions
 const getCourses = async () => {
@@ -158,6 +205,8 @@ const getSchedules = async () => {
     schedules.value = res.data
   } catch (err) {
     $q.notify({ type: 'negative', message: 'Failed to load schedules' })
+  } finally {
+    tableLoading.value = false
   }
 }
 
@@ -195,6 +244,7 @@ function removeEntry(index) {
 
 function resetForm() {
   scheduleCourse.value = ''
+  scheduleProgram.value = ''
   scheduleEntries.value = [{ day: '', startTime: '', endTime: '' }]
 }
 

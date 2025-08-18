@@ -135,7 +135,7 @@ async function getUser() {
 
 async function fetchCourses() {
   try {
-    const res = await Axios.get(`${process.env.api_host}/courses?program=${userData.value.course}`)
+    const res = await Axios.get(`${process.env.api_host}/courses?`)
     const allCourses = res.data
 
     const scheduleRes = await Axios.get(`${process.env.api_host}/courses/getSchedule`)
