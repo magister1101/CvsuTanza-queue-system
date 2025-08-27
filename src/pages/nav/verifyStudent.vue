@@ -49,9 +49,9 @@
 
     <!-- Dialog -->
     <q-dialog v-model="dialogOpen">
-      <q-card style="min-width: 300px; max-width: 800px">
+      <q-card class="student-info-dialog" style="min-width: 300px; max-width: 800px">
         <q-card-section>
-          <div class="text-subtitle1 q-mb-sm">Stud</div>
+          <div class="text-subtitle1 q-mb-sm">Student Information</div>
           <q-card-section>
             <div class="text-subtitle1 q-mb-sm">
               Name: {{ dialogStudent.lastName }}, {{ dialogStudent.firstName }}
@@ -88,6 +88,34 @@
         <!-- Course To Take -->
         <q-card-section>
           <div class="text-subtitle1 q-mb-sm">Course To Take</div>
+
+          <!-- Add Course Form -->
+          <div class="row q-col-gutter-sm q-mb-md">
+            <div class="col-12">
+              <q-select
+                v-model="selectedCourseToTake"
+                :options="courseOptions"
+                label="Select Course"
+                option-label="name"
+                option-value="_id"
+                dense
+                outlined
+                emit-value
+                map-options
+              />
+            </div>
+            <div class="col-12">
+              <q-btn
+                color="primary"
+                label="Add Course"
+                @click="addCourseToTake"
+                :disable="!selectedCourseToTake || addCourseLoading"
+                :loading="addCourseLoading"
+              />
+            </div>
+          </div>
+
+          <!-- Current List -->
           <div v-if="dialogCourseToTake.length">
             <q-list bordered separator>
               <q-item v-for="(course, index) in dialogCourseToTake" :key="index">
@@ -95,10 +123,39 @@
                   <strong>{{ course.name }}</strong> ({{ course.code }})<br />
                   Unit: {{ course.unit }} | Semester: {{ course.semester }}
                 </q-item-section>
+                <q-item-section side>
+                  <q-btn
+                    icon="delete"
+                    color="negative"
+                    dense
+                    flat
+                    @click="removeCourseToTake(course._id)"
+                    :loading="removeCourseLoading && removeCourseId === course._id"
+                  />
+                </q-item-section>
               </q-item>
             </q-list>
           </div>
           <div v-else>No course to take found.</div>
+        </q-card-section>
+
+        <q-separator spaced />
+
+        <!-- Course To Take Removed -->
+        <q-card-section>
+          <div class="text-subtitle1 q-mb-sm text-red">Removed Courses</div>
+
+          <div v-if="dialogCourseToTakeRemoved.length">
+            <q-list bordered separator>
+              <q-item v-for="(course, index) in dialogCourseToTakeRemoved" :key="index">
+                <q-item-section>
+                  <strong class="text-red">{{ course.name }}</strong> ({{ course.code }})<br />
+                  Unit: {{ course.unit }} | Semester: {{ course.semester }}
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </div>
+          <div v-else>No removed courses found.</div>
         </q-card-section>
 
         <q-separator spaced />
@@ -219,6 +276,13 @@ const userData = ref({})
 const verifyLoading = ref(false)
 const tableLoading = ref(true)
 
+const removeCourseLoading = ref(false)
+const removeCourseId = ref(null)
+
+const selectedCourseToTake = ref(null)
+const courseOptions = ref([])
+const addCourseLoading = ref(false)
+
 const dialogOpen = ref(false)
 const dialogCourseToTake = ref([])
 const dialogCourses = ref([])
@@ -237,6 +301,30 @@ const scheduleOptions = ref([])
 
 const removeLoading = ref(false)
 const addLoading = ref(false)
+
+async function removeCourseToTake(courseId) {
+  try {
+    removeCourseLoading.value = true
+    removeCourseId.value = courseId
+
+    console.log('user:' + currentUserId.value + ' courseId:' + courseId)
+
+    await Axios.post(`${process.env.api_host}/users/removeCourseToTake`, {
+      userId: currentUserId.value,
+      courseId,
+    })
+
+    dialogCourseToTake.value = dialogCourseToTake.value.filter((c) => c._id !== courseId)
+
+    $q.notify({ type: 'positive', message: 'Course removed successfully' })
+  } catch (err) {
+    console.error('Error removing course:', err)
+    $q.notify({ type: 'negative', message: 'Failed to remove course' })
+  } finally {
+    removeCourseLoading.value = false
+    removeCourseId.value = null
+  }
+}
 
 function flattenFromRaw(raw) {
   return (raw || []).flatMap((subject) => {
@@ -311,9 +399,12 @@ const columns = [
 
 const pagination = ref({ rowsPerPage: 10 })
 
+const dialogCourseToTakeRemoved = ref([])
+
 function openDialog(row) {
   currentUserId.value = row._id
   dialogCourseToTake.value = row.courseToTake || []
+  dialogCourseToTakeRemoved.value = row.courseToTakeRemoved || [] // ⬅️ added
   dialogCourses.value = row.courses || []
   dialogScheduleRaw.value = JSON.parse(JSON.stringify(row.schedule || []))
   dialogSchedule.value = flattenFromRaw(dialogScheduleRaw.value)
@@ -398,6 +489,39 @@ async function removeSchedule(index) {
     $q.notify({ type: 'negative', message: 'Failed to remove schedule' })
   } finally {
     removeLoading.value = false
+  }
+}
+
+async function fetchCourses() {
+  try {
+    const res = await Axios.get(`${process.env.api_host}/courses`)
+    courseOptions.value = res.data
+  } catch (err) {
+    console.error('Error fetching courses:', err)
+  }
+}
+
+async function addCourseToTake() {
+  try {
+    addCourseLoading.value = true
+
+    await Axios.post(`${process.env.api_host}/users/addCourseToTake`, {
+      userId: currentUserId.value,
+      courseId: selectedCourseToTake.value,
+    })
+
+    const addedCourse = courseOptions.value.find((c) => c._id === selectedCourseToTake.value)
+    if (addedCourse) {
+      dialogCourseToTake.value.push(addedCourse)
+    }
+
+    selectedCourseToTake.value = null
+    $q.notify({ type: 'positive', message: 'Course added successfully' })
+  } catch (err) {
+    console.error('Error adding course:', err)
+    $q.notify({ type: 'negative', message: err.response?.data?.message || 'Failed to add course' })
+  } finally {
+    addCourseLoading.value = false
   }
 }
 
@@ -524,10 +648,18 @@ onMounted(async () => {
   await getTotalCounts()
   await fetchStudents()
   await fetchSchedules()
+  await fetchCourses()
 })
 </script>
 
 <style lang="sass" scoped>
+
+.text-red
+  color: #a30000
+
+.student-info-dialog
+  width: 1000px
+
 .stats-container
   display: flex
   flex-wrap: wrap

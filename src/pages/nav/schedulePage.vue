@@ -6,7 +6,7 @@
 
     <!-- Dialog Form -->
     <q-dialog v-model="showDialog" persistent>
-      <q-card style="max-width: 600px; width: 100%">
+      <q-card style="max-width: 800px; width: 800px">
         <q-card-section>
           <div class="text-h6">Create Schedule</div>
         </q-card-section>

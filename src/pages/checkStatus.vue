@@ -29,28 +29,33 @@
                           <strong>NO INFO TO SHOW</strong>
                         </div>
                         <div class="info-cell">
-                          <strong>Username:</strong> {{ userData.username }}
-                        </div>
-                        <div class="info-cell"><strong>Email:</strong> {{ userData.email }}</div>
-                        <div class="info-cell">
-                          <strong>First Name:</strong> {{ userData.firstName }}
+                          <strong>Student No: </strong> <span>{{ userData.username }}</span>
                         </div>
                         <div class="info-cell">
-                          <strong>Middle Name:</strong> {{ userData.middleName }}
+                          <strong>First Name: </strong> <span>{{ userData.firstName }}</span>
                         </div>
                         <div class="info-cell">
-                          <strong>Last Name:</strong> {{ userData.lastName }}
-                        </div>
-                        <div class="info-cell"><strong>Course:</strong> {{ userData.course }}</div>
-                        <div class="info-cell"><strong>Year:</strong> {{ userData.year }}</div>
-                        <div class="info-cell">
-                          <strong>Section:</strong> {{ userData.section }}
+                          <strong>Middle Name: </strong> <span>{{ userData.middleName }}</span>
                         </div>
                         <div class="info-cell">
-                          <strong>Regular:</strong> {{ userData.isRegular ? 'YES' : 'NO' }}
+                          <strong>Last Name: </strong> <span>{{ userData.lastName }}</span>
                         </div>
                         <div class="info-cell">
-                          <strong>Approved:</strong> {{ userData.isApproved ? 'YES' : 'NO' }}
+                          <strong>Program: </strong> <span>{{ userData.course }}</span>
+                        </div>
+                        <div class="info-cell">
+                          <strong>Section: </strong> <span>{{ userData.section }}</span>
+                        </div>
+                        <div class="info-cell">
+                          <strong>Year: </strong> <span>{{ userData.year }}</span>
+                        </div>
+                        <div class="info-cell">
+                          <strong>Regular: </strong>
+                          <span>{{ userData.isRegular ? 'YES' : 'NO' }}</span>
+                        </div>
+                        <div class="info-cell">
+                          <strong>Status of Registration: </strong>
+                          <span>{{ userData.isApproved ? 'Approved' : 'Not Approved' }}</span>
                         </div>
                       </div>
                     </div>
@@ -58,20 +63,47 @@
                 </div>
                 <!-- Course Information Section -->
                 <div class="course-container">
-                  <div class="section-header">Courses to Take</div>
-                  <div class="course-grid">
+                  <div class="section-header">Courses</div>
+                  <div class="course-grids">
+                    <!-- Courses to Take -->
+                    <div class="course-column">
+                      <div class="sub-header take-header">Courses to Take</div>
+                      <div class="course-grid">
+                        <div
+                          v-for="course in userData.courseToTake"
+                          :key="course._id"
+                          class="course-cell take-cell"
+                        >
+                          <div><strong>Course Code:</strong> {{ course.code }}</div>
+                          <div><strong>Course Name:</strong> {{ course.name }}</div>
+                          <div><strong>Course:</strong> {{ course.course }}</div>
+                          <div><strong>Course Unit:</strong> {{ course.unit }}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Removed Courses -->
                     <div
-                      v-for="course in userData.courseToTake"
-                      :key="course._id"
-                      class="course-cell"
+                      class="course-column"
+                      v-if="userData.courseToTakeRemoved && userData.courseToTakeRemoved.length"
                     >
-                      <div><strong>Course Code:</strong> {{ course.code }}</div>
-                      <div><strong>Course Name:</strong> {{ course.name }}</div>
-                      <div><strong>Course:</strong> {{ course.course }}</div>
-                      <div><strong>Course Unit:</strong> {{ course.unit }}</div>
+                      <div class="sub-header removed-header">Removed Courses</div>
+                      <div class="course-grid">
+                        <div
+                          v-for="course in userData.courseToTakeRemoved"
+                          :key="course._id"
+                          class="course-cell removed-cell"
+                        >
+                          <div><strong>Course Code:</strong> {{ course.code }}</div>
+                          <div><strong>Course Name:</strong> {{ course.name }}</div>
+                          <div><strong>Course:</strong> {{ course.course }}</div>
+                          <div><strong>Course Unit:</strong> {{ course.unit }}</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
+
                 <!-- Schedule Section -->
                 <div
                   class="schedule-container"
@@ -152,8 +184,6 @@ onMounted(async () => {
 </script>
 
 <style lang="sass" scoped>
-
-
 .container-queuing
   background-color: #fcfedf
   width: 100%
@@ -200,9 +230,10 @@ onMounted(async () => {
 .info-cell
   padding: 10px
   background: #ffffff
-  border-radius: 8px
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1)
   word-wrap: break-word
+
+.info-cell span
+  text-decoration: underline
 
 .section-header
   font-size: 1.5em
@@ -213,23 +244,92 @@ onMounted(async () => {
   text-align: center
   border-radius: 8px
 
-.course-container
+  .course-container
   margin-top: 20px
   text-align: center
+
+.section-header
+  font-size: 1.5em
+  background-color: #30572d
+  text-transform: uppercase
+  color: #ffffff
+  padding: 10px
+  text-align: center
+  border-radius: 8px
+
+.course-grids
+  display: grid
+  grid-template-columns: 1fr 1fr
+  gap: 20px
+  padding: 20px
+
+.course-column
+  display: flex
+  flex-direction: column
+  align-items: center
+
+.sub-header
+  font-size: 1.2em
+  font-weight: bold
+  margin-bottom: 10px
+  padding: 8px 12px
+  border-radius: 6px
+  width: 100%
+  text-align: center
+  color: #fff
+
+.take-header
+  background-color: #2e7d32
+
+.removed-header
+  background-color: #a30000
 
 .course-grid
   display: grid
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))
   gap: 15px
-  padding: 20px
+  width: 100%
 
 .course-cell
   padding: 10px
   background: #fff
   border-radius: 8px
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1)
-  border: 2px solid #ccc
   word-wrap: break-word
+
+.take-cell
+  border: 2px solid #2e7d32
+
+.removed-cell
+  border: 2px solid #a30000
+  box-shadow: 0 2px 5px rgba(255, 0, 0, 0.2)
+
+@media (max-width: 700px)
+  .course-grids
+    grid-template-columns: 1fr
+
+/* Removed Courses Section */
+.removed-course-container
+  margin-top: 20px
+  text-align: center
+
+.removed-header
+  background-color: #a30000 !important
+
+.removed-course-grid
+  display: grid
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))
+  gap: 15px
+  padding: 20px
+
+.removed-course-cell
+  padding: 10px
+  background: #fff
+  border-radius: 8px
+  border: 2px solid red
+  box-shadow: 0 2px 5px rgba(255, 0, 0, 0.2)
+  word-wrap: break-word
+
 .schedule-container
   margin-top: 20px
   text-align: center
@@ -258,10 +358,9 @@ onMounted(async () => {
   padding: 5px
   margin-bottom: 4px
 
-
 @media (max-width: 400px)
   .content-width
     width: 100%
-  .student-info, .course-grid
+  .student-info, .course-grid, .removed-course-grid
     grid-template-columns: 1fr
 </style>

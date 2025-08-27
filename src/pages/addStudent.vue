@@ -21,9 +21,19 @@
 
           <q-card-section class="button-section" v-if="isAdmin">
             <q-btn
-              :label="'Import CSV'"
+              :label="'Import CSV Student'"
               no-caps
               @click="importStudentDialog = true"
+              flat
+              class="action-button"
+            />
+          </q-card-section>
+
+          <q-card-section class="button-section" v-if="isAdmin">
+            <q-btn
+              :label="'Import CSV Grades'"
+              no-caps
+              @click="importGradesDialog = true"
               flat
               class="action-button"
             />
@@ -205,6 +215,59 @@
                     color="primary"
                     :disable="!file || loadingImport"
                     @click="uploadFile"
+                    class="full-width"
+                  />
+                </div>
+
+                <div v-if="loadingImport" class="q-mt-md text-center">
+                  <q-spinner-dots color="primary" size="md" />
+                  <div class="text-caption q-mt-xs">Uploading...</div>
+                </div>
+              </q-card-section>
+
+              <q-separator />
+
+              <q-card-actions align="right">
+                <q-btn flat label="Close" @click="cancelImport" color="negative" />
+              </q-card-actions>
+            </q-card>
+          </q-dialog>
+        </div>
+
+        <!-- grades dialog -->
+        <div>
+          <q-dialog v-model="importGradesDialog" persistent>
+            <q-card class="q-pa-md" style="min-width: 350px; max-width: 40vw; width: 100%">
+              <q-card-section>
+                <div class="text-h6">Import Students</div>
+                <div class="text-subtitle2 text-grey">Upload an Excel file (.xlsx or .xls)</div>
+              </q-card-section>
+
+              <q-separator />
+
+              <q-card-section>
+                <q-file
+                  v-model="file"
+                  @change="handleFileChange"
+                  accept=".xlsx,.xls"
+                  label="Choose Excel File"
+                  filled
+                  dense
+                  bottom-slots
+                  :clearable="!!file"
+                  style="width: 100%"
+                >
+                  <template v-slot:append>
+                    <q-icon name="upload" />
+                  </template>
+                </q-file>
+
+                <div class="q-mt-md">
+                  <q-btn
+                    label="Upload"
+                    color="primary"
+                    :disable="!file || loadingImport"
+                    @click="uploadFileGrades"
                     class="full-width"
                   />
                 </div>
@@ -636,6 +699,7 @@ const selectedStudent = ref('')
 const studentInfoDialog = ref(false)
 const addStudentPopUp = ref(false)
 const importStudentDialog = ref(false)
+const importGradesDialog = ref(false)
 const editStudentInfo = ref(false)
 const deleteDialog = ref(false)
 
@@ -706,6 +770,7 @@ async function cancelAdd() {
 async function cancelImport() {
   file.value = ''
   importStudentDialog.value = false
+  importGradesDialog.value = false
 }
 
 async function addStudent() {
@@ -834,6 +899,38 @@ const uploadFile = async () => {
     })
   } finally {
     importStudentDialog.value = false
+    loadingImport.value = false
+    file.value = null
+  }
+}
+
+const uploadFileGrades = async () => {
+  if (!file.value) return
+
+  const formData = new FormData()
+  formData.append('file', file.value)
+
+  try {
+    loadingImport.value = true
+
+    const response = await axios.post(
+      `${process.env.api_host}/users/excel/insertGrades`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } },
+    )
+
+    Notify.create({
+      type: 'positive',
+      message: 'File uploaded successfully',
+    })
+    getAllStudents()
+  } catch (error) {
+    Notify.create({
+      type: 'negative',
+      message: 'Failed to upload file',
+    })
+  } finally {
+    importGradesDialog.value = false
     loadingImport.value = false
     file.value = null
   }
