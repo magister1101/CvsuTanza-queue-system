@@ -414,14 +414,25 @@ function openDialog(row) {
 
 async function fetchSchedules() {
   try {
-    const res = await Axios.get(
-      `${process.env.api_host}/courses/GetSchedule?program=${userData.value.role}`,
-    )
-    scheduleOptions.value = res.data.map((item) => ({
-      _id: item._id,
-      label: `${item.course.name} (Section ${item.section}) - ${item.code}`,
-      data: item,
-    }))
+    console.log(userData.value.role)
+
+    if (userData.value.role === 'admin') {
+      const res = await Axios.get(`${process.env.api_host}/courses/GetSchedule`)
+      scheduleOptions.value = res.data.map((item) => ({
+        _id: item._id,
+        label: `${item.course.name} (Section ${item.section}) - ${item.code}`,
+        data: item,
+      }))
+    } else {
+      const res = await Axios.get(
+        `${process.env.api_host}/courses/GetSchedule?program=${userData.value.role}`,
+        (scheduleOptions.value = res.data.map((item) => ({
+          _id: item._id,
+          label: `${item.course.name} (Section ${item.section}) - ${item.code}`,
+          data: item,
+        }))),
+      )
+    }
   } catch (err) {
     console.error('Error fetching schedules:', err)
   }
@@ -544,17 +555,29 @@ async function getUser() {
 
 async function fetchStudents() {
   try {
-    const res = await Axios.get(`${process.env.api_host}/users`, {
-      params: {
-        isArchived: false,
-        role: 'student',
-        isEnrolled: true,
-        isApproved: false,
-        program: userData.value.role,
-        year: userData.value.year,
-      },
-    })
-    rows.value = res.data
+    if (userData.value.role === 'admin') {
+      const res = await Axios.get(`${process.env.api_host}/users`, {
+        params: {
+          isArchived: false,
+          role: 'student',
+          isEnrolled: true,
+          isApproved: false,
+        },
+      })
+      rows.value = res.data
+    } else {
+      const res = await Axios.get(`${process.env.api_host}/users`, {
+        params: {
+          isArchived: false,
+          role: 'student',
+          isEnrolled: true,
+          isApproved: false,
+          program: userData.value.role,
+          year: userData.value.year,
+        },
+      })
+      rows.value = res.data
+    }
   } catch (err) {
     console.error('Error fetching students:', err)
   } finally {
@@ -566,41 +589,78 @@ async function getTotalCounts() {
   try {
     const program = userData.value.role
     const year = userData.value.year
-    const [preRes, regRes, appRes] = await Promise.all([
-      Axios.get(`${process.env.api_host}/users`, {
-        params: {
-          isArchived: false,
-          role: 'student',
-          program,
-          year,
-          isEnrolled: false,
-          isApproved: false,
-        },
-      }),
-      Axios.get(`${process.env.api_host}/users`, {
-        params: {
-          isArchived: false,
-          role: 'student',
-          program,
-          year,
-          isEnrolled: true,
-          isApproved: false,
-        },
-      }),
-      Axios.get(`${process.env.api_host}/users`, {
-        params: {
-          isArchived: false,
-          role: 'student',
-          program,
-          year,
-          isEnrolled: true,
-          isApproved: true,
-        },
-      }),
-    ])
-    preRegTotal.value = preRes.data.length
-    regTotal.value = regRes.data.length
-    appTotal.value = appRes.data.length
+    if (userData.value.role === 'admin') {
+      const [preRes, regRes, appRes] = await Promise.all([
+        Axios.get(`${process.env.api_host}/users`, {
+          params: {
+            isArchived: false,
+            role: 'student',
+
+            isEnrolled: false,
+            isApproved: false,
+          },
+        }),
+        Axios.get(`${process.env.api_host}/users`, {
+          params: {
+            isArchived: false,
+            role: 'student',
+
+            isEnrolled: true,
+            isApproved: false,
+          },
+        }),
+        Axios.get(`${process.env.api_host}/users`, {
+          params: {
+            isArchived: false,
+            role: 'student',
+
+            isEnrolled: true,
+            isApproved: true,
+          },
+        }),
+      ])
+
+      preRegTotal.value = preRes.data.length
+      regTotal.value = regRes.data.length
+      appTotal.value = appRes.data.length
+    } else {
+      const [preRes, regRes, appRes] = await Promise.all([
+        Axios.get(`${process.env.api_host}/users`, {
+          params: {
+            isArchived: false,
+            role: 'student',
+            program,
+            year,
+            isEnrolled: false,
+            isApproved: false,
+          },
+        }),
+        Axios.get(`${process.env.api_host}/users`, {
+          params: {
+            isArchived: false,
+            role: 'student',
+            program,
+            year,
+            isEnrolled: true,
+            isApproved: false,
+          },
+        }),
+        Axios.get(`${process.env.api_host}/users`, {
+          params: {
+            isArchived: false,
+            role: 'student',
+            program,
+            year,
+            isEnrolled: true,
+            isApproved: true,
+          },
+        }),
+      ])
+
+      preRegTotal.value = preRes.data.length
+      regTotal.value = regRes.data.length
+      appTotal.value = appRes.data.length
+    }
   } catch (err) {
     console.error('Error fetching totals:', err)
   }

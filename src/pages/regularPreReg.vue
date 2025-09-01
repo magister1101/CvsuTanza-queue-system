@@ -92,8 +92,10 @@ async function enroll() {
 
     await Axios.post(`${process.env.api_host}/users/enroll/${userData.value._id}`, {
       courseToTake: courses.value,
-      semester: semesterRes.data[0].semester, // ✅ only send the string
+      courseToTakeRemoved: [],
+      semester: semesterRes.data[0].semester,
     })
+    redirect('/thankYou')
   } catch (error) {
     console.error(error)
   } finally {

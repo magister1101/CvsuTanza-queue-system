@@ -2,8 +2,10 @@
   <q-page class="q-pa-md bg-grey-1">
     <q-card class="q-pa-lg shadow-2 rounded-borders" style="max-width: 600px; margin: auto">
       <q-card-section>
-        <div class="text-h6 text-primary">Send Email to Student</div>
-        <div class="text-subtitle2 text-grey-7">Fill out the form below to send a message.</div>
+        <div class="text-h6 text-primary">Send Email to Students by Course</div>
+        <div class="text-subtitle2 text-grey-7">
+          Fill out the form below to send a message to all students of a course.
+        </div>
       </q-card-section>
 
       <q-separator />
@@ -14,18 +16,14 @@
         <q-select
           emit-value
           map-options
-          v-model="email"
-          :options="filteredEmailOptions"
-          label="Student Number"
+          v-model="course"
+          :options="courseOptions"
+          label="Course"
           option-label="label"
           option-value="value"
           outlined
           dense
           clearable
-          use-input
-          fill-input
-          input-debounce="200"
-          @filter="filterFn"
         />
 
         <q-input v-model="subject" label="Subject" outlined dense />
@@ -50,55 +48,47 @@ import { Notify } from 'quasar'
 
 const sendLoading = ref(false)
 
-const email = ref('')
+const course = ref('')
 const message = ref('')
 const date = ref('')
 const subject = ref('')
 
-const allUsers = ref([])
-const filteredEmailOptions = ref([])
+const courseOptions = ref([])
 
-const fetchUsers = async () => {
+const fetchCourses = async () => {
   try {
-    const { data } = await axios.get(`${process.env.api_host}/users?role=student`)
-    allUsers.value = data
-    // Initially show all
-    filteredEmailOptions.value = data.map((user) => ({
-      label: user.studentNumber,
-      value: user._id,
+    const { data } = await axios.get(`${process.env.api_host}/courses/getProgram?isArchived=false`)
+    courseOptions.value = data.map((c) => ({
+      label: c.name, // e.g., "BSIT"
+      value: c._id, // use _id for backend identification
     }))
   } catch (err) {
-    console.error('Failed to fetch users:', err)
+    console.error('Failed to fetch courses:', err)
   }
 }
 
-const filterFn = (val, update) => {
-  const keyword = val.toLowerCase()
-
-  update(() => {
-    const filtered = allUsers.value
-      .filter((user) => user.studentNumber.toLowerCase().includes(keyword))
-      .map((user) => ({
-        label: user.studentNumber,
-        value: user._id,
-      }))
-
-    filteredEmailOptions.value = filtered
-  })
-}
-
 const sendEmail = async () => {
+  if (!course.value) {
+    Notify.create({
+      message: 'Please select a course.',
+      color: 'warning',
+      textColor: 'white',
+      timeout: 2000,
+    })
+    return
+  }
+
   try {
     sendLoading.value = true
-    await axios.post(`${process.env.api_host}/users/emailStudent`, {
-      id: email.value,
+    await axios.post(`${process.env.api_host}/users/emailCourseStudents`, {
+      courseId: course.value,
       subject: subject.value,
       message: message.value,
       date: date.value,
     })
 
     Notify.create({
-      message: 'Email sent successfully!',
+      message: 'Emails sent successfully to all students of the course!',
       color: 'positive',
       textColor: 'white',
       timeout: 2000,
@@ -117,6 +107,6 @@ const sendEmail = async () => {
 }
 
 onMounted(() => {
-  fetchUsers()
+  fetchCourses()
 })
 </script>

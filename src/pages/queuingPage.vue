@@ -130,6 +130,11 @@ async function printQr() {
 
   const qrImage = qrCanvas.toDataURL()
 
+  // Get current date and time
+  const now = new Date()
+  const formattedDate = now.toLocaleDateString()
+  const formattedTime = now.toLocaleTimeString()
+
   // Create a hidden iframe for printing
   const printFrame = document.createElement('iframe')
   printFrame.style.display = 'none'
@@ -161,6 +166,10 @@ async function printQr() {
             font-size: 12px;
             margin: 5px 0;
           }
+          .date-time {
+            font-size: 11px;
+            margin: 5px 0;
+          }
           .qr-code {
             width: 120px;
             height: 120px;
@@ -177,6 +186,10 @@ async function printQr() {
         <div class="certificate-text">
           Release of Certificate<br>
           of Registration
+        </div>
+        <div class="date-time">
+          Date: ${formattedDate}<br>
+          Time: ${formattedTime}
         </div>
         <div class="qr-code">
           <img src="${qrImage}" alt="QR Code" style="width: 100%; height: 100%;">

@@ -30,6 +30,24 @@
               <div class="text-h6">Total Queue</div>
             </q-card-section>
           </div>
+          <div class="stat-card">
+            <q-card-section>
+              <div class="text-h4 text-weight-bold">{{ preRegTotal }}</div>
+              <div class="text-h6">Pre-Registered Students</div>
+            </q-card-section>
+          </div>
+          <div class="stat-card">
+            <q-card-section>
+              <div class="text-h4 text-weight-bold">{{ regTotal }}</div>
+              <div class="text-h6">Registered Student</div>
+            </q-card-section>
+          </div>
+          <div class="stat-card">
+            <q-card-section>
+              <div class="text-h4 text-weight-bold">{{ appTotal }}</div>
+              <div class="text-h6">Approved Students</div>
+            </q-card-section>
+          </div>
         </div>
         <!-- table -->
         <div class="q-mt-lg">
@@ -80,6 +98,10 @@ const totalStudents = ref(0)
 const totalPrograms = ref(0)
 const totalCourses = ref(0)
 const totalQueue = ref(0)
+const preRegTotal = ref(0)
+const regTotal = ref(0)
+const appTotal = ref(0)
+
 const columns = ref([
   {
     name: '#',
@@ -227,6 +249,42 @@ async function getCourses() {
   }
 }
 
+async function getTotalCounts() {
+  try {
+    const [preRes, regRes, appRes] = await Promise.all([
+      axios.get(`${process.env.api_host}/users`, {
+        params: {
+          isArchived: false,
+          role: 'student',
+          isEnrolled: false,
+          isApproved: false,
+        },
+      }),
+      axios.get(`${process.env.api_host}/users`, {
+        params: {
+          isArchived: false,
+          role: 'student',
+          isEnrolled: true,
+          isApproved: false,
+        },
+      }),
+      axios.get(`${process.env.api_host}/users`, {
+        params: {
+          isArchived: false,
+          role: 'student',
+          isEnrolled: true,
+          isApproved: true,
+        },
+      }),
+    ])
+    preRegTotal.value = preRes.data.length
+    regTotal.value = regRes.data.length
+    appTotal.value = appRes.data.length
+  } catch (err) {
+    console.error('Error fetching totals:', err)
+  }
+}
+
 async function getQeueue() {
   const token = localStorage.getItem('authToken')
   try {
@@ -263,6 +321,7 @@ async function copySignUp() {
 onMounted(() => {
   getUsers()
   userInfo()
+  getTotalCounts()
   getPrograms()
   getCourses()
   getQeueue()

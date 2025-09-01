@@ -342,108 +342,143 @@
         </q-card-section>
 
         <q-dialog v-model="queueDetailsDialog">
-          <q-card class="dialog-card" style="min-width: 500px; max-width: 90vw">
+          <q-card class="dialog-card" style="min-width: 550px; max-width: 95vw">
             <q-card-section v-if="currentQueue">
               <div class="text-h6 q-mb-md">Queue Details</div>
 
-              <!-- Student Details -->
-              <q-card-section class="q-py-xs">
-                <div class="text-subtitle1 q-mb-sm">Student Details:</div>
-                <q-list dense>
-                  <q-item>
-                    <q-item-section>Username:</q-item-section>
-                    <q-item-section>{{ currentQueue.student.username }}</q-item-section>
-                  </q-item>
-                  <q-item>
-                    <q-item-section>Student Number:</q-item-section>
-                    <q-item-section>{{ currentQueue.studentNumber }}</q-item-section>
-                  </q-item>
-                  <q-item>
-                    <q-item-section>First Name:</q-item-section>
-                    <q-item-section>{{ currentQueue.student.firstName }}</q-item-section>
-                  </q-item>
-                  <q-item>
-                    <q-item-section>Middle Name:</q-item-section>
-                    <q-item-section>{{ currentQueue.student.middleName }}</q-item-section>
-                  </q-item>
-                  <q-item>
-                    <q-item-section>Last Name:</q-item-section>
-                    <q-item-section>{{ currentQueue.student.lastName }}</q-item-section>
-                  </q-item>
-                  <q-item>
-                    <q-item-section>Email:</q-item-section>
-                    <q-item-section>{{ currentQueue.student.email }}</q-item-section>
-                  </q-item>
-                  <q-item>
-                    <q-item-section>Regular:</q-item-section>
-                    <q-item-section>{{
-                      currentQueue.student.isRegular ? 'Yes' : 'No'
-                    }}</q-item-section>
-                  </q-item>
-                  <q-item>
-                    <q-item-section>Year:</q-item-section>
-                    <q-item-section>{{ currentQueue.student.year }}</q-item-section>
-                  </q-item>
-                  <q-item>
-                    <q-item-section>Section:</q-item-section>
-                    <q-item-section>{{ currentQueue.student.section }}</q-item-section>
-                  </q-item>
-                </q-list>
-              </q-card-section>
-
-              <q-separator spaced />
+              <!-- Student Info -->
+              <q-card flat bordered class="q-mb-md">
+                <q-card-section>
+                  <div class="text-subtitle1 text-primary q-mb-sm">
+                    <q-icon name="person" class="q-mr-sm" /> Student Details
+                  </div>
+                  <q-list dense bordered separator>
+                    <q-item>
+                      <q-item-section>
+                        <q-item-label caption>Username</q-item-label>
+                        <q-item-label>{{ currentQueue.student.username }}</q-item-label>
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label caption>Student No.</q-item-label>
+                        <q-item-label>{{ currentQueue.student.username }}</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                    <q-item>
+                      <q-item-section>
+                        <q-item-label caption>First Name</q-item-label>
+                        <q-item-label>{{ currentQueue.student.firstName }}</q-item-label>
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label caption>Middle Name</q-item-label>
+                        <q-item-label>{{ currentQueue.student.middleName }}</q-item-label>
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label caption>Last Name</q-item-label>
+                        <q-item-label>{{ currentQueue.student.lastName }}</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                    <q-item>
+                      <q-item-section>
+                        <q-item-label caption>Email</q-item-label>
+                        <q-item-label>{{ currentQueue.student.email }}</q-item-label>
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label caption>Regular</q-item-label>
+                        <q-badge :color="currentQueue.student.isRegular ? 'positive' : 'negative'">
+                          {{ currentQueue.student.isRegular ? 'Yes' : 'No' }}
+                        </q-badge>
+                      </q-item-section>
+                    </q-item>
+                    <q-item>
+                      <q-item-section>
+                        <q-item-label caption>Year</q-item-label>
+                        <q-item-label>{{ currentQueue.student.year }}</q-item-label>
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label caption>Section</q-item-label>
+                        <q-item-label>{{ currentQueue.student.section }}</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                  </q-list>
+                </q-card-section>
+              </q-card>
 
               <!-- Courses to Take -->
-              <q-card-section class="q-py-xs">
-                <div class="text-subtitle1 q-mb-sm">Courses to Take:</div>
-                <div
-                  v-for="(course, index) in currentQueue.courseToTake"
-                  :key="index"
-                  class="q-mb-md"
-                >
-                  <div class="text-body1 q-mb-xs">
-                    {{ course.name }} ({{ course.code }}) - {{ course.unit }} Units
+              <q-card flat bordered class="q-mb-md">
+                <q-card-section>
+                  <div class="text-subtitle1 text-primary q-mb-sm">
+                    <q-icon name="school" class="q-mr-sm" /> Courses to Take
                   </div>
-                </div>
-              </q-card-section>
-
-              <q-separator spaced />
+                  <q-list bordered separator>
+                    <q-item
+                      v-for="(course, index) in currentQueue.courseToTake"
+                      :key="index"
+                      clickable
+                    >
+                      <q-item-section>
+                        <q-item-label>{{ course.name }} ({{ course.code }})</q-item-label>
+                        <q-item-label caption>{{ course.unit }} Units</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                  </q-list>
+                </q-card-section>
+              </q-card>
 
               <!-- Student Schedule -->
-              <q-card-section class="q-py-xs">
-                <div class="text-subtitle1 q-mb-sm">Student Schedule:</div>
-                <q-separator spaced />
-
-                <div
-                  v-for="(schedItem, index) in currentQueue.student.schedule"
-                  :key="index"
-                  class="q-mb-md"
-                >
-                  <!-- Clickable code -->
-                  <div
-                    class="text-body1 q-mb-xs text-primary cursor-pointer"
-                    @click="copyToClipboard(schedItem.code)"
-                  >
-                    {{ schedItem.code }}
-                    <q-icon name="content_copy" size="16px" class="q-ml-xs" />
+              <q-card flat bordered>
+                <q-card-section>
+                  <div class="row items-center justify-between q-mb-sm">
+                    <div class="text-subtitle1 text-primary">
+                      <q-icon name="event" class="q-mr-sm" /> Student Schedule
+                    </div>
+                    <!-- NEW COPY BUTTON -->
+                    <q-btn
+                      dense
+                      outline
+                      color="primary"
+                      icon="content_copy"
+                      label="Copy All Codes"
+                      @click="copyAllCodes"
+                    />
                   </div>
 
-                  <div class="text-subtitle1 q-mb-sm">section: {{ schedItem.section }}</div>
-                  <div class="text-subtitle1">
-                    Schedule:
-                    <div v-if="schedItem.schedule && schedItem.schedule.length > 0" class="q-ml-md">
-                      <div v-for="(s, i) in schedItem.schedule" :key="i" class="text-caption">
-                        {{ s.day }} - {{ s.startTime }} to {{ s.endTime }}
+                  <div
+                    v-for="(schedItem, index) in currentQueue.student.schedule"
+                    :key="index"
+                    class="q-mb-md"
+                  >
+                    <div class="text-body2 text-primary flex items-center">
+                      <q-icon name="book" size="16px" class="q-mr-xs" />
+                      <span>{{ schedItem.code }}</span>
+                    </div>
+
+                    <div class="q-ml-lg q-mt-xs">
+                      <div class="text-caption text-bold">
+                        Section: <span class="text-dark">{{ schedItem.section }}</span>
+                      </div>
+                      <div class="q-mt-xs">
+                        <div
+                          v-if="schedItem.schedule && schedItem.schedule.length > 0"
+                          class="q-ml-sm"
+                        >
+                          <q-badge
+                            v-for="(s, i) in schedItem.schedule"
+                            :key="i"
+                            color="blue-4"
+                            class="q-mr-sm q-mb-sm"
+                          >
+                            {{ s.day }}: {{ s.startTime }} - {{ s.endTime }}
+                          </q-badge>
+                        </div>
+                        <div v-else class="text-negative text-caption q-ml-sm">
+                          No schedule available
+                        </div>
                       </div>
                     </div>
-
-                    <div v-else class="text-negative text-caption q-ml-md">
-                      No schedule available
-                    </div>
+                    <q-separator spaced />
                   </div>
-                  <q-separator spaced />
-                </div>
-              </q-card-section>
+                </q-card-section>
+              </q-card>
             </q-card-section>
           </q-card>
         </q-dialog>
@@ -612,6 +647,37 @@ const fetchTransactions = async () => {
 function copyToClipboard(text) {
   navigator.clipboard.writeText(text)
   $q.notify({ message: 'Code copied to clipboard!', color: 'green-4', icon: 'check' })
+}
+
+function copyAllCodes() {
+  if (!currentQueue.value?.student?.schedule?.length) {
+    $q.notify({
+      message: 'No schedule codes to copy.',
+      color: 'red-5',
+      icon: 'warning',
+    })
+    return
+  }
+
+  // Collect codes, join with TAB
+  const codes = currentQueue.value.student.schedule.map((s) => s.code).join('\t')
+
+  navigator.clipboard
+    .writeText(codes)
+    .then(() => {
+      $q.notify({
+        message: 'All schedule codes copied!',
+        color: 'green-4',
+        icon: 'check',
+      })
+    })
+    .catch(() => {
+      $q.notify({
+        message: 'Failed to copy.',
+        color: 'red-5',
+        icon: 'error',
+      })
+    })
 }
 
 async function queueListPage() {

@@ -129,6 +129,16 @@
       </q-item>
     </div>
     <div class="q-py-sm">
+      <q-item clickable @click="router.replace(`/new/email`)">
+        <q-item-section avatar>
+          <q-icon name="email" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label>Email</q-item-label>
+        </q-item-section>
+      </q-item>
+    </div>
+    <div class="q-py-sm">
       <q-item clickable @click="router.replace(`/new/addProgram`)">
         <q-item-section avatar>
           <q-icon name="folder" />
@@ -148,7 +158,35 @@
         </q-item-section>
       </q-item>
     </div>
+    <div class="q-py-sm">
+      <q-item clickable @click="router.replace(`/new/schedule`)">
+        <q-item-section avatar>
+          <q-icon name="schedule" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label>schedule</q-item-label>
+        </q-item-section>
+      </q-item>
+    </div>
     <div>
+      <div class="q-py-sm">
+        <q-item clickable @click="router.replace(`/new/adminQueuePage`)">
+          <q-item-section avatar>
+            <q-icon name="menu" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Queue</q-item-label>
+          </q-item-section>
+        </q-item>
+      </div>
+      <div class="q-py-sm">
+        <q-item clickable @click="router.replace(`/new/verifyStudent`)">
+          <q-item-section avatar>
+            <q-icon name="confirmation_number" />
+          </q-item-section>
+          <q-item-section> Verify </q-item-section>
+        </q-item>
+      </div>
       <q-item clickable @click="router.replace(`/new/adminCreateAccount`)">
         <q-item-section avatar>
           <q-icon name="people" />

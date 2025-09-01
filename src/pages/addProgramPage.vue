@@ -21,10 +21,12 @@
                   <div class="text-subtitle2 q-mb-sm">Program</div>
                   <div class="input-field">
                     <q-select
-                      v-model="courseProgram"
-                      type="text"
+                      v-model="selectedProgram"
+                      :options="optionPrograms"
+                      emit-value
+                      map-options
                       borderless
-                      :options="optionPrograms.option"
+                      label="Select Program"
                     />
                   </div>
                 </div>
@@ -118,7 +120,6 @@
 </template>
 
 <script setup>
-
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { Notify } from 'quasar'
@@ -178,9 +179,12 @@ async function getPrograms() {
         },
       },
     )
-    optionPrograms.value = {
-      option: response.data.map((program) => program.name),
-    }
+
+    // Build options with label (display) and value (save)
+    optionPrograms.value = response.data.map((program) => ({
+      label: program.code, // displayed in UI
+      value: program.name, // saved value
+    }))
   } catch (err) {
     console.error(err)
   }

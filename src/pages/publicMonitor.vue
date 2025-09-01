@@ -38,21 +38,21 @@
           </div>
           <q-card-section class="queue-section">
             <div class="queue-item">
-              <div class="queue-number">{{ currentRegistrar }}</div>
+              <div class="queue-number">R - {{ currentRegistrar }}</div>
               <div class="counter-container">
                 <div class="counter-label">COUNTER</div>
                 <div class="counter-number">01</div>
               </div>
             </div>
             <div class="queue-item">
-              <div class="queue-number">{{ currentAdmission }}</div>
+              <div class="queue-number">A - {{ currentAdmission }}</div>
               <div class="counter-container">
                 <div class="counter-label">COUNTER</div>
                 <div class="counter-number">02</div>
               </div>
             </div>
             <div class="queue-item">
-              <div class="queue-number">{{ currentCashier }}</div>
+              <div class="queue-number">C - {{ currentCashier }}</div>
               <div class="counter-container">
                 <div class="counter-label">COUNTER</div>
                 <div class="counter-number">03</div>

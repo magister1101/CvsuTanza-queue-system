@@ -7,10 +7,42 @@
       </q-btn>
     </q-card-section>
 
-    <!-- Course Table -->
-    <q-card>
-      <!-- Single Search Bar -->
-      <div class="q-mb-md">
+    <!-- Selected Schedules Section -->
+    <q-card class="q-mt-md" v-if="selectedScheduleDetails.length > 0">
+      <q-card-section>
+        <div class="text-h6">Selected Schedules</div>
+      </q-card-section>
+      <q-card-section>
+        <q-btn
+          label="Enroll"
+          color="primary"
+          @click="enroll"
+          :disable="selectedScheduleDetails.length === 0"
+          :loading="enrollLoading"
+        />
+      </q-card-section>
+      <q-card-section>
+        <q-list bordered separator>
+          <q-item v-for="(item, index) in selectedScheduleDetails" :key="index">
+            <q-item-section>
+              <div class="text-subtitle1">{{ item.courseTitle }} ({{ item.code }})</div>
+              <div class="text-caption text-grey">
+                Program: {{ item.program }} | Year: {{ item.year }} | Semester: {{ item.semester }}
+              </div>
+              <div class="q-mt-xs">
+                <q-badge color="primary">
+                  {{ item.scheduleText }}
+                </q-badge>
+              </div>
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-card-section>
+    </q-card>
+
+    <!-- Schedule List -->
+    <q-card class="q-mt-md">
+      <q-card-section>
         <q-input
           filled
           v-model="searchQuery"
@@ -22,48 +54,44 @@
             <q-icon name="search" />
           </template>
         </q-input>
-      </div>
-      <q-card-section>
-        <div class="text-h6">Course List</div>
       </q-card-section>
 
-      <q-table
-        title="Courses"
-        :rows="filteredRows"
-        :columns="columns"
-        row-key="_id"
-        flat
-        bordered
-        :pagination="pagination"
-        :loading="tableLoading"
-      >
-        <template v-slot:body-cell-schedule="props">
-          <q-td>
-            <q-select
-              filled
-              dense
-              emit-value
-              map-options
-              v-model="selectedSchedules[props.row._id]"
-              :options="scheduleOptions[props.row._id] || []"
-              option-label="dayTime"
-              option-value="_id"
-              @update:model-value="(val) => onScheduleSelected(props.row, val)"
-              placeholder="Select schedule"
-            />
-          </q-td>
-        </template>
+      <q-card-section>
+        <div class="text-h6">Schedule List</div>
+      </q-card-section>
 
-        <template v-slot:top-right>
-          <q-btn
-            label="Enroll"
-            color="primary"
-            @click="enroll"
-            :disable="Object.keys(selectedSchedules).length === 0"
-            :loading="enrollLoading"
-          />
-        </template>
-      </q-table>
+      <q-card-section>
+        <q-list bordered separator>
+          <q-item
+            v-for="sched in flatFilteredSchedules"
+            :key="sched._id"
+            clickable
+            @click="onScheduleSelected(sched.course, sched._id)"
+          >
+            <q-item-section>
+              <div class="text-subtitle1">{{ sched.courseName }} ({{ sched.courseCode }})</div>
+              <div class="text-caption text-grey">
+                Program: {{ sched.program }} | Year: {{ sched.year }} | Semester:
+                {{ sched.semester }}
+              </div>
+              <div class="q-mt-xs">
+                <q-badge
+                  :color="
+                    (selectedSchedules[sched.course] || []).includes(sched._id)
+                      ? 'primary'
+                      : 'grey-6'
+                  "
+                >
+                  Section {{ sched.section }} -
+                  {{
+                    sched.schedule.map((s) => `${s.day} (${s.startTime} - ${s.endTime})`).join(', ')
+                  }}
+                </q-badge>
+              </div>
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-card-section>
     </q-card>
   </q-page>
 </template>
@@ -80,42 +108,10 @@ const userData = ref({})
 const tableLoading = ref(true)
 const enrollLoading = ref(false)
 
+// courseId -> [scheduleId, scheduleId...]
 const selectedSchedules = ref({})
 const scheduleOptions = ref({})
-const pagination = ref({ rowsPerPage: 10 })
-
-// Single search query
 const searchQuery = ref('')
-
-// Table columns
-const columns = [
-  { name: 'schedule', label: 'Schedule', field: 'schedule', align: 'center' },
-  { name: 'name', label: 'Course Title', field: 'name', sortable: true, align: 'left' },
-  { name: 'code', label: 'Code', field: 'code', sortable: true, align: 'left' },
-  { name: 'unit', label: 'Units', field: 'unit', sortable: true, align: 'left' },
-  { name: 'course', label: 'Program', field: 'course', sortable: true, align: 'left' },
-  { name: 'year', label: 'Year', field: 'year', sortable: true, align: 'left' },
-  { name: 'semester', label: 'Semester', field: 'semester', sortable: true, align: 'left' },
-]
-
-// Filtered rows
-const filteredRows = computed(() => {
-  if (!searchQuery.value) return rows.value
-  const query = searchQuery.value.toLowerCase()
-
-  return rows.value.filter(
-    (row) =>
-      String(row.name || '')
-        .toLowerCase()
-        .includes(query) ||
-      String(row.course || '')
-        .toLowerCase()
-        .includes(query) ||
-      String(row.code || '')
-        .toLowerCase()
-        .includes(query),
-  )
-})
 
 function redirect(path) {
   router.push(path)
@@ -153,20 +149,12 @@ async function fetchCourses() {
         .join(', ')
       scheduleMap[courseId].push({
         ...sched,
-        dayTime: `Section ${sched.section} - ${scheduleText}`, // now shows section
+        dayTime: `Section ${sched.section} - ${scheduleText}`,
       })
     }
 
-    const filteredCourses = allCourses.filter((course) => {
-      const courseId = course._id
-      if (scheduleMap[courseId] && scheduleMap[courseId].length > 0) {
-        scheduleOptions.value[courseId] = scheduleMap[courseId]
-        return true
-      }
-      return false
-    })
-
-    rows.value = filteredCourses
+    rows.value = allCourses
+    scheduleOptions.value = scheduleMap
   } catch (err) {
     console.error('Error fetching courses or schedules:', err)
   } finally {
@@ -174,17 +162,29 @@ async function fetchCourses() {
   }
 }
 
-function onScheduleSelected(course, scheduleId) {
-  selectedSchedules.value[course._id] = scheduleId
+function onScheduleSelected(courseId, scheduleId) {
+  if (!selectedSchedules.value[courseId]) {
+    selectedSchedules.value[courseId] = []
+  }
+  const index = selectedSchedules.value[courseId].indexOf(scheduleId)
+  if (index === -1) {
+    selectedSchedules.value[courseId].push(scheduleId) // add
+  } else {
+    selectedSchedules.value[courseId].splice(index, 1) // remove
+  }
 }
 
 async function enroll() {
   try {
     enrollLoading.value = true
+
+    // Flatten courseToTake and scheduleIds
     const courseToTakeIds = Object.keys(selectedSchedules.value)
-    const scheduleIds = Object.values(selectedSchedules.value)
+    const scheduleIds = Object.values(selectedSchedules.value).flat()
+
     await Axios.post(`${process.env.api_host}/users/update/${userData.value._id}`, {
       courseToTake: courseToTakeIds,
+      courseToTakeRemoved: [],
       schedule: scheduleIds,
       isEnrolled: true,
       isApproved: false,
@@ -196,6 +196,57 @@ async function enroll() {
     enrollLoading.value = false
   }
 }
+
+// Flatten schedules into a list
+const flatFilteredSchedules = computed(() => {
+  let all = []
+  for (const [courseId, scheds] of Object.entries(scheduleOptions.value)) {
+    const course = rows.value.find((c) => c._id === courseId)
+    if (course) {
+      scheds.forEach((s) => {
+        all.push({
+          ...s,
+          course: courseId,
+          courseName: course.name,
+          courseCode: course.code,
+          program: course.course,
+          year: course.year,
+          semester: course.semester,
+        })
+      })
+    }
+  }
+
+  if (!searchQuery.value) return all
+
+  const query = searchQuery.value.toLowerCase()
+  return all.filter(
+    (s) =>
+      s.courseName.toLowerCase().includes(query) ||
+      s.courseCode.toLowerCase().includes(query) ||
+      s.program.toLowerCase().includes(query),
+  )
+})
+
+// Selected schedule details
+const selectedScheduleDetails = computed(() => {
+  let details = []
+  for (const [courseId, scheduleIds] of Object.entries(selectedSchedules.value)) {
+    const course = rows.value.find((c) => c._id === courseId)
+    scheduleIds.forEach((scheduleId) => {
+      const schedule = (scheduleOptions.value[courseId] || []).find((s) => s._id === scheduleId)
+      details.push({
+        courseTitle: course?.name || '',
+        code: course?.code || '',
+        program: course?.course || '',
+        year: course?.year || '',
+        semester: course?.semester || '',
+        scheduleText: schedule?.dayTime || '',
+      })
+    })
+  }
+  return details
+})
 
 onMounted(async () => {
   await getUser()
