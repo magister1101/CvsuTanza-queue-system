@@ -45,6 +45,7 @@ const routes = [
       { path: 'email', component: () => import('src/pages/emailPage.vue') },
       { path: 'verifyStudent', component: () => import('src/pages/nav/verifyStudent.vue') },
       { path: 'schedule', component: () => import('src/pages/nav/schedulePage.vue') },
+      { path: 'cor', component: () => import('src/pages/nav/corPage.vue') },
     ],
   },
 

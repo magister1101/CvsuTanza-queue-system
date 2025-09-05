@@ -12,22 +12,29 @@
       <q-card-section>
         <div class="text-h6">Selected Schedules</div>
       </q-card-section>
+
+      <q-card-section>
+        <div class="text-subtitle2">Total Units: {{ totalUnits }} / 24</div>
+      </q-card-section>
+
       <q-card-section>
         <q-btn
           label="Enroll"
           color="primary"
           @click="enroll"
-          :disable="selectedScheduleDetails.length === 0"
+          :disable="selectedScheduleDetails.length === 0 || totalUnits > 24"
           :loading="enrollLoading"
         />
       </q-card-section>
+
       <q-card-section>
         <q-list bordered separator>
           <q-item v-for="(item, index) in selectedScheduleDetails" :key="index">
             <q-item-section>
               <div class="text-subtitle1">{{ item.courseTitle }} ({{ item.code }})</div>
               <div class="text-caption text-grey">
-                Program: {{ item.program }} | Year: {{ item.year }} | Semester: {{ item.semester }}
+                Program: {{ item.program }} | Year: {{ item.year }} | Semester:
+                {{ item.semester }}
               </div>
               <div class="q-mt-xs">
                 <q-badge color="primary">
@@ -66,18 +73,19 @@
             v-for="sched in flatFilteredSchedules"
             :key="sched._id"
             clickable
-            @click="onScheduleSelected(sched.course, sched._id)"
+            @click="onScheduleSelected(sched.courseId, sched._id)"
           >
             <q-item-section>
+              <div class="text-subtitle1">{{ sched.code }}</div>
               <div class="text-subtitle1">{{ sched.courseName }} ({{ sched.courseCode }})</div>
               <div class="text-caption text-grey">
                 Program: {{ sched.program }} | Year: {{ sched.year }} | Semester:
-                {{ sched.semester }}
+                {{ sched.semester }} | Unit: {{ sched.unit }}
               </div>
               <div class="q-mt-xs">
                 <q-badge
                   :color="
-                    (selectedSchedules[sched.course] || []).includes(sched._id)
+                    (selectedSchedules[sched.courseId] || []).includes(sched._id)
                       ? 'primary'
                       : 'grey-6'
                   "
@@ -100,18 +108,30 @@
 import { ref, computed, onMounted } from 'vue'
 import Axios from 'axios'
 import { useRouter } from 'vue-router'
+import { Notify } from 'quasar'
 
 const router = useRouter()
 
-const rows = ref([])
+// data
+const rows = ref([]) // courses (normalized)
+const rowsById = ref({}) // { [courseId:string]: course }
 const userData = ref({})
 const tableLoading = ref(true)
 const enrollLoading = ref(false)
 
-// courseId -> [scheduleId, scheduleId...]
+// courseId(string) -> [scheduleId, scheduleId...]
 const selectedSchedules = ref({})
+// courseId(string) -> schedule[]
 const scheduleOptions = ref({})
 const searchQuery = ref('')
+
+// --- helpers ---
+const toId = (v) => {
+  if (!v) return ''
+  if (typeof v === 'string') return v
+  if (typeof v === 'object' && v._id) return String(v._id)
+  return String(v)
+}
 
 function redirect(path) {
   router.push(path)
@@ -131,29 +151,49 @@ async function getUser() {
 
 async function fetchCourses() {
   try {
+    // 1) fetch all courses
     const res = await Axios.get(`${process.env.api_host}/courses?`)
-    const allCourses = res.data
+    const allCourses = res.data || []
 
+    // normalize course ids to string
+    const normalizedCourses = allCourses.map((c) => ({
+      ...c,
+      _id: toId(c._id),
+      // unit fallback if your API sometimes uses "units"
+      unit: c.unit ?? c.units ?? 0,
+    }))
+    rows.value = normalizedCourses
+
+    // build O(1) lookup
+    const idx = {}
+    for (const c of normalizedCourses) idx[c._id] = c
+    rowsById.value = idx
+
+    // 2) fetch schedules
     const scheduleRes = await Axios.get(`${process.env.api_host}/courses/getSchedule`)
-    const allSchedules = scheduleRes.data
+    const allSchedules = scheduleRes.data || []
 
     const scheduleMap = {}
 
-    for (const sched of allSchedules) {
-      const courseId = typeof sched.course === 'string' ? sched.course : sched.course?._id
-      if (!scheduleMap[courseId]) {
-        scheduleMap[courseId] = []
-      }
-      const scheduleText = sched.schedule
+    for (const raw of allSchedules) {
+      const courseId = toId(raw.course)
+      if (!courseId) continue
+
+      if (!scheduleMap[courseId]) scheduleMap[courseId] = []
+
+      const scheduleText = (raw.schedule || [])
         .map((s) => `${s.day} (${s.startTime} - ${s.endTime})`)
         .join(', ')
+
       scheduleMap[courseId].push({
-        ...sched,
-        dayTime: `Section ${sched.section} - ${scheduleText}`,
+        ...raw,
+        _id: toId(raw._id),
+        course: raw.course, // keep original
+        courseId, // normalized id for UI/logic
+        dayTime: `Section ${raw.section} - ${scheduleText}`,
       })
     }
 
-    rows.value = allCourses
     scheduleOptions.value = scheduleMap
   } catch (err) {
     console.error('Error fetching courses or schedules:', err)
@@ -162,15 +202,35 @@ async function fetchCourses() {
   }
 }
 
-function onScheduleSelected(courseId, scheduleId) {
+function onScheduleSelected(courseIdRaw, scheduleIdRaw) {
+  const courseId = toId(courseIdRaw)
+  const scheduleId = toId(scheduleIdRaw)
+
   if (!selectedSchedules.value[courseId]) {
     selectedSchedules.value[courseId] = []
   }
+
+  const alreadySelected = selectedSchedules.value[courseId]?.length > 0
+  const course = rowsById.value[courseId]
+  const courseUnits = course?.unit ?? course?.units ?? 0
+
+  // If the course isn't yet counted and adding it would exceed 24, block
+  if (!alreadySelected && totalUnits.value + courseUnits > 24) {
+    Notify.create({ type: 'negative', message: 'You cannot enroll in more than 24 units.' })
+    // alert('You cannot enroll in more than 24 units.')
+    return
+  }
+
   const index = selectedSchedules.value[courseId].indexOf(scheduleId)
   if (index === -1) {
     selectedSchedules.value[courseId].push(scheduleId) // add
   } else {
     selectedSchedules.value[courseId].splice(index, 1) // remove
+  }
+
+  // if a course has no schedules left selected, clean it up (optional)
+  if (selectedSchedules.value[courseId].length === 0) {
+    delete selectedSchedules.value[courseId]
   }
 }
 
@@ -178,8 +238,7 @@ async function enroll() {
   try {
     enrollLoading.value = true
 
-    // Flatten courseToTake and scheduleIds
-    const courseToTakeIds = Object.keys(selectedSchedules.value)
+    const courseToTakeIds = Object.keys(selectedSchedules.value) // normalized IDs
     const scheduleIds = Object.values(selectedSchedules.value).flat()
 
     await Axios.post(`${process.env.api_host}/users/update/${userData.value._id}`, {
@@ -197,44 +256,46 @@ async function enroll() {
   }
 }
 
-// Flatten schedules into a list
+// Flatten schedules into a list for display/search
 const flatFilteredSchedules = computed(() => {
-  let all = []
+  const all = []
   for (const [courseId, scheds] of Object.entries(scheduleOptions.value)) {
-    const course = rows.value.find((c) => c._id === courseId)
-    if (course) {
-      scheds.forEach((s) => {
-        all.push({
-          ...s,
-          course: courseId,
-          courseName: course.name,
-          courseCode: course.code,
-          program: course.course,
-          year: course.year,
-          semester: course.semester,
-        })
+    const course = rowsById.value[courseId]
+    if (!course) continue
+    scheds.forEach((s) => {
+      all.push({
+        ...s,
+        courseId, // normalized id used by template
+        courseName: course.name,
+        courseCode: course.code,
+        program: course.course,
+        year: course.year,
+        semester: course.semester,
+        unit: course.unit,
       })
-    }
+    })
   }
 
   if (!searchQuery.value) return all
 
-  const query = searchQuery.value.toLowerCase()
+  const q = searchQuery.value.toLowerCase()
   return all.filter(
     (s) =>
-      s.courseName.toLowerCase().includes(query) ||
-      s.courseCode.toLowerCase().includes(query) ||
-      s.program.toLowerCase().includes(query),
+      (s.courseName || '').toLowerCase().includes(q) ||
+      (s.courseCode || '').toLowerCase().includes(q) ||
+      (s.program || '').toLowerCase().includes(q) ||
+      (s.code || '').toLowerCase().includes(q),
   )
 })
 
 // Selected schedule details
 const selectedScheduleDetails = computed(() => {
-  let details = []
+  const details = []
   for (const [courseId, scheduleIds] of Object.entries(selectedSchedules.value)) {
-    const course = rows.value.find((c) => c._id === courseId)
-    scheduleIds.forEach((scheduleId) => {
-      const schedule = (scheduleOptions.value[courseId] || []).find((s) => s._id === scheduleId)
+    const course = rowsById.value[courseId]
+    const schedList = scheduleOptions.value[courseId] || []
+    for (const scheduleId of scheduleIds) {
+      const schedule = schedList.find((s) => toId(s._id) === toId(scheduleId))
       details.push({
         courseTitle: course?.name || '',
         code: course?.code || '',
@@ -243,9 +304,22 @@ const selectedScheduleDetails = computed(() => {
         semester: course?.semester || '',
         scheduleText: schedule?.dayTime || '',
       })
-    })
+    }
   }
   return details
+})
+
+// Total selected units (count each course once if it has any selected schedule)
+const totalUnits = computed(() => {
+  let sum = 0
+  for (const [courseId, scheduleIds] of Object.entries(selectedSchedules.value)) {
+    if (scheduleIds.length > 0) {
+      const course = rowsById.value[courseId]
+      const u = course?.unit ?? course?.units ?? 0
+      sum += Number(u) || 0
+    }
+  }
+  return sum
 })
 
 onMounted(async () => {

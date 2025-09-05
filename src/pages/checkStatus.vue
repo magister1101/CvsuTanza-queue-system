@@ -57,6 +57,10 @@
                           <strong>Status of Registration: </strong>
                           <span>{{ userData.isApproved ? 'Approved' : 'Not Approved' }}</span>
                         </div>
+                        <div class="info-cell">
+                          <strong>Status: </strong>
+                          <span> {{ userData.status }}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
