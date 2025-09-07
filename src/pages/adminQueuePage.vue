@@ -539,7 +539,7 @@
         <q-separator class="q-my-sm" />
 
         <q-card-actions align="right">
-          <q-btn label="Back" flat color="primary" @click="cashierDialog = false" />
+          <q-btn label="Back" flat color="primary" @click="resetDialog = false" />
           <q-btn
             label="RESET"
             color="primary"
@@ -870,7 +870,7 @@ async function resetUserQueue() {
     userInfo()
     Notify.create({
       type: 'positive',
-      message: 'Reset queue successfully',
+      message: 'Reset queue stats successfully',
     })
   } catch (err) {
     console.error(err)
