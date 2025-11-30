@@ -176,10 +176,6 @@ onMounted(() => {
   text-align: center
   border-radius: 8px
 
-.course-container
-  margin-top: 20px
-  text-align: center
-
 .course-grid
   display: grid
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))

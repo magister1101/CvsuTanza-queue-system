@@ -44,14 +44,14 @@ const uploadFile = async () => {
 
     // Make the API request to upload the file
     const response = await axios.post(
-      `${process.env.api_host}/users/excel/insertStudents`, // Replace with your backend URL
+      `${process.env.api_host}/users/excel/test`, // Replace with your backend URL
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } },
     )
 
     // Handle success
     successMessage.value = response.data.message
-    file.value = null // Clear the file input after success
+    file.value = null
   } catch (error) {
     // Handle error
     errorMessage.value = error.response?.data?.error || 'An error occurred'

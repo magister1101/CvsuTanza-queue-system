@@ -248,10 +248,6 @@ onMounted(async () => {
   text-align: center
   border-radius: 8px
 
-  .course-container
-  margin-top: 20px
-  text-align: center
-
 .section-header
   font-size: 1.5em
   background-color: #30572d
