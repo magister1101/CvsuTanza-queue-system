@@ -5,13 +5,7 @@
         <q-btn label="Create Schedule" color="primary" @click="openCreateDialog" />
       </div>
       <div class="col-auto">
-        <q-btn
-          label="Import Schedules"
-          color="primary"
-          icon="upload"
-          @click="openImportDialog"
-          disable
-        />
+        <q-btn label="Import Schedules" color="primary" icon="upload" @click="openImportDialog" />
       </div>
       <!-- <div class="col-auto">
         <q-btn
@@ -424,9 +418,11 @@ async function uploadScheduleExcel() {
   try {
     importLoading.value = true
 
-    await axios.post(`${process.env.api_host}/courses/excel/importSchedules`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    const response = await axios.post(
+      `${process.env.api_host}/courses/excel/importSchedules`, // Replace with your backend URL
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } },
+    )
 
     Notify.create({ type: 'positive', message: 'Schedules imported successfully' })
     closeImportDialog()
