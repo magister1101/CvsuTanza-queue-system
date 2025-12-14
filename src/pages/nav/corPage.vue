@@ -33,7 +33,7 @@
       <!-- Header -->
       <div class="text-center">
         <div class="text-h6">CAVITE STATE UNIVERSITY</div>
-        <div>Imus Campus</div>
+        <div>Tanza Campus</div>
         <div class="text-subtitle2 q-mt-sm">Certificate of Registration</div>
       </div>
 

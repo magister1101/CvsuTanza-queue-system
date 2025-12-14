@@ -67,7 +67,7 @@
             </q-card>
           </q-dialog>
           <q-card
-            class="info-box q-py-md ellipsis"
+            class="info-box q-py-md"
             style="
               background-color: #fefffe;
               border: 2px solid #cbcdc7;
@@ -84,27 +84,19 @@
             <div class="q-mr-md">
               <q-btn
                 label="CALL"
-                style="background-color: #b7faff; margin-left: 8px"
+                style="background-color: #b7faff"
                 @click="speakCurrentQueue"
                 icon="record_voice_over"
               />
               <q-btn
                 label="STOP"
-                style="background-color: #fe7e7f; margin-left: 8px"
+                style="background-color: #fe7e7f"
                 @click="stopSpeech"
                 icon="stop"
               />
-              <q-btn
-                label="LIST"
-                style="background-color: #fffeb8; margin-left: 8px"
-                @click="queueListPage"
-              />
+              <q-btn label="LIST" style="background-color: #fffeb8" @click="queueListPage" />
 
-              <q-btn
-                label="RESET"
-                style="background-color: #fe7e7f; margin-left: 8px"
-                @click="resetDialog = true"
-              />
+              <q-btn label="RESET" style="background-color: #fe7e7f" @click="resetDialog = true" />
             </div>
           </q-card>
         </q-card-section>
@@ -1034,6 +1026,7 @@ onMounted(async () => {
   width: 400px
   height: 150px
   border-radius: 14px
+
 .action-button
   height: 150px
   width: 200px
@@ -1069,52 +1062,52 @@ onMounted(async () => {
 
 .details, .course-item
   margin-bottom: 8px
-@media (max-width: 1440px)
-  .info-box
-    width: 300px
-    height: 130px
-  .action-button
-    width: 180px
-    height: 130px
-  .list-container
-    width: 250px
+// @media (max-width: 1440px)
+//   .info-box
+//     width: 400px
+//     height: 130px
+//   .action-button
+//     width: 180px
+//     height: 130px
+//   .list-container
+//     width: 250px
 
-@media (max-width: 1024px)
-  .info-box
-    width: 250px
-    height: 120px
-  .action-button
-    width: 150px
-    height: 120px
-  .list-container
-    width: 200px
+// @media (max-width: 1024px)
+//   .info-box
+//     width: 250px
+//     height: 120px
+//   .action-button
+//     width: 150px
+//     height: 120px
+//   .list-container
+//     width: 200px
 
-@media (max-width: 768px)
-  .info-box
-    width: 200px
-    height: 100px
-  .action-button
-    width: 130px
-    height: 100px
-    .q-icon
-      font-size: 50px !important
-    .text-h4
-      font-size: 1.2rem
-  .list-container
-    width: 180px
+// @media (max-width: 768px)
+//   .info-box
+//     width: 200px
+//     height: 100px
+//   .action-button
+//     width: 130px
+//     height: 100px
+//     .q-icon
+//       font-size: 50px !important
+//     .text-h4
+//       font-size: 1.2rem
+//   .list-container
+//     width: 180px
 
-@media (max-width: 599px)
-  .info-box
-    width: 100%
-    height: 100px
-    margin-bottom: 8px
-  .action-button
-    width: 100%
-    height: 100px
-    margin-bottom: 8px
-  .list-container
-    width: 100%
-    margin-bottom: 16px
-  .q-card-section
-    padding: 8px !important
+// @media (max-width: 599px)
+//   .info-box
+//     width: 100%
+//     height: auto
+//     margin-bottom: 8px
+//   .action-button
+//     width: 100%
+//     height: 100px
+//     margin-bottom: 8px
+//   .list-container
+//     width: 100%
+//     margin-bottom: 16px
+//   .q-card-section
+//     padding: 8px !important
 </style>

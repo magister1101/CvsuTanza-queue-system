@@ -7,18 +7,80 @@
       <div class="col-auto">
         <q-btn label="Import Schedules" color="primary" icon="upload" @click="openImportDialog" />
       </div>
-      <!-- <div class="col-auto">
-        <q-btn
-          flat
-          color="primary"
-          icon="download"
-          label="Download Template"
-          @click="downloadScheduleTemplate"
-        />
-      </div> -->
     </div>
 
-    <!-- Create/Edit Dialog (unchanged from your version) -->
+    <!-- Search Bar -->
+    <div class="row q-col-gutter-md q-mb-md">
+      <div class="col-12 col-md-4">
+        <q-input
+          v-model="searchQuery"
+          placeholder="Search schedules..."
+          filled
+          clearable
+          @clear="searchQuery = ''"
+          @keyup.enter="filterSchedules"
+        >
+          <template v-slot:prepend>
+            <q-icon name="search" />
+          </template>
+          <template v-slot:append>
+            <q-btn flat round dense icon="filter_list" @click="showFilters = !showFilters">
+              <q-tooltip>Advanced Filters</q-tooltip>
+            </q-btn>
+          </template>
+        </q-input>
+      </div>
+
+      <!-- Advanced Filters (collapsible) -->
+      <div v-if="showFilters" class="col-12">
+        <div class="row q-col-gutter-md">
+          <div class="col-12 col-md-3">
+            <q-select
+              v-model="filterCourse"
+              :options="filterCourseOptions"
+              label="Filter by Course"
+              filled
+              clearable
+              emit-value
+              map-options
+            />
+          </div>
+          <div class="col-12 col-md-3">
+            <q-select
+              v-model="filterSection"
+              :options="filterSectionOptions"
+              label="Filter by Section"
+              filled
+              clearable
+              emit-value
+              map-options
+            />
+          </div>
+          <div class="col-12 col-md-3">
+            <q-select
+              v-model="filterDay"
+              :options="filterDayOptions"
+              label="Filter by Day"
+              filled
+              clearable
+              emit-value
+              map-options
+            />
+          </div>
+          <div class="col-12 col-md-3">
+            <q-btn
+              color="primary"
+              label="Apply Filters"
+              @click="filterSchedules"
+              class="full-height"
+            />
+            <q-btn flat color="negative" label="Clear All" @click="clearFilters" class="q-mt-xs" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create/Edit Dialog -->
     <q-dialog v-model="showDialog" persistent>
       <q-card style="max-width: 800px; width: 800px">
         <q-card-section>
@@ -113,6 +175,21 @@
       </q-card>
     </q-dialog>
 
+    <q-dialog v-model="confirmDeleteDialog" persistent>
+      <q-card style="max-width: 800px; width: 800px">
+        <q-card-section>
+          <div class="text-h6">Confirm Delete</div>
+        </q-card-section>
+
+        <q-form @submit.prevent="deleteSchedule()">
+          <q-card-actions align="right">
+            <q-btn flat label="Cancel" color="grey" @click="confirmDeleteDialog = false" />
+            <q-btn type="submit" label="Delete" color="primary" :loading="submitting" />
+          </q-card-actions>
+        </q-form>
+      </q-card>
+    </q-dialog>
+
     <!-- Import Schedules Dialog -->
     <q-dialog v-model="importDialog" persistent>
       <q-card style="min-width: 420px; max-width: 90vw">
@@ -166,7 +243,7 @@
     <!-- Schedule Table -->
     <q-table
       title="Schedule List"
-      :rows="schedules"
+      :rows="filteredSchedules"
       :columns="columns"
       row-key="_id"
       :pagination="{ rowsPerPage: 10 }"
@@ -174,18 +251,44 @@
       :loading="tableLoading"
       bordered
     >
+      <template v-slot:top-right>
+        <q-input
+          v-model="searchQuery"
+          placeholder="Search..."
+          dense
+          filled
+          clearable
+          class="q-mr-sm"
+          style="width: 200px"
+        >
+          <template v-slot:prepend>
+            <q-icon name="search" />
+          </template>
+        </q-input>
+      </template>
+
       <template v-slot:body-cell-actions="props">
         <q-td>
           <q-btn dense flat icon="edit" color="primary" @click="openEditDialog(props.row)" />
           <q-btn dense flat icon="delete" color="negative" @click="openDeleteDialog(props.row)" />
         </q-td>
       </template>
+
+      <template v-slot:no-data>
+        <div class="full-width row flex-center text-grey q-gutter-sm">
+          <q-icon size="2em" name="sentiment_dissatisfied" />
+          <span v-if="searchQuery || filterCourse || filterSection || filterDay">
+            No schedules match your search criteria
+          </span>
+          <span v-else> No schedules available </span>
+        </div>
+      </template>
     </q-table>
   </q-page>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useQuasar, Notify } from 'quasar'
 import axios from 'axios'
 
@@ -197,13 +300,18 @@ const confirmDeleteDialog = ref(false)
 const loadingCourses = ref(true)
 const submitting = ref(false)
 const tableLoading = ref(true)
-
 const importDialog = ref(false)
 const importFile = ref(null)
 const importLoading = ref(false)
-
 const editingSchedule = ref(null)
 const scheduleToDelete = ref(null)
+
+// Search and Filter states
+const searchQuery = ref('')
+const showFilters = ref(false)
+const filterCourse = ref(null)
+const filterSection = ref(null)
+const filterDay = ref(null)
 
 // Form data
 const scheduleCourse = ref('')
@@ -233,6 +341,87 @@ const sectionOptions = ref([
 
 const courseOptions = ref([])
 const schedules = ref([])
+
+// Computed properties for filter options
+const filterCourseOptions = computed(() => {
+  const courses = [...new Set(schedules.value.map((s) => s.course?.code).filter(Boolean))]
+  return courses.map((code) => ({
+    label: code,
+    value: code,
+  }))
+})
+
+const filterSectionOptions = computed(() => {
+  const sections = [...new Set(schedules.value.map((s) => s.section).filter(Boolean))]
+  return sections
+    .map((section) => ({
+      label: section,
+      value: section,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label))
+})
+
+const filterDayOptions = computed(() => {
+  const days = []
+  schedules.value.forEach((schedule) => {
+    schedule.schedule?.forEach((s) => {
+      if (s.day && !days.includes(s.day)) {
+        days.push(s.day)
+      }
+    })
+  })
+  return days
+    .map((day) => ({
+      label: day,
+      value: day,
+    }))
+    .sort(
+      (a, b) =>
+        dayOptions.value.findIndex((d) => d.value === a.value) -
+        dayOptions.value.findIndex((d) => d.value === b.value),
+    )
+})
+
+// Computed property for filtered schedules
+const filteredSchedules = computed(() => {
+  if (!searchQuery.value && !filterCourse.value && !filterSection.value && !filterDay.value) {
+    return schedules.value
+  }
+
+  return schedules.value.filter((schedule) => {
+    // Search query filter
+    if (searchQuery.value) {
+      const query = searchQuery.value.toLowerCase()
+      const matchesSearch =
+        schedule.code?.toLowerCase().includes(query) ||
+        schedule.course?.code?.toLowerCase().includes(query) ||
+        schedule.course?.name?.toLowerCase().includes(query) ||
+        schedule.section?.toLowerCase().includes(query) ||
+        schedule.schedule?.some(
+          (s) => s.room?.toLowerCase().includes(query) || s.day?.toLowerCase().includes(query),
+        )
+      if (!matchesSearch) return false
+    }
+
+    // Course filter
+    if (filterCourse.value && schedule.course?.code !== filterCourse.value) {
+      return false
+    }
+
+    // Section filter
+    if (filterSection.value && schedule.section !== filterSection.value) {
+      return false
+    }
+
+    // Day filter
+    if (filterDay.value) {
+      const hasDay = schedule.schedule?.some((s) => s.day === filterDay.value)
+      if (!hasDay) return false
+    }
+
+    return true
+  })
+})
 
 const columns = [
   { name: 'code', label: 'Schedule Code', field: 'code', align: 'left' },
@@ -328,7 +517,7 @@ const getCourses = async () => {
 
 const getSchedules = async () => {
   try {
-    const res = await axios.get(`${process.env.api_host}/courses/getSchedule`)
+    const res = await axios.get(`${process.env.api_host}/courses/getSchedule?isArchived=false`)
     schedules.value = res.data
   } catch (err) {
     $q.notify({ type: 'negative', message: 'Failed to load schedules' })
@@ -388,13 +577,33 @@ const updateSchedule = async () => {
 
 const deleteSchedule = async () => {
   try {
-    await axios.delete(`${process.env.api_host}/courses/schedule/${scheduleToDelete.value._id}`)
+    const payload = {
+      isArchived: true,
+    }
+    await axios.put(
+      `${process.env.api_host}/courses/schedule/${scheduleToDelete.value._id}`,
+      payload,
+    )
     $q.notify({ type: 'positive', message: 'Schedule deleted successfully' })
     confirmDeleteDialog.value = false
     getSchedules()
   } catch {
     $q.notify({ type: 'negative', message: 'Failed to delete schedule' })
   }
+}
+
+// Search and Filter functions
+function filterSchedules() {
+  // This is handled by the computed property, but we can add any additional logic here
+  console.log('Filtering schedules...')
+}
+
+function clearFilters() {
+  searchQuery.value = ''
+  filterCourse.value = null
+  filterSection.value = null
+  filterDay.value = null
+  showFilters.value = false
 }
 
 // Import dialog actions
@@ -434,23 +643,6 @@ async function uploadScheduleExcel() {
     Notify.create({ type: 'negative', message: msg })
   } finally {
     importLoading.value = false
-  }
-}
-
-async function downloadScheduleTemplate() {
-  try {
-    const { data } = await axios.get(`${process.env.api_host}/courses/excel/template`, {
-      responseType: 'blob',
-    })
-    const url = window.URL.createObjectURL(new Blob([data]))
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', 'ScheduleTemplate.xlsx')
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-  } catch {
-    Notify.create({ type: 'negative', message: 'Failed to download template' })
   }
 }
 
