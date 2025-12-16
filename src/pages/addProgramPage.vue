@@ -21,7 +21,7 @@
                   <div class="text-subtitle2 q-mb-sm">Program</div>
                   <div class="input-field">
                     <q-select
-                      v-model="selectedProgram"
+                      v-model="courseProgram"
                       :options="optionPrograms"
                       emit-value
                       map-options

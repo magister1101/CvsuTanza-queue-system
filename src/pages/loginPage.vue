@@ -85,6 +85,7 @@ const password = ref(username)
 const loading = ref(false)
 
 async function login() {
+  console.log('Logging in...', username.value)
   loading.value = true
   try {
     const response = await axios.post(
