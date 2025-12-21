@@ -84,7 +84,7 @@
                         </div>
                       </div>
                       <div class="col-12 col-sm-4">
-                        <div class="text-subtitle2 q-mb-sm">Username</div>
+                        <div class="text-subtitle2 q-mb-sm">Student Number</div>
                         <div class="input-field">
                           <q-input v-model="studentNumber" type="text" borderless dense />
                         </div>
@@ -562,7 +562,7 @@
                   </div>
                 </div>
                 <div class="col-12 col-sm-4">
-                  <div class="text-subtitle2 q-mb-sm">Username</div>
+                  <div class="text-subtitle2 q-mb-sm">Student Number</div>
                   <div class="input-field">
                     <q-input v-model="editForm.studentId" type="text" borderless dense />
                   </div>

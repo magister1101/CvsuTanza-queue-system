@@ -93,7 +93,7 @@
             <q-select
               v-model="scheduleCourse"
               :options="courseOptions"
-              :option-label="(opt) => (opt ? `${opt.name} (${opt.course})` : '')"
+              :option-label="(opt) => (opt ? `${opt.code} - ${opt.name}` : '')"
               option-value="_id"
               label="Select Course"
               filled
@@ -152,7 +152,13 @@
                   />
                 </div>
                 <div class="col-auto">
-                  <q-btn round icon="close" color="negative" @click="removeEntry(index)" />
+                  <q-btn
+                    round
+                    icon="close"
+                    color="negative"
+                    @click="removeEntry(index)"
+                    :disabled="scheduleEntries.length === 1"
+                  />
                 </div>
               </div>
             </div>
@@ -163,7 +169,7 @@
           </q-card-section>
 
           <q-card-actions align="right">
-            <q-btn flat label="Cancel" color="grey" @click="showDialog = false" />
+            <q-btn flat label="Cancel" color="grey" @click="cancelDialog" />
             <q-btn
               type="submit"
               :label="editingSchedule ? 'Update' : 'Create'"
@@ -176,17 +182,21 @@
     </q-dialog>
 
     <q-dialog v-model="confirmDeleteDialog" persistent>
-      <q-card style="max-width: 800px; width: 800px">
+      <q-card style="max-width: 500px; width: 500px">
         <q-card-section>
           <div class="text-h6">Confirm Delete</div>
+          <div class="q-mt-md">
+            Are you sure you want to delete the schedule for
+            <strong>{{ scheduleToDelete?.course?.code }}</strong> - Section
+            <strong>{{ scheduleToDelete?.section }}</strong
+            >?
+          </div>
         </q-card-section>
 
-        <q-form @submit.prevent="deleteSchedule()">
-          <q-card-actions align="right">
-            <q-btn flat label="Cancel" color="grey" @click="confirmDeleteDialog = false" />
-            <q-btn type="submit" label="Delete" color="primary" :loading="submitting" />
-          </q-card-actions>
-        </q-form>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" color="grey" @click="cancelDeleteDialog" />
+          <q-btn label="Delete" color="negative" @click="deleteSchedule" :loading="submitting" />
+        </q-card-actions>
       </q-card>
     </q-dialog>
 
@@ -315,7 +325,6 @@ const filterDay = ref(null)
 
 // Form data
 const scheduleCourse = ref('')
-const scheduleProgram = ref('')
 const scheduleSection = ref('')
 const scheduleEntries = ref([{ day: '', startTime: '', endTime: '', room: '' }])
 
@@ -480,6 +489,9 @@ const timeOptions = ref(
   }),
 )
 
+// Add TBA to time options
+timeOptions.value.unshift({ label: 'TBA', value: 'TBA' })
+
 // Auto-set TBA times
 watch(
   scheduleEntries,
@@ -488,26 +500,17 @@ watch(
       if (entry.day === 'TBA') {
         entry.startTime = 'TBA'
         entry.endTime = 'TBA'
-      } else {
-        if (entry.startTime === 'TBA') entry.startTime = ''
-        if (entry.endTime === 'TBA') entry.endTime = ''
       }
     })
   },
   { deep: true },
 )
 
-// Watch course change to auto-fill program
-watch(scheduleCourse, (courseId) => {
-  const selected = courseOptions.value.find((c) => c._id === courseId)
-  scheduleProgram.value = selected?.program || ''
-})
-
 // Functions
 const getCourses = async () => {
   try {
-    // const res = await axios.get(`${process.env.api_host}/courses`)
-    // courseOptions.value = res.data
+    const res = await axios.get(`${process.env.api_host}/courses?isArchived=false`)
+    courseOptions.value = res.data
   } catch (err) {
     $q.notify({ type: 'negative', message: 'Failed to load courses' })
   } finally {
@@ -517,6 +520,7 @@ const getCourses = async () => {
 
 const getSchedules = async () => {
   try {
+    tableLoading.value = true
     const res = await axios.get(`${process.env.api_host}/courses/getSchedule?isArchived=false`)
     schedules.value = res.data
   } catch (err) {
@@ -530,21 +534,34 @@ const createSchedule = async () => {
   try {
     submitting.value = true
 
+    // Validate entries
+    const validEntries = scheduleEntries.value.filter(
+      (entry) => entry.day && entry.startTime && entry.endTime && entry.room,
+    )
+
+    if (validEntries.length === 0) {
+      $q.notify({ type: 'warning', message: 'Please add at least one valid schedule entry' })
+      return
+    }
+
     const payload = {
       course: scheduleCourse.value,
       section: scheduleSection.value,
       code: generateCode(),
-      schedule: scheduleEntries.value,
+      schedule: validEntries,
     }
 
     await axios.post(`${process.env.api_host}/courses/createSchedule`, payload)
 
     $q.notify({ type: 'positive', message: 'Schedule created successfully' })
-    showDialog.value = false
-    resetForm()
+    cancelDialog()
     getSchedules()
-  } catch {
-    $q.notify({ type: 'negative', message: 'Failed to create schedule' })
+  } catch (error) {
+    console.error('Create schedule error:', error)
+    $q.notify({
+      type: 'negative',
+      message: error.response?.data?.message || 'Failed to create schedule',
+    })
   } finally {
     submitting.value = false
   }
@@ -554,9 +571,20 @@ const updateSchedule = async () => {
   try {
     submitting.value = true
 
+    // Validate entries
+    const validEntries = scheduleEntries.value.filter(
+      (entry) => entry.day && entry.startTime && entry.endTime && entry.room,
+    )
+
+    if (validEntries.length === 0) {
+      $q.notify({ type: 'warning', message: 'Please add at least one valid schedule entry' })
+      return
+    }
+
     const payload = {
+      course: scheduleCourse.value,
       section: scheduleSection.value,
-      schedule: scheduleEntries.value,
+      schedule: validEntries,
     }
 
     await axios.put(
@@ -565,11 +593,14 @@ const updateSchedule = async () => {
     )
 
     $q.notify({ type: 'positive', message: 'Schedule updated successfully' })
-    showDialog.value = false
-    resetForm()
+    cancelDialog()
     getSchedules()
-  } catch {
-    $q.notify({ type: 'negative', message: 'Failed to update schedule' })
+  } catch (error) {
+    console.error('Update schedule error:', error)
+    $q.notify({
+      type: 'negative',
+      message: error.response?.data?.message || 'Failed to update schedule',
+    })
   } finally {
     submitting.value = false
   }
@@ -577,6 +608,7 @@ const updateSchedule = async () => {
 
 const deleteSchedule = async () => {
   try {
+    submitting.value = true
     const payload = {
       isArchived: true,
     }
@@ -585,10 +617,16 @@ const deleteSchedule = async () => {
       payload,
     )
     $q.notify({ type: 'positive', message: 'Schedule deleted successfully' })
-    confirmDeleteDialog.value = false
+    cancelDeleteDialog()
     getSchedules()
-  } catch {
-    $q.notify({ type: 'negative', message: 'Failed to delete schedule' })
+  } catch (error) {
+    console.error('Delete schedule error:', error)
+    $q.notify({
+      type: 'negative',
+      message: error.response?.data?.message || 'Failed to delete schedule',
+    })
+  } finally {
+    submitting.value = false
   }
 }
 
@@ -628,14 +666,13 @@ async function uploadScheduleExcel() {
     importLoading.value = true
 
     const response = await axios.post(
-      `${process.env.api_host}/courses/excel/importSchedules`, // Replace with your backend URL
+      `${process.env.api_host}/courses/excel/importSchedules`,
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } },
     )
 
     Notify.create({ type: 'positive', message: 'Schedules imported successfully' })
     closeImportDialog()
-    tableLoading.value = true
     await getSchedules()
   } catch (err) {
     const msg =
@@ -651,31 +688,58 @@ function addEntry() {
   scheduleEntries.value.push({ day: '', startTime: '', endTime: '', room: '' })
 }
 function removeEntry(index) {
-  scheduleEntries.value.splice(index, 1)
+  if (scheduleEntries.value.length > 1) {
+    scheduleEntries.value.splice(index, 1)
+  }
 }
 function resetForm() {
-  editingSchedule.value = null
   scheduleCourse.value = ''
-  scheduleProgram.value = ''
   scheduleSection.value = ''
   scheduleEntries.value = [{ day: '', startTime: '', endTime: '', room: '' }]
 }
 function generateCode() {
-  const courseName =
-    courseOptions.value.find((c) => c._id === scheduleCourse.value)?.code || 'UNKNOWN'
-  return `${courseName}-${Date.now()}`
+  const course = courseOptions.value.find((c) => c._id === scheduleCourse.value)
+  const courseCode = course?.code || 'UNKNOWN'
+  const timestamp = Date.now().toString().slice(-6)
+  return `${courseCode}-${scheduleSection.value}-${timestamp}`
 }
+
+function cancelDialog() {
+  showDialog.value = false
+  editingSchedule.value = null
+  resetForm()
+}
+
+function cancelDeleteDialog() {
+  confirmDeleteDialog.value = false
+  scheduleToDelete.value = null
+}
+
 function openCreateDialog() {
   resetForm()
   showDialog.value = true
 }
+
 function openEditDialog(schedule) {
   editingSchedule.value = schedule
   scheduleCourse.value = schedule.course?._id || schedule.course
   scheduleSection.value = schedule.section
-  scheduleEntries.value = JSON.parse(JSON.stringify(schedule.schedule))
+
+  // Ensure schedule entries are properly formatted
+  if (schedule.schedule && Array.isArray(schedule.schedule)) {
+    scheduleEntries.value = schedule.schedule.map((entry) => ({
+      day: entry.day || '',
+      startTime: entry.startTime || '',
+      endTime: entry.endTime || '',
+      room: entry.room || '',
+    }))
+  } else {
+    scheduleEntries.value = [{ day: '', startTime: '', endTime: '', room: '' }]
+  }
+
   showDialog.value = true
 }
+
 function openDeleteDialog(schedule) {
   scheduleToDelete.value = schedule
   confirmDeleteDialog.value = true
