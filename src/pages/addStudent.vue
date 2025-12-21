@@ -9,7 +9,7 @@
         </q-card-section>
         <!-- buttons add student/export -->
         <div class="button-container">
-          <!-- <q-card-section class="button-section" v-if="isAdmin">
+          <q-card-section class="button-section" v-if="isAdmin">
             <q-btn
               label="Add Student"
               no-caps
@@ -17,7 +17,7 @@
               flat
               class="action-button"
             />
-          </q-card-section> -->
+          </q-card-section>
 
           <q-card-section class="button-section" v-if="isAdmin">
             <q-btn
@@ -57,7 +57,7 @@
         <!-- add student -->
         <div>
           <q-dialog v-model="addStudentPopUp" persistent>
-            <q-card style="width: 800px; max-width: 95vw">
+            <q-card style="width: 900px; max-width: 95vw; max-height: 90vh" class="scroll">
               <q-form @submit.prevent="addStudent">
                 <div class="q-pa-md">
                   <q-card-section class="text-h6 text-weight-medium" style="color: #282726">
@@ -68,51 +68,31 @@
                       <div class="col-12 col-sm-4">
                         <div class="text-subtitle2 q-mb-sm">First Name</div>
                         <div class="input-field">
-                          <q-input v-model="firstName" type="text" borderless />
+                          <q-input v-model="firstName" type="text" borderless dense />
                         </div>
                       </div>
                       <div class="col-12 col-sm-4">
                         <div class="text-subtitle2 q-mb-sm">Middle Name</div>
                         <div class="input-field">
-                          <q-input v-model="middleName" type="text" borderless />
+                          <q-input v-model="middleName" type="text" borderless dense />
                         </div>
                       </div>
                       <div class="col-12 col-sm-4">
                         <div class="text-subtitle2 q-mb-sm">Last Name</div>
                         <div class="input-field">
-                          <q-input v-model="lastName" type="text" borderless />
+                          <q-input v-model="lastName" type="text" borderless dense />
                         </div>
                       </div>
                       <div class="col-12 col-sm-4">
                         <div class="text-subtitle2 q-mb-sm">Username</div>
                         <div class="input-field">
-                          <q-input v-model="username" type="text" borderless />
-                        </div>
-                      </div>
-                      <div class="col-12 col-sm-4">
-                        <div class="text-subtitle2 q-mb-sm">Password</div>
-                        <div class="input-field">
-                          <q-input v-model="password" type="password" borderless />
-                        </div>
-                      </div>
-                      <div class="col-12 col-sm-4">
-                        <div class="text-subtitle2 q-mb-sm">Confirm Password</div>
-                        <div class="input-field">
-                          <q-input v-model="confirmPassword" type="password" borderless />
-                        </div>
-                      </div>
-                    </div>
-                    <div class="row q-col-gutter-md">
-                      <div class="col-12 col-sm-4">
-                        <div class="text-subtitle2 q-mb-sm">Student ID</div>
-                        <div class="input-field">
-                          <q-input v-model="studentId" type="number" borderless />
+                          <q-input v-model="studentNumber" type="text" borderless dense />
                         </div>
                       </div>
                       <div class="col-12 col-sm-4">
                         <div class="text-subtitle2 q-mb-sm">Email</div>
                         <div class="input-field">
-                          <q-input v-model="email" type="email" borderless />
+                          <q-input v-model="email" type="email" borderless dense />
                         </div>
                       </div>
                       <div class="col-12 col-sm-4">
@@ -122,14 +102,13 @@
                             v-model="program"
                             type="text"
                             borderless
+                            dense
                             :options="programOption.option"
                             option-value="value"
                             option-label="label"
                           />
                         </div>
                       </div>
-                    </div>
-                    <div class="row q-col-gutter-md">
                       <div class="col-12 col-sm-4">
                         <div class="text-subtitle2 q-mb-sm">Year</div>
                         <div class="input-field">
@@ -137,6 +116,7 @@
                             v-model="year"
                             type="text"
                             borderless
+                            dense
                             :options="yearOption.options"
                           />
                         </div>
@@ -148,6 +128,7 @@
                             v-model="section"
                             type="text"
                             borderless
+                            dense
                             :options="sectionOption.options"
                           />
                         </div>
@@ -159,7 +140,116 @@
                             v-model="status"
                             type="text"
                             borderless
+                            dense
                             :options="statusOption"
+                          />
+                        </div>
+                      </div>
+                      <div class="col-12 col-sm-4">
+                        <div class="text-subtitle2 q-mb-sm">House Number</div>
+                        <div class="input-field">
+                          <q-input v-model="houseNumber" type="text" borderless dense />
+                        </div>
+                      </div>
+                      <div class="col-12 col-sm-4">
+                        <div class="text-subtitle2 q-mb-sm">Street</div>
+                        <div class="input-field">
+                          <q-input v-model="street" type="text" borderless dense />
+                        </div>
+                      </div>
+                      <div class="col-12 col-sm-4">
+                        <div class="text-subtitle2 q-mb-sm">Barangay</div>
+                        <div class="input-field">
+                          <q-input v-model="barangay" type="text" borderless dense />
+                        </div>
+                      </div>
+                      <div class="col-12 col-sm-4">
+                        <div class="text-subtitle2 q-mb-sm">City</div>
+                        <div class="input-field">
+                          <q-input v-model="city" type="text" borderless dense />
+                        </div>
+                      </div>
+                      <div class="col-12 col-sm-4">
+                        <div class="text-subtitle2 q-mb-sm">Province</div>
+                        <div class="input-field">
+                          <q-input v-model="province" type="text" borderless dense />
+                        </div>
+                      </div>
+                      <div class="col-12 col-sm-4">
+                        <div class="text-subtitle2 q-mb-sm">Sex</div>
+                        <div class="input-field">
+                          <q-select
+                            v-model="sex"
+                            type="text"
+                            borderless
+                            dense
+                            :options="sexOptions"
+                          />
+                        </div>
+                      </div>
+                      <div class="col-12 col-sm-4">
+                        <div class="text-subtitle2 q-mb-sm">Birth Date</div>
+                        <div class="input-field">
+                          <q-input v-model="birthDate" type="date" borderless dense />
+                        </div>
+                      </div>
+                      <div class="col-12 col-sm-4">
+                        <div class="text-subtitle2 q-mb-sm">Elementary School</div>
+                        <div class="input-field">
+                          <q-input v-model="elementarySchool" type="text" borderless dense />
+                        </div>
+                      </div>
+                      <div class="col-12 col-sm-4">
+                        <div class="text-subtitle2 q-mb-sm">High School</div>
+                        <div class="input-field">
+                          <q-input v-model="highSchool" type="text" borderless dense />
+                        </div>
+                      </div>
+                      <div class="col-12 col-sm-4">
+                        <div class="text-subtitle2 q-mb-sm">Senior High School</div>
+                        <div class="input-field">
+                          <q-input v-model="seniorHighSchool" type="text" borderless dense />
+                        </div>
+                      </div>
+                      <div class="col-12 col-sm-4">
+                        <div class="text-subtitle2 q-mb-sm">School Address</div>
+                        <div class="input-field">
+                          <q-input v-model="schoolAddress" type="text" borderless dense />
+                        </div>
+                      </div>
+                      <div class="col-12 col-sm-4">
+                        <div class="text-subtitle2 q-mb-sm">Indigenous</div>
+                        <div class="input-field">
+                          <q-select
+                            v-model="isYouIndigenous"
+                            type="text"
+                            borderless
+                            dense
+                            :options="boolOpt.options"
+                          />
+                        </div>
+                      </div>
+                      <div class="col-12 col-sm-4">
+                        <div class="text-subtitle2 q-mb-sm">Disabled</div>
+                        <div class="input-field">
+                          <q-select
+                            v-model="isDisabled"
+                            type="text"
+                            borderless
+                            dense
+                            :options="boolOpt.options"
+                          />
+                        </div>
+                      </div>
+                      <div class="col-12 col-sm-4">
+                        <div class="text-subtitle2 q-mb-sm">First College Graduate</div>
+                        <div class="input-field">
+                          <q-select
+                            v-model="isFirstCollegeGraduate"
+                            type="text"
+                            borderless
+                            dense
+                            :options="boolOpt.options"
                           />
                         </div>
                       </div>
@@ -363,7 +453,7 @@
                               flat
                             />
                           </div>
-                          <div>
+                          <!-- <div>
                             <q-btn
                               @click="resetPassword(props.row._id)"
                               style="width: 100%"
@@ -372,7 +462,7 @@
                               no-caps
                               flat
                             />
-                          </div>
+                          </div> -->
                           <div>
                             <q-btn
                               :loading="loading"
@@ -445,7 +535,7 @@
     </template>
     <!-- Edit dialog -->
     <q-dialog v-model="editStudentInfo" persistent>
-      <q-card style="width: 800px; max-width: 95vw">
+      <q-card style="width: 900px; max-width: 95vw; max-height: 90vh" class="scroll">
         <q-form @submit.prevent="editStudent(selectedStudentId)">
           <div class="q-pa-md">
             <q-card-section class="text-h6 text-weight-medium" style="color: #282726">
@@ -456,33 +546,31 @@
                 <div class="col-12 col-sm-4">
                   <div class="text-subtitle2 q-mb-sm">First Name</div>
                   <div class="input-field">
-                    <q-input v-model="editForm.firstName" type="text" borderless />
+                    <q-input v-model="editForm.firstName" type="text" borderless dense />
                   </div>
                 </div>
                 <div class="col-12 col-sm-4">
                   <div class="text-subtitle2 q-mb-sm">Middle Name</div>
                   <div class="input-field">
-                    <q-input v-model="editForm.middleName" type="text" borderless />
+                    <q-input v-model="editForm.middleName" type="text" borderless dense />
                   </div>
                 </div>
                 <div class="col-12 col-sm-4">
                   <div class="text-subtitle2 q-mb-sm">Last Name</div>
                   <div class="input-field">
-                    <q-input v-model="editForm.lastName" type="text" borderless />
+                    <q-input v-model="editForm.lastName" type="text" borderless dense />
                   </div>
                 </div>
-              </div>
-              <div class="row q-col-gutter-md">
                 <div class="col-12 col-sm-4">
-                  <div class="text-subtitle2 q-mb-sm">Student ID</div>
+                  <div class="text-subtitle2 q-mb-sm">Username</div>
                   <div class="input-field">
-                    <q-input v-model="editForm.studentId" type="number" borderless />
+                    <q-input v-model="editForm.studentId" type="text" borderless dense />
                   </div>
                 </div>
                 <div class="col-12 col-sm-4">
                   <div class="text-subtitle2 q-mb-sm">Email</div>
                   <div class="input-field">
-                    <q-input v-model="editForm.email" type="email" borderless />
+                    <q-input v-model="editForm.email" type="email" borderless dense />
                   </div>
                 </div>
                 <div class="col-12 col-sm-4">
@@ -492,14 +580,13 @@
                       v-model="editForm.program"
                       type="text"
                       borderless
+                      dense
                       :options="programOption.option"
                       option-value="value"
                       option-label="label"
                     />
                   </div>
                 </div>
-              </div>
-              <div class="row q-col-gutter-md">
                 <div class="col-12 col-sm-4">
                   <div class="text-subtitle2 q-mb-sm">Year</div>
                   <div class="input-field">
@@ -507,6 +594,7 @@
                       v-model="editForm.year"
                       type="text"
                       borderless
+                      dense
                       :options="editYearOption.options"
                     />
                   </div>
@@ -518,6 +606,7 @@
                       v-model="editForm.section"
                       type="text"
                       borderless
+                      dense
                       :options="editSectionOption.options"
                     />
                   </div>
@@ -529,7 +618,116 @@
                       v-model="editForm.status"
                       type="text"
                       borderless
+                      dense
                       :options="editStatusOption"
+                    />
+                  </div>
+                </div>
+                <div class="col-12 col-sm-4">
+                  <div class="text-subtitle2 q-mb-sm">House Number</div>
+                  <div class="input-field">
+                    <q-input v-model="editForm.houseNumber" type="text" borderless dense />
+                  </div>
+                </div>
+                <div class="col-12 col-sm-4">
+                  <div class="text-subtitle2 q-mb-sm">Street</div>
+                  <div class="input-field">
+                    <q-input v-model="editForm.street" type="text" borderless dense />
+                  </div>
+                </div>
+                <div class="col-12 col-sm-4">
+                  <div class="text-subtitle2 q-mb-sm">Barangay</div>
+                  <div class="input-field">
+                    <q-input v-model="editForm.barangay" type="text" borderless dense />
+                  </div>
+                </div>
+                <div class="col-12 col-sm-4">
+                  <div class="text-subtitle2 q-mb-sm">City</div>
+                  <div class="input-field">
+                    <q-input v-model="editForm.city" type="text" borderless dense />
+                  </div>
+                </div>
+                <div class="col-12 col-sm-4">
+                  <div class="text-subtitle2 q-mb-sm">Province</div>
+                  <div class="input-field">
+                    <q-input v-model="editForm.province" type="text" borderless dense />
+                  </div>
+                </div>
+                <div class="col-12 col-sm-4">
+                  <div class="text-subtitle2 q-mb-sm">Sex</div>
+                  <div class="input-field">
+                    <q-select
+                      v-model="editForm.sex"
+                      type="text"
+                      borderless
+                      dense
+                      :options="sexOptions"
+                    />
+                  </div>
+                </div>
+                <div class="col-12 col-sm-4">
+                  <div class="text-subtitle2 q-mb-sm">Birth Date</div>
+                  <div class="input-field">
+                    <q-input v-model="editForm.birthDate" type="date" borderless dense />
+                  </div>
+                </div>
+                <div class="col-12 col-sm-4">
+                  <div class="text-subtitle2 q-mb-sm">Elementary School</div>
+                  <div class="input-field">
+                    <q-input v-model="editForm.elementarySchool" type="text" borderless dense />
+                  </div>
+                </div>
+                <div class="col-12 col-sm-4">
+                  <div class="text-subtitle2 q-mb-sm">High School</div>
+                  <div class="input-field">
+                    <q-input v-model="editForm.highSchool" type="text" borderless dense />
+                  </div>
+                </div>
+                <div class="col-12 col-sm-4">
+                  <div class="text-subtitle2 q-mb-sm">Senior High School</div>
+                  <div class="input-field">
+                    <q-input v-model="editForm.seniorHighSchool" type="text" borderless dense />
+                  </div>
+                </div>
+                <div class="col-12 col-sm-4">
+                  <div class="text-subtitle2 q-mb-sm">School Address</div>
+                  <div class="input-field">
+                    <q-input v-model="editForm.schoolAddress" type="text" borderless dense />
+                  </div>
+                </div>
+                <div class="col-12 col-sm-4">
+                  <div class="text-subtitle2 q-mb-sm">Indigenous</div>
+                  <div class="input-field">
+                    <q-select
+                      v-model="editForm.isYouIndigenous"
+                      type="text"
+                      borderless
+                      dense
+                      :options="boolOpt.options"
+                    />
+                  </div>
+                </div>
+                <div class="col-12 col-sm-4">
+                  <div class="text-subtitle2 q-mb-sm">Disabled</div>
+                  <div class="input-field">
+                    <q-select
+                      v-model="editForm.isDisabled"
+                      type="text"
+                      borderless
+                      dense
+                      :options="boolOpt.options"
+                    />
+                  </div>
+                </div>
+                <div class="col-12 col-sm-4">
+                  <div class="text-subtitle2 q-mb-sm">First College Graduate</div>
+                  <div class="input-field">
+                    <q-select
+                      v-model="editForm.isFirstCollegeGraduate"
+                      type="text"
+                      borderless
+                      dense
+                      :options="boolOpt.options"
                     />
                   </div>
                 </div>
@@ -630,6 +828,110 @@
               </q-item-section>
             </q-item>
 
+            <q-item v-if="selectedStudent.houseNumber">
+              <q-item-section>
+                <q-item-label><strong>House Number:</strong></q-item-label>
+                <q-item-label caption>{{ selectedStudent.houseNumber }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item v-if="selectedStudent.street">
+              <q-item-section>
+                <q-item-label><strong>Street:</strong></q-item-label>
+                <q-item-label caption>{{ selectedStudent.street }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item v-if="selectedStudent.barangay">
+              <q-item-section>
+                <q-item-label><strong>Barangay:</strong></q-item-label>
+                <q-item-label caption>{{ selectedStudent.barangay }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item v-if="selectedStudent.city">
+              <q-item-section>
+                <q-item-label><strong>City:</strong></q-item-label>
+                <q-item-label caption>{{ selectedStudent.city }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item v-if="selectedStudent.province">
+              <q-item-section>
+                <q-item-label><strong>Province:</strong></q-item-label>
+                <q-item-label caption>{{ selectedStudent.province }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item v-if="selectedStudent.sex">
+              <q-item-section>
+                <q-item-label><strong>Sex:</strong></q-item-label>
+                <q-item-label caption>{{ selectedStudent.sex }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item v-if="selectedStudent.birthDate">
+              <q-item-section>
+                <q-item-label><strong>Birth Date:</strong></q-item-label>
+                <q-item-label caption>{{
+                  new Date(selectedStudent.birthDate).toLocaleDateString()
+                }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item v-if="selectedStudent.elementarySchool">
+              <q-item-section>
+                <q-item-label><strong>Elementary School:</strong></q-item-label>
+                <q-item-label caption>{{ selectedStudent.elementarySchool }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item v-if="selectedStudent.highSchool">
+              <q-item-section>
+                <q-item-label><strong>High School:</strong></q-item-label>
+                <q-item-label caption>{{ selectedStudent.highSchool }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item v-if="selectedStudent.seniorHighSchool">
+              <q-item-section>
+                <q-item-label><strong>Senior High School:</strong></q-item-label>
+                <q-item-label caption>{{ selectedStudent.seniorHighSchool }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item v-if="selectedStudent.schoolAddress">
+              <q-item-section>
+                <q-item-label><strong>School Address:</strong></q-item-label>
+                <q-item-label caption>{{ selectedStudent.schoolAddress }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item v-if="selectedStudent.isYouIndigenous !== undefined">
+              <q-item-section>
+                <q-item-label><strong>Indigenous:</strong></q-item-label>
+                <q-item-label caption>{{
+                  selectedStudent.isYouIndigenous ? 'Yes' : 'No'
+                }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item v-if="selectedStudent.isDisabled !== undefined">
+              <q-item-section>
+                <q-item-label><strong>Disabled:</strong></q-item-label>
+                <q-item-label caption>{{ selectedStudent.isDisabled ? 'Yes' : 'No' }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item v-if="selectedStudent.isFirstCollegeGraduate !== undefined">
+              <q-item-section>
+                <q-item-label><strong>First College Graduate:</strong></q-item-label>
+                <q-item-label caption>{{
+                  selectedStudent.isFirstCollegeGraduate ? 'Yes' : 'No'
+                }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
             <q-item v-if="selectedStudent.createdAt">
               <q-item-section>
                 <q-item-label><strong>Created At:</strong></q-item-label>
@@ -679,15 +981,14 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Notify, exportFile, is } from 'quasar'
-import { useRouter, useRoute } from 'vue-router'
+import { Notify, exportFile } from 'quasar'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 
 // loading
 const loading = ref(false)
 
 //router
-const route = useRoute()
 const router = useRouter()
 
 //value
@@ -704,14 +1005,12 @@ const editStudentInfo = ref(false)
 const deleteDialog = ref(false)
 
 // Form fields
+const studentNumber = ref('')
+const email = ref('')
 const username = ref('')
-const password = ref('')
-const confirmPassword = ref('')
 const firstName = ref('')
 const middleName = ref('')
 const lastName = ref('')
-const studentId = ref('')
-const email = ref('')
 const program = ref('')
 const programOption = ref({})
 const year = ref('')
@@ -722,8 +1021,28 @@ const section = ref('')
 const sectionOption = ref({
   options: ['1', '2', '3', '4', '5', '6', '7'],
 })
+const boolOpt = ref({
+  options: ['true', 'false'],
+})
 const statusOption = ref(['Regular', 'Irregular'])
 const status = ref('Regular')
+const houseNumber = ref('')
+const street = ref('')
+const barangay = ref('')
+const city = ref('')
+const province = ref('')
+const sex = ref('')
+const sexOptions = ['Male', 'Female', 'Other']
+const birthDate = ref('')
+const elementarySchool = ref('')
+const highSchool = ref('')
+const seniorHighSchool = ref('')
+const schoolAddress = ref('')
+const isYouIndigenous = ref('false')
+const isDisabled = ref('false')
+const isFirstCollegeGraduate = ref('false')
+const role = ref('student')
+
 // Edit form
 const editForm = ref({
   firstName: '',
@@ -735,7 +1054,22 @@ const editForm = ref({
   year: '',
   section: '',
   status: '',
+  houseNumber: '',
+  street: '',
+  barangay: '',
+  city: '',
+  province: '',
+  sex: '',
+  birthDate: '',
+  elementarySchool: '',
+  highSchool: '',
+  seniorHighSchool: '',
+  schoolAddress: '',
+  isYouIndigenous: 'false',
+  isDisabled: 'false',
+  isFirstCollegeGraduate: 'false',
 })
+
 //file
 const file = ref(null)
 const loadingImport = ref(false)
@@ -755,15 +1089,29 @@ const tableLoading = ref(false)
 const selectedStudentId = ref(null)
 
 async function cancelAdd() {
-  ;(firstName.value = ''),
-    (middleName.value = ''),
-    (lastName.value = ''),
-    (studentId.value = ''),
-    (email.value = ''),
-    (program.value = ''),
-    (year.value = ''),
-    (section.value = ''),
-    (status.value = '')
+  firstName.value = ''
+  middleName.value = ''
+  lastName.value = ''
+  email.value = ''
+  studentNumber.value = ''
+  program.value = ''
+  year.value = ''
+  section.value = ''
+  status.value = 'Regular'
+  houseNumber.value = ''
+  street.value = ''
+  barangay.value = ''
+  city.value = ''
+  province.value = ''
+  sex.value = ''
+  birthDate.value = ''
+  elementarySchool.value = ''
+  highSchool.value = ''
+  seniorHighSchool.value = ''
+  schoolAddress.value = ''
+  isYouIndigenous.value = 'false'
+  isDisabled.value = 'false'
+  isFirstCollegeGraduate.value = 'false'
   addStudentPopUp.value = false
 }
 
@@ -779,9 +1127,7 @@ async function addStudent() {
     if (
       !firstName.value ||
       !lastName.value ||
-      !username.value ||
-      !password.value ||
-      !confirmPassword.value ||
+      !studentNumber.value ||
       !email.value ||
       !program.value ||
       !year.value ||
@@ -795,23 +1141,6 @@ async function addStudent() {
       loading.value = false
       return
     }
-
-    if (password.value !== confirmPassword.value) {
-      Notify.create({
-        type: 'negative',
-        message: 'Passwords do not match',
-      })
-      loading.value = false
-      return
-    }
-    if (password.value.length < 6) {
-      Notify.create({
-        type: 'negative',
-        message: 'Password must be at least 6 characters long',
-      })
-      loading.value = false
-      return
-    }
     const isRegular = status.value === 'Regular'
     const token = localStorage.getItem('authToken')
     const response = await axios.post(
@@ -821,14 +1150,27 @@ async function addStudent() {
         middleName: middleName.value,
         lastName: lastName.value,
         role: 'student',
-        username: username.value,
-        password: password.value,
+        username: studentNumber.value,
         email: email.value,
+        studentNumber: studentNumber.value,
         course: program.value,
         year: year.value,
         section: section.value,
         isRegular: isRegular,
-        studentNumber: studentId.value,
+        houseNumber: houseNumber.value,
+        street: street.value,
+        barangay: barangay.value,
+        city: city.value,
+        province: province.value,
+        sex: sex.value,
+        birthDate: birthDate.value,
+        elementarySchool: elementarySchool.value,
+        highSchool: highSchool.value,
+        seniorHighSchool: seniorHighSchool.value,
+        schoolAddress: schoolAddress.value,
+        isYouIndigenous: isYouIndigenous.value === 'true',
+        isDisabled: isDisabled.value === 'true',
+        isFirstCollegeGraduate: isFirstCollegeGraduate.value === 'true',
       },
       {
         headers: {
@@ -841,20 +1183,9 @@ async function addStudent() {
     getAllStudents()
     Notify.create({
       type: 'positive',
-      message: 'Register Successfully',
+      message: 'Student added successfully',
     })
-    ;(firstName.value = ''),
-      (middleName.value = ''),
-      (lastName.value = ''),
-      (studentId.value = ''),
-      (email.value = ''),
-      (program.value = ''),
-      (year.value = ''),
-      (section.value = ''),
-      (status.value = ''),
-      (username.value = ''),
-      (password.value = ''),
-      (confirmPassword.value = '')
+    cancelAdd()
   } catch (err) {
     console.error(err)
     Notify.create({
@@ -1006,49 +1337,49 @@ const columns = ref([
   {
     name: 'houseNumber',
     align: 'left',
-    label: 'houseNumber',
+    label: 'House Number',
     field: 'houseNumber',
     sortable: true,
   },
   {
     name: 'street',
     align: 'left',
-    label: 'street',
+    label: 'Street',
     field: 'street',
     sortable: true,
   },
   {
     name: 'barangay',
     align: 'left',
-    label: 'barangay',
+    label: 'Barangay',
     field: 'barangay',
     sortable: true,
   },
   {
     name: 'city',
     align: 'left',
-    label: 'city',
+    label: 'City',
     field: 'city',
     sortable: true,
   },
   {
     name: 'province',
     align: 'left',
-    label: 'province',
+    label: 'Province',
     field: 'province',
     sortable: true,
   },
   {
     name: 'sex',
     align: 'left',
-    label: 'sex',
+    label: 'Sex',
     field: 'sex',
     sortable: true,
   },
   {
     name: 'birthDate',
     align: 'left',
-    label: 'birthDate',
+    label: 'Birth Date',
     field: (row) => {
       if (!row.birthDate) return ''
       return new Date(row.birthDate).toLocaleDateString('en-CA')
@@ -1056,71 +1387,54 @@ const columns = ref([
     sortable: true,
   },
   {
-    name: 'elemenarySchool',
+    name: 'elementarySchool',
     align: 'left',
-    label: 'elemenarySchool',
-    field: 'elemenarySchool',
+    label: 'Elementary School',
+    field: 'elementarySchool',
     sortable: true,
   },
   {
     name: 'highSchool',
     align: 'left',
-    label: 'highSchool',
+    label: 'High School',
     field: 'highSchool',
     sortable: true,
   },
   {
     name: 'seniorHighSchool',
     align: 'left',
-    label: 'seniorHighSchool',
+    label: 'Senior High School',
     field: 'seniorHighSchool',
     sortable: true,
   },
   {
     name: 'schoolAddress',
     align: 'left',
-    label: 'schoolAddress',
+    label: 'School Address',
     field: 'schoolAddress',
     sortable: true,
   },
   {
     name: 'isYouIndigenous',
     align: 'left',
-    label: 'isYouIndigenous',
+    label: 'Indigenous',
     field: (row) => (row.isYouIndigenous ? 'Yes' : 'No'),
     sortable: true,
   },
   {
     name: 'isDisabled',
     align: 'left',
-    label: 'isDisabled',
+    label: 'Disabled',
     field: (row) => (row.isDisabled ? 'Yes' : 'No'),
     sortable: true,
   },
   {
     name: 'isFirstCollegeGraduate',
     align: 'left',
-    label: 'isFirstCollegeGraduate',
+    label: 'First College Graduate',
     field: (row) => (row.isFirstCollegeGraduate ? 'Yes' : 'No'),
     sortable: true,
   },
-
-  // {
-  //   name: 'courses',
-  //   align: 'left',
-  //   label: 'Course Taken',
-  //   field: (row) =>
-  //     Array.isArray(row.courses)
-  //       ? row.courses
-  //           .map((course) =>
-  //             course.courseId && typeof course.courseId === 'object'
-  //               ? course.courseId.code || 'N/A' // Accessing the courseId and getting the code
-  //               : 'N/A',
-  //           )
-  //           .join(', ')
-  //       : 'None',
-  //   sortable: false,
-  // },
   {
     name: 'action',
     align: 'left',
@@ -1228,10 +1542,24 @@ function openEditDialog(student) {
     lastName: student.lastName || '',
     studentId: student.studentNumber || student.username || '',
     email: student.email || '',
-    program: student.course,
+    program: student.course || '',
     year: student.year || '',
     section: student.section || '',
     status: student.isRegular ? 'Regular' : 'Irregular',
+    houseNumber: student.houseNumber || '',
+    street: student.street || '',
+    barangay: student.barangay || '',
+    city: student.city || '',
+    province: student.province || '',
+    sex: student.sex || '',
+    birthDate: student.birthDate ? student.birthDate.split('T')[0] : '',
+    elementarySchool: student.elementarySchool || '',
+    highSchool: student.highSchool || '',
+    seniorHighSchool: student.seniorHighSchool || '',
+    schoolAddress: student.schoolAddress || '',
+    isYouIndigenous: student.isYouIndigenous ? 'true' : 'false',
+    isDisabled: student.isDisabled ? 'true' : 'false',
+    isFirstCollegeGraduate: student.isFirstCollegeGraduate ? 'true' : 'false',
     _id: student._id,
   }
   editStudentInfo.value = true
@@ -1253,6 +1581,20 @@ async function editStudent() {
         year: editForm.value.year,
         section: editForm.value.section,
         isRegular: editForm.value.status === 'Regular',
+        houseNumber: editForm.value.houseNumber,
+        street: editForm.value.street,
+        barangay: editForm.value.barangay,
+        city: editForm.value.city,
+        province: editForm.value.province,
+        sex: editForm.value.sex,
+        birthDate: editForm.value.birthDate,
+        elementarySchool: editForm.value.elementarySchool,
+        highSchool: editForm.value.highSchool,
+        seniorHighSchool: editForm.value.seniorHighSchool,
+        schoolAddress: editForm.value.schoolAddress,
+        isYouIndigenous: editForm.value.isYouIndigenous === 'true',
+        isDisabled: editForm.value.isDisabled === 'true',
+        isFirstCollegeGraduate: editForm.value.isFirstCollegeGraduate === 'true',
       },
       {
         headers: {
@@ -1320,38 +1662,6 @@ async function confirmDelete() {
     loading.value = false
     deleteDialog.value = false
     selectedStudentId.value = null
-  }
-}
-
-async function resetPassword(studentId) {
-  loading.value = true
-  try {
-    const token = localStorage.getItem('authToken')
-    const response = await axios.post(
-      `${process.env.api_host}/users/update/${studentId}`,
-      {
-        password: 'cvsuTanza101',
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          authorization: token,
-        },
-      },
-    )
-
-    Notify.create({
-      type: 'positive',
-      message: 'Password reset successfully',
-    })
-  } catch (err) {
-    console.error(err)
-    Notify.create({
-      type: 'negative',
-      message: 'Something went Wrong',
-    })
-  } finally {
-    loading.value = false
   }
 }
 
@@ -1510,50 +1820,114 @@ async function userInfo() {
   }
 }
 
-// export button
-function wrapCsvValue(val, formatFn, row) {
-  let formatted = formatFn !== void 0 ? formatFn(val, row) : val
+// Modified export button function
+function wrapCsvValue(val) {
+  if (val === null || val === undefined) {
+    return ''
+  }
 
-  formatted = formatted === void 0 || formatted === null ? '' : String(formatted)
-
+  let formatted = String(val)
   formatted = formatted.split('"').join('""')
-
   return `"${formatted}"`
 }
+
 function exportTable() {
-  // Add row numbers to the data before export
-  const contentRows = rows.value.map((row, index) => ({
-    '#': index + 1, // Add the row number
-    ...row,
-  }))
+  try {
+    // Define export columns with all fields
+    const exportColumns = [
+      { label: 'No.', field: 'index' },
+      { label: 'Student Number', field: 'studentNumber' },
+      { label: 'First Name', field: 'firstName' },
+      { label: 'Middle Name', field: 'middleName' },
+      { label: 'Last Name', field: 'lastName' },
+      { label: 'Username', field: 'username' },
+      { label: 'Email', field: 'email' },
+      { label: 'Program', field: 'course' },
+      { label: 'Year', field: 'year' },
+      { label: 'Section', field: 'section' },
+      { label: 'Status', field: (row) => (row.isRegular ? 'Regular' : 'Irregular') },
+      { label: 'House Number', field: 'houseNumber' },
+      { label: 'Street', field: 'street' },
+      { label: 'Barangay', field: 'barangay' },
+      { label: 'City', field: 'city' },
+      { label: 'Province', field: 'province' },
+      { label: 'Sex', field: 'sex' },
+      {
+        label: 'Birth Date',
+        field: (row) => (row.birthDate ? new Date(row.birthDate).toLocaleDateString('en-CA') : ''),
+      },
+      { label: 'Elementary School', field: 'elementarySchool' },
+      { label: 'High School', field: 'highSchool' },
+      { label: 'Senior High School', field: 'seniorHighSchool' },
+      { label: 'School Address', field: 'schoolAddress' },
+      { label: 'Indigenous', field: (row) => (row.isYouIndigenous ? 'Yes' : 'No') },
+      { label: 'Disabled', field: (row) => (row.isDisabled ? 'Yes' : 'No') },
+      {
+        label: 'First College Graduate',
+        field: (row) => (row.isFirstCollegeGraduate ? 'Yes' : 'No'),
+      },
+      {
+        label: 'Courses',
+        field: (row) =>
+          row.courses
+            ?.map((course) => course.courseId?.code)
+            .filter(Boolean)
+            .join(', ') || '',
+      },
+      {
+        label: 'Grades',
+        field: (row) =>
+          row.courses
+            ?.map((course) => course.grade)
+            .filter(Boolean)
+            .join(', ') || '',
+      },
+    ]
 
-  const content = [columns.value.map((col) => wrapCsvValue(col.label))]
-    .concat(
-      contentRows.map((row) =>
-        columns.value
-          .map((col) =>
-            wrapCsvValue(
-              col.name === '#'
-                ? row['#'] // Handle the numbering column
-                : typeof col.field === 'function'
-                  ? col.field(row)
-                  : row[col.field === void 0 ? col.name : col.field],
-              col.format,
-              row,
-            ),
-          )
-          .join(','),
-      ),
-    )
-    .join('\r\n')
+    // Create headers row
+    const headers = exportColumns.map((col) => wrapCsvValue(col.label)).join(',')
 
-  const status = exportFile('Students-info.csv', content, 'text/csv')
+    // Create data rows
+    const dataRows = rows.value.map((row, index) => {
+      const rowData = exportColumns.map((col) => {
+        let value
+        if (col.field === 'index') {
+          value = index + 1
+        } else if (typeof col.field === 'function') {
+          value = col.field(row)
+        } else {
+          value = row[col.field] || ''
+        }
+        return wrapCsvValue(value)
+      })
+      return rowData.join(',')
+    })
 
-  if (status !== true) {
+    // Combine headers and data
+    const csvContent = [headers, ...dataRows].join('\r\n')
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+
+    link.setAttribute('href', url)
+    link.setAttribute('download', `students_${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
     Notify.create({
-      message: 'Browser denied file download...',
-      color: 'negative',
-      icon: 'warning',
+      type: 'positive',
+      message: 'CSV exported successfully',
+    })
+  } catch (error) {
+    console.error('Error exporting CSV:', error)
+    Notify.create({
+      type: 'negative',
+      message: 'Failed to export CSV',
     })
   }
 }
