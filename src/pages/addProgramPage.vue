@@ -144,27 +144,24 @@ const loading = ref(false)
 const selectedPrerequisites = ref([])
 const filter = ref('')
 
+function formatCourse(course) {
+  if (!course) return ''
+  return `${course.courseCode} – ${course.courseName} (${course.course})`
+}
+
 const prerequisiteRows = ref([])
 const prerequisiteColumns = [
   {
     name: 'select',
     label: 'Select',
     align: 'left',
-    field: 'select',
   },
   {
-    name: 'courseName',
-    label: 'Course Name',
-    field: 'courseName',
+    name: 'formatted',
+    label: 'Course',
     align: 'left',
     sortable: true,
-  },
-  {
-    name: 'courseCode',
-    label: 'Course Code',
-    field: 'courseCode',
-    align: 'left',
-    sortable: true,
+    field: (row) => formatCourse(row),
   },
 ]
 
@@ -203,6 +200,7 @@ async function fetchPrerequisites() {
       index: index + 1,
       courseCode: course.code,
       courseName: course.name,
+      course: course.course, // 🔹 ADD THIS
       action: course._id,
     }))
   } catch (err) {

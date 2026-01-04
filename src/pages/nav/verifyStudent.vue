@@ -95,13 +95,12 @@
               <q-select
                 v-model="selectedCourseToTake"
                 :options="courseOptions"
-                label="Select Course"
-                option-label="name"
                 option-value="_id"
-                dense
-                outlined
+                :option-label="formatCourse"
                 emit-value
                 map-options
+                label="Select Course"
+                outlined
               />
             </div>
             <div class="col-12">
@@ -120,7 +119,8 @@
             <q-list bordered separator>
               <q-item v-for="(course, index) in dialogCourseToTake" :key="index">
                 <q-item-section>
-                  <strong>{{ course.name }}</strong> ({{ course.code }})<br />
+                  <strong>{{ formatCourse(course) }}</strong
+                  ><br />
                   Unit: {{ course.unit }} | Semester: {{ course.semester }}
                 </q-item-section>
                 <q-item-section side>
@@ -149,7 +149,8 @@
             <q-list bordered separator>
               <q-item v-for="(course, index) in dialogCourseToTakeRemoved" :key="index">
                 <q-item-section>
-                  <strong class="text-red">{{ course.name }}</strong> ({{ course.code }})<br />
+                  <strong class="text-red">{{ formatCourse(course) }}</strong
+                  ><br />
                   Unit: {{ course.unit }} | Semester: {{ course.semester }}
                 </q-item-section>
               </q-item>
@@ -162,7 +163,7 @@
 
         <!-- Schedule List -->
         <!-- Add Schedule Form -->
-        <q-card-section>
+        <!-- <q-card-section>
           <div class="text-subtitle1 q-mb-sm">Add Schedule</div>
           <div class="row q-col-gutter-sm">
             <div class="col-12">
@@ -188,8 +189,8 @@
               />
             </div>
           </div>
-        </q-card-section>
-        <q-card-section>
+        </q-card-section> -->
+        <!-- <q-card-section>
           <div class="text-subtitle1 q-mb-sm">Schedule</div>
 
           <div v-if="groupedSchedule.length">
@@ -236,7 +237,7 @@
             </q-list>
           </div>
           <div v-else>No schedule found.</div>
-        </q-card-section>
+        </q-card-section> -->
 
         <!-- Actions inside dialog -->
         <q-card-actions align="right">
@@ -302,19 +303,32 @@ const scheduleOptions = ref([])
 const removeLoading = ref(false)
 const addLoading = ref(false)
 
+function formatCourse(course) {
+  if (!course) return ''
+
+  return `${course.code} – ${course.name} (${course.course})`
+}
+
 async function removeCourseToTake(courseId) {
   try {
     removeCourseLoading.value = true
     removeCourseId.value = courseId
-
-    console.log('user:' + currentUserId.value + ' courseId:' + courseId)
 
     await Axios.post(`${process.env.api_host}/users/removeCourseToTake`, {
       userId: currentUserId.value,
       courseId,
     })
 
+    // 🔹 Find the course BEFORE removing it
+    const removedCourse = dialogCourseToTake.value.find((c) => c._id === courseId)
+
+    // 🔹 Remove from "Course To Take"
     dialogCourseToTake.value = dialogCourseToTake.value.filter((c) => c._id !== courseId)
+
+    // 🔹 Add to "Removed Courses"
+    if (removedCourse) {
+      dialogCourseToTakeRemoved.value.push(removedCourse)
+    }
 
     $q.notify({ type: 'positive', message: 'Course removed successfully' })
   } catch (err) {
@@ -323,6 +337,7 @@ async function removeCourseToTake(courseId) {
   } finally {
     removeCourseLoading.value = false
     removeCourseId.value = null
+    fetchStudents()
   }
 }
 
@@ -533,6 +548,7 @@ async function addCourseToTake() {
     $q.notify({ type: 'negative', message: err.response?.data?.message || 'Failed to add course' })
   } finally {
     addCourseLoading.value = false
+    fetchStudents()
   }
 }
 
