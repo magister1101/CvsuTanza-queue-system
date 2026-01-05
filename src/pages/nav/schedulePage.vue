@@ -93,7 +93,7 @@
             <q-select
               v-model="scheduleCourse"
               :options="courseOptions"
-              :option-label="(opt) => (opt ? `${opt.code} - ${opt.name}` : '')"
+              :option-label="formatCourse"
               option-value="_id"
               label="Select Course"
               filled
@@ -350,6 +350,12 @@ const sectionOptions = ref([
 
 const courseOptions = ref([])
 const schedules = ref([])
+
+// Format function
+const formatCourse = (c) => {
+  if (!c) return ''
+  return `${c.code} – ${c.name} (${c.course})`
+}
 
 // Computed properties for filter options
 const filterCourseOptions = computed(() => {
