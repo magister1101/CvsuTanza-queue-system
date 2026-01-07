@@ -583,6 +583,7 @@ async function createAccount() {
         type: 'warning',
         message: 'Fill all the required fields',
       })
+      loading.value = false
       return
     }
     if (password.value !== confirmPassword.value) {
@@ -590,21 +591,39 @@ async function createAccount() {
         type: 'negative',
         message: 'Passwords do not match',
       })
+      loading.value = false
       return
     }
+
+    // Check if role is an admin role
+    const adminRoles = ['admin', 'registrar', 'admission', 'cashier']
+    const isAdminRole = adminRoles.includes(role.value)
+
+    // Use appropriate endpoint based on role
+    const endpoint = isAdminRole 
+      ? `${process.env.api_host}/users/createAdmin`
+      : `${process.env.api_host}/users/create`
+
+    // Prepare request data
+    const requestData = {
+      firstName: firstName.value,
+      middleName: middleName.value || '',
+      lastName: lastName.value,
+      username: userName.value,
+      email: email.value,
+      password: password.value,
+      role: role.value,
+    }
+
+    // Only add year and isEmailSent for student accounts
+    if (!isAdminRole) {
+      requestData.isEmailSent = true
+      requestData.year = year.value
+    }
+
     const response = await axios.post(
-      `${process.env.api_host}/users/create`,
-      {
-        firstName: firstName.value,
-        middleName: middleName.value,
-        lastName: lastName.value,
-        username: userName.value,
-        email: email.value,
-        password: password.value,
-        role: role.value,
-        isEmailSent: true,
-        year: year.value,
-      },
+      endpoint,
+      requestData,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -628,10 +647,12 @@ async function createAccount() {
     year.value = null
     createAccountDialog.value = false
   } catch (err) {
-    console.error(err)
+    console.error('Full error:', err)
+    console.error('Error response:', err.response?.data)
+    const errorMessage = err.response?.data?.message || err.response?.data?.error || 'Error creating account'
     Notify.create({
       type: 'negative',
-      message: 'Error creating account',
+      message: errorMessage,
     })
   } finally {
     loading.value = false
