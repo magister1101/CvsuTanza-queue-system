@@ -95,7 +95,7 @@ function handleRegularClick() {
   if (isIrregular.value) {
     Notify.create({
       type: 'negative',
-      message: 'The student is irregular. You cannot go to regular registration.',
+      message: 'These buttons not available for the student please try other options',
       position: 'top',
     })
     return
@@ -107,7 +107,7 @@ function handleIrregularClick() {
   if (isRegular.value) {
     Notify.create({
       type: 'negative',
-      message: 'The student is regular. You cannot go to irregular registration.',
+      message: 'These buttons not available for the student please try other options',
       position: 'top',
     })
     return
