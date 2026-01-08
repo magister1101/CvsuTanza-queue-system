@@ -243,19 +243,34 @@
         <q-card-actions align="right">
           <q-btn
             flat
-            label="Reject"
-            color="red"
-            @click="reject(currentUserId)"
-            :loading="verifyLoading"
-          />
-          <q-btn
-            flat
-            label="Verify"
-            color="primary"
-            @click="verify(currentUserId)"
+            label="Validation"
+            :color="hasCourseChanges ? 'red' : 'primary'"
+            @click="validateStudent(currentUserId)"
             :loading="verifyLoading"
           />
           <q-btn flat label="Close" color="grey" v-close-popup @click="fetchStudents" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Delete Course Confirmation Dialog -->
+    <q-dialog v-model="confirmDeleteCourseDialog" persistent>
+      <q-card style="min-width: 300px">
+        <q-card-section>
+          <div class="text-h6">Confirm Remove Course</div>
+          <div class="q-mt-md">
+            Are you sure you want to remove <strong>{{ courseToDeleteName }}</strong>? This will auto-reject the student.
+          </div>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Close" color="grey" @click="confirmDeleteCourseDialog = false" />
+          <q-btn
+            flat
+            label="Confirm"
+            color="negative"
+            @click="confirmRemoveCourse"
+            :loading="removeCourseLoading"
+          />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -279,6 +294,9 @@ const tableLoading = ref(true)
 
 const removeCourseLoading = ref(false)
 const removeCourseId = ref(null)
+const confirmDeleteCourseDialog = ref(false)
+const courseToDeleteName = ref('')
+const courseToDeleteId = ref(null)
 
 const selectedCourseToTake = ref(null)
 const courseOptions = ref([])
@@ -309,34 +327,52 @@ function formatCourse(course) {
   return `${course.code} – ${course.name} (${course.course})`
 }
 
-async function removeCourseToTake(courseId) {
+function removeCourseToTake(courseId) {
+  // Find the course to get its name for the confirmation dialog
+  const courseToRemove = dialogCourseToTake.value.find((c) => c._id === courseId)
+  courseToDeleteName.value = courseToRemove ? formatCourse(courseToRemove) : 'this course'
+  courseToDeleteId.value = courseId
+  confirmDeleteCourseDialog.value = true
+}
+
+async function confirmRemoveCourse() {
+  if (!courseToDeleteId.value) return
+
   try {
     removeCourseLoading.value = true
-    removeCourseId.value = courseId
+    removeCourseId.value = courseToDeleteId.value
 
     await Axios.post(`${process.env.api_host}/users/removeCourseToTake`, {
       userId: currentUserId.value,
-      courseId,
+      courseId: courseToDeleteId.value,
     })
 
     // 🔹 Find the course BEFORE removing it
-    const removedCourse = dialogCourseToTake.value.find((c) => c._id === courseId)
+    const removedCourse = dialogCourseToTake.value.find((c) => c._id === courseToDeleteId.value)
 
     // 🔹 Remove from "Course To Take"
-    dialogCourseToTake.value = dialogCourseToTake.value.filter((c) => c._id !== courseId)
+    dialogCourseToTake.value = dialogCourseToTake.value.filter((c) => c._id !== courseToDeleteId.value)
 
     // 🔹 Add to "Removed Courses"
     if (removedCourse) {
       dialogCourseToTakeRemoved.value.push(removedCourse)
     }
 
-    $q.notify({ type: 'positive', message: 'Course removed successfully' })
+    // Mark that admin modified courses (auto-reject)
+    adminModifiedCourses.value = true
+    // Auto-reject when admin removes course
+    await autoRejectOnCourseChange()
+
+    confirmDeleteCourseDialog.value = false
+    $q.notify({ type: 'positive', message: 'Course removed successfully. Student auto-rejected due to course changes.' })
   } catch (err) {
     console.error('Error removing course:', err)
     $q.notify({ type: 'negative', message: 'Failed to remove course' })
   } finally {
     removeCourseLoading.value = false
     removeCourseId.value = null
+    courseToDeleteId.value = null
+    courseToDeleteName.value = ''
     fetchStudents()
   }
 }
@@ -415,11 +451,21 @@ const columns = [
 const pagination = ref({ rowsPerPage: 10 })
 
 const dialogCourseToTakeRemoved = ref([])
+const originalCourseToTake = ref([])
+const originalCourseToTakeRemoved = ref([])
+const adminModifiedCourses = ref(false)
+
+const hasCourseChanges = computed(() => {
+  return dialogCourseToTakeRemoved.value.length > 0 || adminModifiedCourses.value
+})
 
 function openDialog(row) {
   currentUserId.value = row._id
   dialogCourseToTake.value = row.courseToTake || []
-  dialogCourseToTakeRemoved.value = row.courseToTakeRemoved || [] // ⬅️ added
+  dialogCourseToTakeRemoved.value = row.courseToTakeRemoved || []
+  originalCourseToTake.value = JSON.parse(JSON.stringify(row.courseToTake || []))
+  originalCourseToTakeRemoved.value = JSON.parse(JSON.stringify(row.courseToTakeRemoved || []))
+  adminModifiedCourses.value = false
   dialogCourses.value = row.courses || []
   dialogScheduleRaw.value = JSON.parse(JSON.stringify(row.schedule || []))
   dialogSchedule.value = flattenFromRaw(dialogScheduleRaw.value)
@@ -441,12 +487,12 @@ async function fetchSchedules() {
     } else {
       const res = await Axios.get(
         `${process.env.api_host}/courses/GetSchedule?program=${userData.value.role}`,
-        (scheduleOptions.value = res.data.map((item) => ({
-          _id: item._id,
-          label: `${item.course.name} (Section ${item.section}) - ${item.code}`,
-          data: item,
-        }))),
       )
+      scheduleOptions.value = res.data.map((item) => ({
+        _id: item._id,
+        label: `${item.course.name} (Section ${item.section}) - ${item.code}`,
+        data: item,
+      }))
     }
   } catch (err) {
     console.error('Error fetching schedules:', err)
@@ -541,8 +587,18 @@ async function addCourseToTake() {
       dialogCourseToTake.value.push(addedCourse)
     }
 
+    // Remove from removed courses if it was there
+    dialogCourseToTakeRemoved.value = dialogCourseToTakeRemoved.value.filter(
+      (c) => c._id !== selectedCourseToTake.value
+    )
+
+    // Mark that admin modified courses (auto-reject)
+    adminModifiedCourses.value = true
+    // Auto-reject when admin adds course
+    await autoRejectOnCourseChange()
+
     selectedCourseToTake.value = null
-    $q.notify({ type: 'positive', message: 'Course added successfully' })
+    $q.notify({ type: 'positive', message: 'Course added successfully. Student auto-rejected due to course changes.' })
   } catch (err) {
     console.error('Error adding course:', err)
     $q.notify({ type: 'negative', message: err.response?.data?.message || 'Failed to add course' })
@@ -682,38 +738,47 @@ async function getTotalCounts() {
   }
 }
 
-async function verify(id) {
+async function autoRejectOnCourseChange() {
   try {
-    verifyLoading.value = true
-    await Axios.post(`${process.env.api_host}/users/update/${id}`, { isApproved: true })
-    await Axios.post(`${process.env.api_host}/queues/createQueue`, { studentId: id })
-    $q.notify({ type: 'positive', message: 'Student verified successfully' })
-    fetchStudents()
-    getTotalCounts()
-    dialogOpen.value = false
-  } catch (err) {
-    console.error('Error verifying:', err)
-    $q.notify({ type: 'negative', message: 'Verification failed' })
-  } finally {
-    verifyLoading.value = false
-  }
-}
-
-async function reject(id) {
-  try {
-    verifyLoading.value = true
-    await Axios.post(`${process.env.api_host}/users/update/${id}`, {
+    await Axios.post(`${process.env.api_host}/users/update/${currentUserId.value}`, {
       isApproved: false,
       isEnrolled: false,
     })
-    await Axios.post(`${process.env.api_host}/queues/rejectEnrollment`, { studentId: id })
-    $q.notify({ type: 'positive', message: 'Student rejected successfully' })
+    await Axios.post(`${process.env.api_host}/queues/rejectEnrollment`, { studentId: currentUserId.value })
+  } catch (err) {
+    console.error('Error auto-rejecting:', err)
+  }
+}
+
+async function validateStudent(id) {
+  try {
+    verifyLoading.value = true
+
+    // Check if courses have been removed (original removed courses or admin modifications)
+    if (hasCourseChanges.value) {
+      // Reject if courses were removed or admin modified courses
+      await Axios.post(`${process.env.api_host}/users/update/${id}`, {
+        isApproved: false,
+        isEnrolled: false,
+      })
+      await Axios.post(`${process.env.api_host}/queues/rejectEnrollment`, { studentId: id })
+      $q.notify({ 
+        type: 'negative', 
+        message: 'Student rejected: Courses have been modified or removed' 
+      })
+    } else {
+      // Approve if no courses were removed
+      await Axios.post(`${process.env.api_host}/users/update/${id}`, { isApproved: true })
+      await Axios.post(`${process.env.api_host}/queues/createQueue`, { studentId: id })
+      $q.notify({ type: 'positive', message: 'Student validated and approved successfully' })
+    }
+
     fetchStudents()
     getTotalCounts()
     dialogOpen.value = false
   } catch (err) {
-    console.error('Error rejecting:', err)
-    $q.notify({ type: 'negative', message: 'Rejection failed' })
+    console.error('Error validating:', err)
+    $q.notify({ type: 'negative', message: 'Validation failed' })
   } finally {
     verifyLoading.value = false
   }

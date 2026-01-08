@@ -74,9 +74,9 @@
               </q-tr>
             </template>
             <template v-slot:top-left>
-              <q-btn label="Signup Link" @click="copySignUp" no-caps>
+              <!-- <q-btn label="Signup Link" @click="copySignUp" no-caps>
                 <q-tooltip> Registration Link for student </q-tooltip>
-              </q-btn>
+              </q-btn> -->
             </template>
           </q-table>
         </div>

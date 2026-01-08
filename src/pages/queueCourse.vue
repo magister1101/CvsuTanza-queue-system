@@ -181,11 +181,17 @@ const filter = ref('')
 const rows = ref([])
 const selectedStudent = ref({})
 
+// CVSU Grading System (with decimal support): 1.0-1.5=Perfect, 1.6-2.5=Good, 2.6-3.0=Pass, 3.1-5.0=Failed
 const getGradeColor = (grade) => {
-  if (grade <= 1.5) return 'green'
-  if (grade <= 2.5) return 'blue'
-  if (grade <= 3.0) return 'orange'
-  return 'red'
+  const numGrade = parseFloat(grade)
+  if (isNaN(numGrade)) return 'grey'
+  
+  if (numGrade >= 1.0 && numGrade <= 1.5) return 'green'      // Perfect
+  if (numGrade >= 1.6 && numGrade <= 2.5) return 'blue'       // Good
+  if (numGrade >= 2.6 && numGrade <= 3.0) return 'orange'     // Pass
+  if (numGrade >= 3.1 && numGrade <= 5.0) return 'red'        // Failed
+  
+  return 'grey'
 }
 
 const columns = ref([

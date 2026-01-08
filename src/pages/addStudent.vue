@@ -962,10 +962,47 @@
                   field: (row) => row.courseId?.name || '',
                   sortable: true,
                 },
-                { name: 'grade', label: 'Grade', field: 'grade', sortable: true },
+                { 
+                  name: 'grade', 
+                  label: 'Grade', 
+                  field: 'grade', 
+                  sortable: true,
+                  align: 'center'
+                },
+                {
+                  name: 'description',
+                  label: 'Status',
+                  field: (row) => getGradeDescription(row.grade),
+                  sortable: true,
+                  align: 'center'
+                },
               ]"
               row-key="courseId._id"
-            />
+            >
+              <template v-slot:body-cell-grade="props">
+                <q-td :props="props">
+                  <q-badge
+                    :color="getGradeColor(props.value)"
+                    text-color="white"
+                    class="q-px-md"
+                  >
+                    {{ props.value }}
+                  </q-badge>
+                </q-td>
+              </template>
+              <template v-slot:body-cell-description="props">
+                <q-td :props="props">
+                  <q-badge
+                    :color="getGradeColor(props.row.grade)"
+                    text-color="white"
+                    outline
+                    class="q-px-md"
+                  >
+                    {{ props.value }}
+                  </q-badge>
+                </q-td>
+              </template>
+            </q-table>
           </div>
         </q-card-section>
 
@@ -1930,6 +1967,32 @@ function exportTable() {
       message: 'Failed to export CSV',
     })
   }
+}
+
+// CVSU Grading System Helper Functions (with decimal support)
+// CVSU Grading Scale: 1.0-1.5=Perfect, 1.6-2.5=Good, 2.6-3.0=Pass, 3.1-5.0=Failed
+const getGradeColor = (grade) => {
+  const numGrade = parseFloat(grade)
+  if (isNaN(numGrade)) return 'grey'
+  
+  if (numGrade >= 1.0 && numGrade <= 1.5) return 'green'      
+  if (numGrade >= 1.6 && numGrade <= 2.5) return 'blue'     
+  if (numGrade >= 2.6 && numGrade <= 3.0) return 'orange'     
+  if (numGrade >= 3.1 && numGrade <= 5.0) return 'red'        
+  
+  return 'grey'
+}
+
+const getGradeDescription = (grade) => {
+  const numGrade = parseFloat(grade)
+  if (isNaN(numGrade)) return 'Invalid'
+  
+  if (numGrade >= 1.0 && numGrade <= 1.5) return 'Perfect'
+  if (numGrade >= 1.6 && numGrade <= 2.5) return 'Good'
+  if (numGrade >= 2.6 && numGrade <= 3.0) return 'Pass'
+  if (numGrade >= 3.1 && numGrade <= 5.0) return 'Failed'
+  
+  return 'Invalid'
 }
 
 onMounted(() => {
