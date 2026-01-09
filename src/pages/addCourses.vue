@@ -219,15 +219,15 @@ const formatCourse = (c) => `${c.code} – ${c.name} (${c.course})`
 
 /* TABLE */
 const columns = [
-  { name: '#', label: '#', align: 'center' },
-  { name: 'courseCode', label: 'Course Code' },
-  { name: 'courseName', label: 'Course Name' },
-  { name: 'courseTitle', label: 'Program' },
-  { name: 'year', label: 'Year' },
-  { name: 'semester', label: 'Semester' },
-  { name: 'numUnits', label: 'Units' },
-  { name: 'prerequisite', label: 'Prerequisite' },
-  { name: 'action', label: 'Action', align: 'center' },
+  { name: '#', label: '#', align: 'center', field: () => '' },
+  { name: 'courseCode', label: 'Course Code', field: (row) => row.courseCode },
+  { name: 'courseName', label: 'Course Name', field: (row) => row.courseName },
+  { name: 'courseTitle', label: 'Program', field: (row) => row.courseTitle },
+  { name: 'year', label: 'Year', field: (row) => row.year },
+  { name: 'semester', label: 'Semester', field: (row) => row.semester },
+  { name: 'numUnits', label: 'Units', field: (row) => row.numUnits },
+  { name: 'prerequisite', label: 'Prerequisite', field: (row) => row.prerequisite },
+  { name: 'action', label: 'Action', align: 'center', field: () => '' },
 ]
 
 const rows = ref([])

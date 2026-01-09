@@ -454,23 +454,58 @@ const dialogCourseToTakeRemoved = ref([])
 const originalCourseToTake = ref([])
 const originalCourseToTakeRemoved = ref([])
 const adminModifiedCourses = ref(false)
+const initialCourseToTakeIds = ref([])
 
 const hasCourseChanges = computed(() => {
-  return dialogCourseToTakeRemoved.value.length > 0 || adminModifiedCourses.value
+  // Only check for admin modifications during this session, not old removed courses from previous enrollments
+  // If student re-enrolled, courseToTakeRemoved might contain old data, so we only check admin modifications
+  return adminModifiedCourses.value
 })
 
-function openDialog(row) {
+async function openDialog(row) {
   currentUserId.value = row._id
-  dialogCourseToTake.value = row.courseToTake || []
-  dialogCourseToTakeRemoved.value = row.courseToTakeRemoved || []
-  originalCourseToTake.value = JSON.parse(JSON.stringify(row.courseToTake || []))
-  originalCourseToTakeRemoved.value = JSON.parse(JSON.stringify(row.courseToTakeRemoved || []))
-  adminModifiedCourses.value = false
-  dialogCourses.value = row.courses || []
-  dialogScheduleRaw.value = JSON.parse(JSON.stringify(row.schedule || []))
-  dialogSchedule.value = flattenFromRaw(dialogScheduleRaw.value)
+  
+  // Fetch fresh student data to ensure we have the latest enrollment status
+  try {
+    const freshStudentRes = await Axios.get(`${process.env.api_host}/users/${row._id}`)
+    const freshStudent = freshStudentRes.data
+    
+    dialogCourseToTake.value = freshStudent.courseToTake || []
+    dialogCourseToTakeRemoved.value = []
+    
+    // Store initial state when dialog opens
+    originalCourseToTake.value = JSON.parse(JSON.stringify(freshStudent.courseToTake || []))
+    originalCourseToTakeRemoved.value = []
+    
+    // Store initial course IDs to detect if student re-enrolled
+    initialCourseToTakeIds.value = (freshStudent.courseToTake || []).map(c => c._id || c)
+    
+    // Reset admin modifications flag - only track changes made during this admin session
+    adminModifiedCourses.value = false
+    
+    // Clear removed courses - we'll only track removals made during this admin session
+    // If student re-enrolled, courseToTakeRemoved should be empty from backend
+    dialogCourseToTakeRemoved.value = []
+    
+    dialogCourses.value = freshStudent.courses || []
+    dialogScheduleRaw.value = JSON.parse(JSON.stringify(freshStudent.schedule || []))
+    dialogSchedule.value = flattenFromRaw(dialogScheduleRaw.value)
+    dialogStudent.value = freshStudent
+  } catch (err) {
+    console.error('Error fetching fresh student data:', err)
+    // Fallback to row data if fetch fails
+    dialogCourseToTake.value = row.courseToTake || []
+    dialogCourseToTakeRemoved.value = []
+    originalCourseToTake.value = JSON.parse(JSON.stringify(row.courseToTake || []))
+    originalCourseToTakeRemoved.value = []
+    adminModifiedCourses.value = false
+    dialogCourses.value = row.courses || []
+    dialogScheduleRaw.value = JSON.parse(JSON.stringify(row.schedule || []))
+    dialogSchedule.value = flattenFromRaw(dialogScheduleRaw.value)
+    dialogStudent.value = row
+  }
+  
   dialogOpen.value = true
-  dialogStudent.value = row
 }
 
 async function fetchSchedules() {

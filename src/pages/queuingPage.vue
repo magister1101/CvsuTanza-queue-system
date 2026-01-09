@@ -47,6 +47,15 @@
                       <qrcode :value="qrValue" v-if="queueData" :size="qrSize" />
                     </div>
                   </q-card-section>
+
+                    <q-card-section class="q-py-none">
+                      <div v-if="queueData.subCategory && queueData.subCategory.length" style="color: green" class="text-center">
+                        <div v-for="(category, idx) in queueData.subCategory" :key="idx">
+                          {{ category }}
+                        </div>
+                      </div>
+                    </q-card-section>
+
                   <q-card-section class="q-py-none">
                     <div class="scan-text text-center q-py-md text-weight-medium">
                       Scan the QR Code to monitor the queue flow
@@ -135,6 +144,11 @@ async function printQr() {
   const formattedDate = now.toLocaleDateString()
   const formattedTime = now.toLocaleTimeString()
 
+  // Get subCategory data
+  const subCategories = queueData.value.subCategory && queueData.value.subCategory.length
+    ? queueData.value.subCategory
+    : []
+
   // Create a hidden iframe for printing
   const printFrame = document.createElement('iframe')
   printFrame.style.display = 'none'
@@ -147,41 +161,93 @@ async function printQr() {
         <style>
           @page {
             margin: 0;
-            size: 58mm auto;  /* Width: 58mm, Height: auto */
+            size: 80mm auto;  /* Width: 80mm, Height: auto based on content */
+          }
+          * {
+            box-sizing: border-box;
           }
           body {
             font-family: Arial, sans-serif;
-            text-align: center;
-            width: 58mm;
-            padding: 5px;
+            width: 80mm;
+            min-height: 80mm;
             margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            text-align: center;
+          }
+          .container {
+            width: 100%;
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 2mm 4mm 4mm 4mm;
+            transform: scale(1);
+            transform-origin: center center;
+            box-sizing: border-box;
           }
           .queue-number {
-            font-size: 18px;
+            font-size: 24px;
             font-weight: bold;
             color: green;
-            margin: 5px 0;
+            margin: 2px 0;
+            line-height: 1.2;
+            word-wrap: break-word;
+            max-width: 100%;
+            flex-shrink: 0;
           }
           .certificate-text {
-            font-size: 12px;
-            margin: 5px 0;
+            font-size: 13px;
+            margin: 2px 0;
+            line-height: 1.2;
+            flex-shrink: 0;
           }
           .date-time {
             font-size: 11px;
-            margin: 5px 0;
+            margin: 2px 0;
+            line-height: 1.3;
+            flex-shrink: 0;
+          }
+          .sub-category {
+            font-size: 11px;
+            color: green;
+            margin: 2px 0;
+            line-height: 1.3;
+            flex-shrink: 0;
+          }
+          .sub-category div {
+            margin: 1px 0;
           }
           .qr-code {
             width: 120px;
             height: 120px;
-            margin: 5px auto;
+            margin: 4px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+          }
+          .qr-code img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
           }
           .scan-text {
             font-size: 10px;
-            margin: 5px 0;
+            margin-top: 4px;
+            line-height: 1.2;
+            padding-bottom: 4mm;
+            margin-bottom: 0;
+            flex-shrink: 0;
           }
         </style>
       </head>
       <body>
+        <div class="container">
         <div class="queue-number">${queueNumber}</div>
         <div class="certificate-text">
           Release of Certificate<br>
@@ -191,11 +257,17 @@ async function printQr() {
           Date: ${formattedDate}<br>
           Time: ${formattedTime}
         </div>
+          ${subCategories.length > 0 ? `
+          <div class="sub-category">
+            ${subCategories.map(category => `<div>${category}</div>`).join('')}
+          </div>
+          ` : ''}
         <div class="qr-code">
-          <img src="${qrImage}" alt="QR Code" style="width: 100%; height: 100%;">
+          <img src="${qrImage}" alt="QR Code">
         </div>
         <div class="scan-text">
           Scan the QR Code to monitor<br>the queue flow
+          </div>
         </div>
       </body>
     </html>
@@ -208,7 +280,7 @@ async function printQr() {
 
   // Wait for images to load before printing
   printFrame.onload = function () {
-    printFrame.contentWindow.print()
+      printFrame.contentWindow.print()
     // Remove the iframe after printing
     setTimeout(() => {
       document.body.removeChild(printFrame)

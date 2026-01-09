@@ -86,6 +86,11 @@
               { label: 'Adding of Subjects', value: 'Adding of Subjects' },
               { label: 'Dropping of Subjects', value: 'Dropping of Subjectss' },
               { label: 'Changing of Subjects', value: 'Changing of Subjects' },
+              { label: 'Good moral', value: 'Good moral' },
+              { label: 'COR', value: 'COR' },
+              { label: 'Honorable dismissal', value: 'Honorable dismissal' },
+              { label: 'TOR', value: 'TOR' },
+              { label: 'Form 137', value: 'Form 137' }
             ]"
             color="primary"
             class="q-gutter-sm"
@@ -124,13 +129,13 @@
             type="checkbox"
             :options="[
               { label: 'Admission form', value: 'Admission form' },
-              { label: 'Form 137', value: 'Form 137' },
+              // { label: 'Form 137', value: 'Form 137' },
               { label: 'Notice of admission', value: 'Notice of admission' },
               { label: 'Medical', value: 'Medical' },
-              { label: 'Good moral', value: 'Good moral' },
-              { label: 'COR', value: 'COR' },
-              { label: 'Honorable dismissal', value: 'Honorable dismissal' },
-              { label: 'TOR', value: 'TOR' },
+              // { label: 'Good moral', value: 'Good moral' },
+              // { label: 'COR', value: 'COR' },
+              // { label: 'Honorable dismissal', value: 'Honorable dismissal' },
+              // { label: 'TOR', value: 'TOR' },
               { label: 'New Student', value: 'New Student' },
               { label: 'Transferee Student', value: 'Transferee Student' },
             ]"
