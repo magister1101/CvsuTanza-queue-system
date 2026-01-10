@@ -201,14 +201,14 @@
         <q-item-section> Users </q-item-section>
       </q-item>
     </div>
-    <div class="q-py-sm">
+    <!-- <div class="q-py-sm">
       <q-item clickable @click="router.replace(`/new/cor`)">
         <q-item-section avatar>
           <q-icon name="people" />
         </q-item-section>
         <q-item-section> COR </q-item-section>
       </q-item>
-    </div>
+    </div> -->
     <div class="q-py-sm">
       <q-item clickable @click="router.replace(`/new/adminSettings`)">
         <q-item-section avatar>
