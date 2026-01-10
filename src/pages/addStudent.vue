@@ -945,64 +945,176 @@
           <!-- Courses and Grades -->
           <div v-if="selectedStudent.courses?.length" class="q-mt-md">
             <div class="text-subtitle1 q-mb-sm"><strong>Courses and Grades</strong></div>
-            <q-table
-              flat
-              dense
-              :rows="selectedStudent.courses"
-              :columns="[
-                {
-                  name: 'code',
-                  label: 'Course Code',
-                  field: (row) => row.courseId?.code || '',
-                  sortable: true,
-                },
-                {
-                  name: 'name',
-                  label: 'Course Name',
-                  field: (row) => row.courseId?.name || '',
-                  sortable: true,
-                },
-                { 
-                  name: 'grade', 
-                  label: 'Grade', 
-                  field: 'grade', 
-                  sortable: true,
-                  align: 'center'
-                },
-                {
-                  name: 'description',
-                  label: 'Status',
-                  field: (row) => getGradeDescription(row.grade),
-                  sortable: true,
-                  align: 'center'
-                },
-              ]"
-              row-key="courseId._id"
-            >
-              <template v-slot:body-cell-grade="props">
-                <q-td :props="props">
-                  <q-badge
-                    :color="getGradeColor(props.value)"
-                    text-color="white"
-                    class="q-px-md"
-                  >
-                    {{ props.value }}
-                  </q-badge>
-                </q-td>
-              </template>
-              <template v-slot:body-cell-description="props">
-                <q-td :props="props">
-                  <q-badge
-                    :color="getGradeColor(props.row.grade)"
-                    text-color="white"
-                    outline
-                    class="q-px-md"
-                  >
-                    {{ props.value }}
-                  </q-badge>
-                </q-td>
-              </template>
-            </q-table>
+            
+            <!-- Semester Tabs -->
+            <q-tabs v-model="selectedGradeTab" class="text-grey q-mb-md" active-color="primary" indicator-color="primary" align="justify">
+              <q-tab name="first" label="First Semester" />
+              <q-tab name="second" label="Second Semester" />
+              <q-tab name="summer" label="Summer" />
+              <q-tab name="all" label="All" />
+            </q-tabs>
+
+            <!-- Year Level Filter -->
+            <div class="q-mb-md">
+              <q-btn-toggle
+                v-model="selectedYearFilter"
+                toggle-color="primary"
+                :options="[
+                  { label: 'All Years', value: 'all' },
+                  { label: 'First Year', value: 'First' },
+                  { label: 'Second Year', value: 'Second' },
+                  { label: 'Third Year', value: 'Third' },
+                  { label: 'Fourth Year', value: 'Fourth' }
+                ]"
+                class="full-width"
+              />
+            </div>
+
+            <q-tab-panels v-model="selectedGradeTab" animated>
+              <!-- First Semester -->
+              <q-tab-panel name="first">
+                <q-table
+                  flat
+                  dense
+                  :rows="firstSemesterCourses"
+                  :columns="gradeColumns"
+                  :row-key="(row) => `${row.courseId?._id}-${row.sem}-${row.year}`"
+                  :loading="!selectedStudent.courses"
+                >
+                  <template v-slot:body-cell-grade="props">
+                    <q-td :props="props">
+                      <q-badge
+                        :color="getGradeColor(props.value)"
+                        text-color="white"
+                        class="q-px-md"
+                      >
+                        {{ props.value }}
+                      </q-badge>
+                    </q-td>
+                  </template>
+                  <template v-slot:body-cell-description="props">
+                    <q-td :props="props">
+                      <q-badge
+                        :color="getGradeColor(props.row.grade)"
+                        text-color="white"
+                        outline
+                        class="q-px-md"
+                      >
+                        {{ props.value }}
+                      </q-badge>
+                    </q-td>
+                  </template>
+                </q-table>
+              </q-tab-panel>
+
+              <!-- Second Semester -->
+              <q-tab-panel name="second">
+                <q-table
+                  flat
+                  dense
+                  :rows="secondSemesterCourses"
+                  :columns="gradeColumns"
+                  :row-key="(row) => `${row.courseId?._id}-${row.sem}-${row.year}`"
+                  :loading="!selectedStudent.courses"
+                >
+                  <template v-slot:body-cell-grade="props">
+                    <q-td :props="props">
+                      <q-badge
+                        :color="getGradeColor(props.value)"
+                        text-color="white"
+                        class="q-px-md"
+                      >
+                        {{ props.value }}
+                      </q-badge>
+                    </q-td>
+                  </template>
+                  <template v-slot:body-cell-description="props">
+                    <q-td :props="props">
+                      <q-badge
+                        :color="getGradeColor(props.row.grade)"
+                        text-color="white"
+                        outline
+                        class="q-px-md"
+                      >
+                        {{ props.value }}
+                      </q-badge>
+                    </q-td>
+                  </template>
+                </q-table>
+              </q-tab-panel>
+
+              <!-- Summer Semester -->
+              <q-tab-panel name="summer">
+                <q-table
+                  flat
+                  dense
+                  :rows="summerSemesterCourses"
+                  :columns="gradeColumns"
+                  :row-key="(row) => `${row.courseId?._id}-${row.sem}-${row.year}`"
+                  :loading="!selectedStudent.courses"
+                >
+                  <template v-slot:body-cell-grade="props">
+                    <q-td :props="props">
+                      <q-badge
+                        :color="getGradeColor(props.value)"
+                        text-color="white"
+                        class="q-px-md"
+                      >
+                        {{ props.value }}
+                      </q-badge>
+                    </q-td>
+                  </template>
+                  <template v-slot:body-cell-description="props">
+                    <q-td :props="props">
+                      <q-badge
+                        :color="getGradeColor(props.row.grade)"
+                        text-color="white"
+                        outline
+                        class="q-px-md"
+                      >
+                        {{ props.value }}
+                      </q-badge>
+                    </q-td>
+                  </template>
+                </q-table>
+              </q-tab-panel>
+
+              <!-- All Grades -->
+              <q-tab-panel name="all">
+                <q-table
+                  flat
+                  dense
+                  :rows="allCoursesFiltered"
+                  :columns="gradeColumns"
+                  :row-key="(row) => `${row.courseId?._id}-${row.sem}-${row.year}`"
+                  :loading="!selectedStudent.courses"
+                >
+                  <template v-slot:body-cell-grade="props">
+                    <q-td :props="props">
+                      <q-badge
+                        :color="getGradeColor(props.value)"
+                        text-color="white"
+                        class="q-px-md"
+                      >
+                        {{ props.value }}
+                      </q-badge>
+                    </q-td>
+                  </template>
+                  <template v-slot:body-cell-description="props">
+                    <q-td :props="props">
+                      <q-badge
+                        :color="getGradeColor(props.row.grade)"
+                        text-color="white"
+                        outline
+                        class="q-px-md"
+                      >
+                        {{ props.value }}
+                      </q-badge>
+                    </q-td>
+                  </template>
+                </q-table>
+              </q-tab-panel>
+            </q-tab-panels>
           </div>
         </q-card-section>
 
@@ -1017,7 +1129,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { Notify, exportFile } from 'quasar'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
@@ -1032,6 +1144,8 @@ const router = useRouter()
 const semester = ref('')
 const semesterData = ref([])
 const selectedStudent = ref('')
+const selectedGradeTab = ref('all')
+const selectedYearFilter = ref('all')
 
 // dialogs
 const studentInfoDialog = ref(false)
@@ -1086,6 +1200,7 @@ const editForm = ref({
   middleName: '',
   lastName: '',
   studentId: '',
+  originalStudentNumber: '', // Store original studentNumber to detect changes
   email: '',
   program: '',
   year: '',
@@ -1216,7 +1331,7 @@ async function addStudent() {
         },
       },
     )
-    console.log(response.data)
+    // console.log(response.data)
     getAllStudents()
     Notify.create({
       type: 'positive',
@@ -1224,7 +1339,7 @@ async function addStudent() {
     })
     cancelAdd()
   } catch (err) {
-    console.error(err)
+    // console.error(err)
     Notify.create({
       type: 'negative',
       message: 'Something Went Wrong',
@@ -1485,11 +1600,11 @@ const rows = ref([])
 async function getSemester() {
   try {
     const response = await axios.get(`${process.env.api_host}/courses/getSemester`)
-    console.log(response.data[0].semester)
+    // console.log(response.data[0].semester)
     semester.value = response.data[0].semester
     semesterData.value = response.data
   } catch (err) {
-    console.error(err)
+    // console.error(err)
   }
 }
 
@@ -1500,7 +1615,7 @@ async function changeSemster() {
     const response = await axios.post(`${process.env.api_host}/courses/changeSemester/${id}`)
     getSemester()
   } catch (err) {
-    console.error(err)
+    // console.error(err)
   }
 }
 
@@ -1532,7 +1647,7 @@ async function getAllStudents() {
       if (response.data && Array.isArray(response.data)) {
         rows.value = response.data
       } else {
-        console.error('Invalid response format:', response)
+        // console.error('Invalid response format:', response)
         rows.value = []
         Notify.create({
           type: 'negative',
@@ -1552,7 +1667,7 @@ async function getAllStudents() {
       if (response.data && Array.isArray(response.data)) {
         rows.value = response.data
       } else {
-        console.error('Invalid response format:', response)
+        // console.error('Invalid response format:', response)
         rows.value = []
         Notify.create({
           type: 'negative',
@@ -1561,7 +1676,7 @@ async function getAllStudents() {
       }
     }
   } catch (err) {
-    console.error(err)
+    // console.error(err)
     rows.value = []
     Notify.create({
       type: 'negative',
@@ -1573,11 +1688,13 @@ async function getAllStudents() {
 }
 
 function openEditDialog(student) {
+  const originalStudentNumber = student.studentNumber || student.username || ''
   editForm.value = {
     firstName: student.firstName || '',
     middleName: student.middleName || '',
     lastName: student.lastName || '',
-    studentId: student.studentNumber || student.username || '',
+    studentId: originalStudentNumber,
+    originalStudentNumber: originalStudentNumber, // Store original to detect changes
     email: student.email || '',
     program: student.course || '',
     year: student.year || '',
@@ -1606,33 +1723,45 @@ async function editStudent() {
   loading.value = true
   try {
     const token = localStorage.getItem('authToken')
+    
+    // Prepare update data
+    const updateData = {
+      firstName: editForm.value.firstName,
+      middleName: editForm.value.middleName,
+      lastName: editForm.value.lastName,
+      studentNumber: editForm.value.studentId,
+      email: editForm.value.email,
+      course: editForm.value.program,
+      year: editForm.value.year,
+      section: editForm.value.section,
+      isRegular: editForm.value.status === 'Regular',
+      houseNumber: editForm.value.houseNumber,
+      street: editForm.value.street,
+      barangay: editForm.value.barangay,
+      city: editForm.value.city,
+      province: editForm.value.province,
+      sex: editForm.value.sex,
+      birthDate: editForm.value.birthDate,
+      elementarySchool: editForm.value.elementarySchool,
+      highSchool: editForm.value.highSchool,
+      seniorHighSchool: editForm.value.seniorHighSchool,
+      schoolAddress: editForm.value.schoolAddress,
+      isYouIndigenous: editForm.value.isYouIndigenous === 'true',
+      isDisabled: editForm.value.isDisabled === 'true',
+      isFirstCollegeGraduate: editForm.value.isFirstCollegeGraduate === 'true',
+    }
+    
+    // Update username and password when studentNumber changes
+    // Username should match studentNumber
+    if (editForm.value.studentId) {
+      updateData.username = editForm.value.studentId
+      // Password should also be set to studentNumber (backend will hash it)
+      updateData.password = editForm.value.studentId
+    }
+    
     const response = await axios.post(
       `${process.env.api_host}/users/update/${editForm.value._id}`,
-      {
-        firstName: editForm.value.firstName,
-        middleName: editForm.value.middleName,
-        lastName: editForm.value.lastName,
-        studentNumber: editForm.value.studentId,
-        email: editForm.value.email,
-        course: editForm.value.program,
-        year: editForm.value.year,
-        section: editForm.value.section,
-        isRegular: editForm.value.status === 'Regular',
-        houseNumber: editForm.value.houseNumber,
-        street: editForm.value.street,
-        barangay: editForm.value.barangay,
-        city: editForm.value.city,
-        province: editForm.value.province,
-        sex: editForm.value.sex,
-        birthDate: editForm.value.birthDate,
-        elementarySchool: editForm.value.elementarySchool,
-        highSchool: editForm.value.highSchool,
-        seniorHighSchool: editForm.value.seniorHighSchool,
-        schoolAddress: editForm.value.schoolAddress,
-        isYouIndigenous: editForm.value.isYouIndigenous === 'true',
-        isDisabled: editForm.value.isDisabled === 'true',
-        isFirstCollegeGraduate: editForm.value.isFirstCollegeGraduate === 'true',
-      },
+      updateData,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -1649,7 +1778,7 @@ async function editStudent() {
       getAllStudents()
     }
   } catch (err) {
-    console.error(err)
+    // console.error(err)
     Notify.create({
       type: 'negative',
       message: 'Failed to update student information',
@@ -1690,7 +1819,7 @@ async function confirmDelete() {
       await getAllStudents()
     }
   } catch (err) {
-    console.error(err)
+    // console.error(err)
     Notify.create({
       type: 'negative',
       message: 'Failed to delete student',
@@ -1706,12 +1835,27 @@ async function openViewDialog(studentId) {
   loading.value = true
   try {
     studentInfoDialog.value = true
+    selectedGradeTab.value = 'all' // Reset to 'all' tab when opening dialog
+    selectedYearFilter.value = 'all' // Reset year filter when opening dialog
 
     const response = await axios.get(`${process.env.api_host}/users?query=${studentId}`)
     selectedStudent.value = response.data[0]
-    console.log(selectedStudent.value)
+    // console.log('Selected student:', selectedStudent.value)
+    // console.log('Student courses:', selectedStudent.value?.courses)
+    // Debug: log semester info for each course
+    // if (selectedStudent.value?.courses) {
+    //   selectedStudent.value.courses.forEach((course, index) => {
+    //     console.log(`Course ${index}:`, {
+    //       code: course.courseId?.code,
+    //       sem: course.sem,
+    //       year: course.year,
+    //       courseIdSemester: course.courseId?.semester,
+    //       courseIdYear: course.courseId?.year
+    //     })
+    //   })
+    // }
   } catch (error) {
-    console.error(error)
+    // console.error(error)
   } finally {
     loading.value = false
   }
@@ -1736,7 +1880,7 @@ async function enrollCourse(studentId) {
       router.push(`/queueCourse/` + `${studentId}`)
     }
   } catch (err) {
-    console.error(err)
+    // console.error(err)
     Notify.create({
       type: 'negative',
       message: 'Failed to enroll course',
@@ -1767,7 +1911,7 @@ async function sendEmail(studentId) {
       })
     }
   } catch (err) {
-    console.error(err)
+    // console.error(err)
     Notify.create({
       type: 'negative',
       message: 'Failed to send email',
@@ -1798,7 +1942,7 @@ async function rejectEmail(studentId) {
       })
     }
   } catch (err) {
-    console.error(err)
+    // console.error(err)
     Notify.create({
       type: 'negative',
       message: 'Failed to send email',
@@ -1824,7 +1968,7 @@ async function fetchPrograms() {
       option: response.data.map((program) => program.name),
     }
   } catch (err) {
-    console.error('Error fetching programs:', err)
+    // console.error('Error fetching programs:', err)
     Notify.create({
       type: 'negative',
       message: 'Failed to fetch programs',
@@ -1849,7 +1993,7 @@ async function userInfo() {
       return (isAdmin.value = false)
     }
   } catch (err) {
-    console.error(err)
+    // console.error(err)
     Notify.create({
       type: 'negative',
       message: 'Error fetching user information',
@@ -1961,7 +2105,7 @@ function exportTable() {
       message: 'CSV exported successfully',
     })
   } catch (error) {
-    console.error('Error exporting CSV:', error)
+    // console.error('Error exporting CSV:', error)
     Notify.create({
       type: 'negative',
       message: 'Failed to export CSV',
@@ -1994,6 +2138,183 @@ const getGradeDescription = (grade) => {
   
   return 'Invalid'
 }
+
+// Grade columns definition
+const gradeColumns = [
+  {
+    name: 'code',
+    label: 'Course Code',
+    field: (row) => row.courseId?.code || '',
+    sortable: true,
+  },
+  {
+    name: 'name',
+    label: 'Course Name',
+    field: (row) => row.courseId?.name || '',
+    sortable: true,
+  },
+  {
+    name: 'sem',
+    label: 'Semester',
+    field: (row) => {
+      // Prioritize courseId.semester as it contains the correct semester information
+      if (row.courseId?.semester) return row.courseId.semester
+      // Fallback to sem field if courseId.semester is not available
+      if (row.sem) return row.sem
+      return '-'
+    },
+    sortable: true,
+    align: 'center'
+  },
+  {
+    name: 'year',
+    label: 'Year',
+    field: (row) => {
+      // Prioritize year field from course entry, fallback to courseId.year
+      if (row.year) return row.year
+      if (row.courseId?.year) return row.courseId.year
+      return '-'
+    },
+    sortable: true,
+    align: 'center'
+  },
+  { 
+    name: 'grade', 
+    label: 'Grade', 
+    field: 'grade', 
+    sortable: true,
+    align: 'center'
+  },
+  {
+    name: 'description',
+    label: 'Status',
+    field: (row) => getGradeDescription(row.grade),
+    sortable: true,
+    align: 'center'
+  },
+]
+
+// Helper function to normalize semester value
+const normalizeSemester = (sem) => {
+  if (!sem) return ''
+  const semStr = String(sem).trim()
+  const semLower = semStr.toLowerCase()
+  
+  // Check for various formats - be more flexible
+  if (semLower.includes('first') || semLower === '1' || semLower === 'first semester' || semLower === '1st') {
+    return 'first'
+  }
+  if (semLower.includes('second') || semLower === '2' || semLower === 'second semester' || semLower === '2nd') {
+    return 'second'
+  }
+  if (semLower.includes('summer') || semLower === '3' || semLower === 'summer semester' || semLower === '3rd') {
+    return 'summer'
+  }
+  
+  // Return original if no match (for display purposes)
+  return semStr
+}
+
+// Helper function to get semester from course (prioritizes courseId.semester as it's more accurate)
+const getCourseSemester = (course) => {
+  // Prioritize courseId.semester as it contains the correct semester information
+  // The course.sem field may be incorrect (e.g., all showing '1st')
+  if (course.courseId?.semester) {
+    return normalizeSemester(course.courseId.semester)
+  }
+  // Fallback to sem field if courseId.semester is not available
+  if (course.sem) {
+    return normalizeSemester(course.sem)
+  }
+  return ''
+}
+
+// Helper function to normalize year value
+const normalizeYear = (year) => {
+  if (!year) return ''
+  const yearStr = String(year).trim()
+  const yearLower = yearStr.toLowerCase()
+  
+  // Check for various formats
+  if (yearLower.includes('first') || yearLower === '1' || yearLower === '1st' || yearLower === 'first year') {
+    return 'First'
+  }
+  if (yearLower.includes('second') || yearLower === '2' || yearLower === '2nd' || yearLower === 'second year') {
+    return 'Second'
+  }
+  if (yearLower.includes('third') || yearLower === '3' || yearLower === '3rd' || yearLower === 'third year') {
+    return 'Third'
+  }
+  if (yearLower.includes('fourth') || yearLower === '4' || yearLower === '4th' || yearLower === 'fourth year') {
+    return 'Fourth'
+  }
+  
+  // Return capitalized first letter if it's a single word (e.g., "first" -> "First")
+  if (yearStr.length > 0) {
+    return yearStr.charAt(0).toUpperCase() + yearStr.slice(1).toLowerCase()
+  }
+  
+  return yearStr
+}
+
+// Helper function to get year level from course (prioritizes courseId.year as it's more accurate)
+const getCourseYear = (course) => {
+  // Prioritize courseId.year as it contains the correct year level information
+  if (course.courseId?.year) {
+    return normalizeYear(course.courseId.year)
+  }
+  // Fallback to year field if courseId.year is not available
+  if (course.year) {
+    return normalizeYear(course.year)
+  }
+  return ''
+}
+
+// Helper function to filter courses by year level
+const filterByYear = (courses) => {
+  if (selectedYearFilter.value === 'all') return courses
+  return courses.filter(course => {
+    const year = getCourseYear(course)
+    return year === selectedYearFilter.value
+  })
+}
+
+// Computed properties for filtering courses by semester and year
+const firstSemesterCourses = computed(() => {
+  if (!selectedStudent.value?.courses || !Array.isArray(selectedStudent.value.courses)) return []
+  const filtered = selectedStudent.value.courses.filter(course => {
+    if (!course) return false
+    const sem = getCourseSemester(course)
+    return sem === 'first'
+  })
+  return filterByYear(filtered)
+})
+
+const secondSemesterCourses = computed(() => {
+  if (!selectedStudent.value?.courses || !Array.isArray(selectedStudent.value.courses)) return []
+  const filtered = selectedStudent.value.courses.filter(course => {
+    if (!course) return false
+    const sem = getCourseSemester(course)
+    return sem === 'second'
+  })
+  return filterByYear(filtered)
+})
+
+const summerSemesterCourses = computed(() => {
+  if (!selectedStudent.value?.courses || !Array.isArray(selectedStudent.value.courses)) return []
+  const filtered = selectedStudent.value.courses.filter(course => {
+    if (!course) return false
+    const sem = getCourseSemester(course)
+    return sem === 'summer'
+  })
+  return filterByYear(filtered)
+})
+
+// Computed property for all courses filtered by year
+const allCoursesFiltered = computed(() => {
+  if (!selectedStudent.value?.courses || !Array.isArray(selectedStudent.value.courses)) return []
+  return filterByYear(selectedStudent.value.courses)
+})
 
 onMounted(() => {
   userInfo()

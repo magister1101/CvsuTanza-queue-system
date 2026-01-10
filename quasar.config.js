@@ -37,6 +37,7 @@ export default defineConfig((/* ctx */) => {
         api_host: "https://pre-registration-and-queueing-system-be.vercel.app",
         // api_host: 'http://localhost:3000',
         // api_host: 'https://strphnxg-3000.asse.devtunnels.ms',
+        // api_host: 'https://backend-ni-jc-production.up.railway.app'
       },
       target: {
         browser: ['es2022', 'firefox115', 'chrome115', 'safari14'],

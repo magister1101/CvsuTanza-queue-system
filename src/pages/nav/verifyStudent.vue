@@ -69,7 +69,17 @@
 
         <!-- Courses with Grades -->
         <q-card-section>
-          <div class="text-subtitle1 q-mb-sm">Courses & Grades</div>
+          <div class="row items-center justify-between q-mb-sm">
+            <div class="text-subtitle1">Courses & Grades</div>
+            <q-btn
+              v-if="dialogCourses.length"
+              label="Show All Grades"
+              color="primary"
+              outline
+              dense
+              @click="showGradesDialog = true"
+            />
+          </div>
           <div v-if="dialogCourses.length" class="scroll-section">
             <q-list bordered separator>
               <q-item v-for="(course, index) in dialogCourses" :key="index">
@@ -274,6 +284,204 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <!-- Grades Dialog -->
+    <q-dialog v-model="showGradesDialog" persistent>
+      <q-card style="min-width: 600px; max-width: 90vw; max-height: 90vh" class="q-pa-md scroll">
+        <q-card-section class="row items-center q-pb-none">
+          <q-icon name="school" class="q-mr-sm" />
+          <div class="text-h6">All Grades</div>
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-section>
+          <!-- Courses and Grades -->
+          <div v-if="dialogCourses?.length" class="q-mt-md">
+            <div class="text-subtitle1 q-mb-sm"><strong>Courses and Grades</strong></div>
+            
+            <!-- Semester Tabs -->
+            <q-tabs v-model="selectedGradeTab" class="text-grey q-mb-md" active-color="primary" indicator-color="primary" align="justify">
+              <q-tab name="first" label="First Semester" />
+              <q-tab name="second" label="Second Semester" />
+              <q-tab name="summer" label="Summer" />
+              <q-tab name="all" label="All" />
+            </q-tabs>
+
+            <!-- Year Level Filter -->
+            <div class="q-mb-md">
+              <q-btn-toggle
+                v-model="selectedYearFilter"
+                toggle-color="primary"
+                :options="[
+                  { label: 'All Years', value: 'all' },
+                  { label: 'First Year', value: 'First' },
+                  { label: 'Second Year', value: 'Second' },
+                  { label: 'Third Year', value: 'Third' },
+                  { label: 'Fourth Year', value: 'Fourth' }
+                ]"
+                class="full-width"
+              />
+            </div>
+
+            <q-tab-panels v-model="selectedGradeTab" animated>
+              <!-- First Semester -->
+              <q-tab-panel name="first">
+                <q-table
+                  flat
+                  dense
+                  :rows="firstSemesterCourses"
+                  :columns="gradeColumns"
+                  :row-key="(row) => `${row.courseId?._id}-${row.sem}-${row.year}`"
+                  :loading="!dialogCourses"
+                >
+                  <template v-slot:body-cell-grade="props">
+                    <q-td :props="props">
+                      <q-badge
+                        :color="getGradeColor(props.value)"
+                        text-color="white"
+                        class="q-px-md"
+                      >
+                        {{ props.value }}
+                      </q-badge>
+                    </q-td>
+                  </template>
+                  <template v-slot:body-cell-description="props">
+                    <q-td :props="props">
+                      <q-badge
+                        :color="getGradeColor(props.row.grade)"
+                        text-color="white"
+                        outline
+                        class="q-px-md"
+                      >
+                        {{ props.value }}
+                      </q-badge>
+                    </q-td>
+                  </template>
+                </q-table>
+              </q-tab-panel>
+
+              <!-- Second Semester -->
+              <q-tab-panel name="second">
+                <q-table
+                  flat
+                  dense
+                  :rows="secondSemesterCourses"
+                  :columns="gradeColumns"
+                  :row-key="(row) => `${row.courseId?._id}-${row.sem}-${row.year}`"
+                  :loading="!dialogCourses"
+                >
+                  <template v-slot:body-cell-grade="props">
+                    <q-td :props="props">
+                      <q-badge
+                        :color="getGradeColor(props.value)"
+                        text-color="white"
+                        class="q-px-md"
+                      >
+                        {{ props.value }}
+                      </q-badge>
+                    </q-td>
+                  </template>
+                  <template v-slot:body-cell-description="props">
+                    <q-td :props="props">
+                      <q-badge
+                        :color="getGradeColor(props.row.grade)"
+                        text-color="white"
+                        outline
+                        class="q-px-md"
+                      >
+                        {{ props.value }}
+                      </q-badge>
+                    </q-td>
+                  </template>
+                </q-table>
+              </q-tab-panel>
+
+              <!-- Summer Semester -->
+              <q-tab-panel name="summer">
+                <q-table
+                  flat
+                  dense
+                  :rows="summerSemesterCourses"
+                  :columns="gradeColumns"
+                  :row-key="(row) => `${row.courseId?._id}-${row.sem}-${row.year}`"
+                  :loading="!dialogCourses"
+                >
+                  <template v-slot:body-cell-grade="props">
+                    <q-td :props="props">
+                      <q-badge
+                        :color="getGradeColor(props.value)"
+                        text-color="white"
+                        class="q-px-md"
+                      >
+                        {{ props.value }}
+                      </q-badge>
+                    </q-td>
+                  </template>
+                  <template v-slot:body-cell-description="props">
+                    <q-td :props="props">
+                      <q-badge
+                        :color="getGradeColor(props.row.grade)"
+                        text-color="white"
+                        outline
+                        class="q-px-md"
+                      >
+                        {{ props.value }}
+                      </q-badge>
+                    </q-td>
+                  </template>
+                </q-table>
+              </q-tab-panel>
+
+              <!-- All Grades -->
+              <q-tab-panel name="all">
+                <q-table
+                  flat
+                  dense
+                  :rows="allCoursesFiltered"
+                  :columns="gradeColumns"
+                  :row-key="(row) => `${row.courseId?._id}-${row.sem}-${row.year}`"
+                  :loading="!dialogCourses"
+                >
+                  <template v-slot:body-cell-grade="props">
+                    <q-td :props="props">
+                      <q-badge
+                        :color="getGradeColor(props.value)"
+                        text-color="white"
+                        class="q-px-md"
+                      >
+                        {{ props.value }}
+                      </q-badge>
+                    </q-td>
+                  </template>
+                  <template v-slot:body-cell-description="props">
+                    <q-td :props="props">
+                      <q-badge
+                        :color="getGradeColor(props.row.grade)"
+                        text-color="white"
+                        outline
+                        class="q-px-md"
+                      >
+                        {{ props.value }}
+                      </q-badge>
+                    </q-td>
+                  </template>
+                </q-table>
+              </q-tab-panel>
+            </q-tab-panels>
+          </div>
+          <div v-else class="text-center q-pa-md">
+            No grades found.
+          </div>
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-actions align="right">
+          <q-btn flat label="Close" color="primary" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -321,6 +529,11 @@ const scheduleOptions = ref([])
 const removeLoading = ref(false)
 const addLoading = ref(false)
 
+// Grades dialog
+const showGradesDialog = ref(false)
+const selectedGradeTab = ref('all')
+const selectedYearFilter = ref('all')
+
 function formatCourse(course) {
   if (!course) return ''
 
@@ -366,7 +579,7 @@ async function confirmRemoveCourse() {
     confirmDeleteCourseDialog.value = false
     $q.notify({ type: 'positive', message: 'Course removed successfully. Student auto-rejected due to course changes.' })
   } catch (err) {
-    console.error('Error removing course:', err)
+    // console.error('Error removing course:', err)
     $q.notify({ type: 'negative', message: 'Failed to remove course' })
   } finally {
     removeCourseLoading.value = false
@@ -491,18 +704,26 @@ async function openDialog(row) {
     dialogScheduleRaw.value = JSON.parse(JSON.stringify(freshStudent.schedule || []))
     dialogSchedule.value = flattenFromRaw(dialogScheduleRaw.value)
     dialogStudent.value = freshStudent
+    
+    // Reset grade filters when opening dialog
+    selectedGradeTab.value = 'all'
+    selectedYearFilter.value = 'all'
   } catch (err) {
-    console.error('Error fetching fresh student data:', err)
+    // console.error('Error fetching fresh student data:', err)
     // Fallback to row data if fetch fails
-    dialogCourseToTake.value = row.courseToTake || []
+  dialogCourseToTake.value = row.courseToTake || []
     dialogCourseToTakeRemoved.value = []
-    originalCourseToTake.value = JSON.parse(JSON.stringify(row.courseToTake || []))
+  originalCourseToTake.value = JSON.parse(JSON.stringify(row.courseToTake || []))
     originalCourseToTakeRemoved.value = []
-    adminModifiedCourses.value = false
-    dialogCourses.value = row.courses || []
-    dialogScheduleRaw.value = JSON.parse(JSON.stringify(row.schedule || []))
-    dialogSchedule.value = flattenFromRaw(dialogScheduleRaw.value)
-    dialogStudent.value = row
+  adminModifiedCourses.value = false
+  dialogCourses.value = row.courses || []
+  dialogScheduleRaw.value = JSON.parse(JSON.stringify(row.schedule || []))
+  dialogSchedule.value = flattenFromRaw(dialogScheduleRaw.value)
+  dialogStudent.value = row
+  
+  // Reset grade filters when opening dialog
+  selectedGradeTab.value = 'all'
+  selectedYearFilter.value = 'all'
   }
   
   dialogOpen.value = true
@@ -510,27 +731,27 @@ async function openDialog(row) {
 
 async function fetchSchedules() {
   try {
-    console.log(userData.value.role)
+    // console.log(userData.value.role)
 
     if (userData.value.role === 'admin') {
       const res = await Axios.get(`${process.env.api_host}/courses/GetSchedule`)
       scheduleOptions.value = res.data.map((item) => ({
-        _id: item._id,
+          _id: item._id,
         label: `${item.course.name} (Section ${item.section}) - ${item.code}`,
-        data: item,
-      }))
+          data: item,
+        }))
     } else {
       const res = await Axios.get(
         `${process.env.api_host}/courses/GetSchedule?program=${userData.value.role}`,
       )
       scheduleOptions.value = res.data.map((item) => ({
-        _id: item._id,
+          _id: item._id,
         label: `${item.course.name} (Section ${item.section}) - ${item.code}`,
-        data: item,
-      }))
+          data: item,
+        }))
     }
   } catch (err) {
-    console.error('Error fetching schedules:', err)
+    // console.error('Error fetching schedules:', err)
   }
 }
 
@@ -567,7 +788,7 @@ async function addSchedule() {
       (s) => s.code !== subject.code || s.section !== subject.section,
     )
     dialogSchedule.value = flattenFromRaw(dialogScheduleRaw.value)
-    console.error('Error saving schedule:', err)
+    // console.error('Error saving schedule:', err)
     $q.notify({ type: 'negative', message: 'Failed to save schedule' })
   } finally {
     addLoading.value = false
@@ -592,7 +813,7 @@ async function removeSchedule(index) {
   } catch (err) {
     dialogScheduleRaw.value = previousRaw
     dialogSchedule.value = flattenFromRaw(dialogScheduleRaw.value)
-    console.error('Error removing schedule:', err)
+    // console.error('Error removing schedule:', err)
     $q.notify({ type: 'negative', message: 'Failed to remove schedule' })
   } finally {
     removeLoading.value = false
@@ -604,7 +825,7 @@ async function fetchCourses() {
     const res = await Axios.get(`${process.env.api_host}/courses`)
     courseOptions.value = res.data
   } catch (err) {
-    console.error('Error fetching courses:', err)
+    // console.error('Error fetching courses:', err)
   }
 }
 
@@ -635,7 +856,7 @@ async function addCourseToTake() {
     selectedCourseToTake.value = null
     $q.notify({ type: 'positive', message: 'Course added successfully. Student auto-rejected due to course changes.' })
   } catch (err) {
-    console.error('Error adding course:', err)
+    // console.error('Error adding course:', err)
     $q.notify({ type: 'negative', message: err.response?.data?.message || 'Failed to add course' })
   } finally {
     addCourseLoading.value = false
@@ -656,7 +877,7 @@ async function getUser() {
     })
     userData.value = res.data
   } catch (err) {
-    console.error('Error fetching user:', err)
+    // console.error('Error fetching user:', err)
   }
 }
 
@@ -686,7 +907,7 @@ async function fetchStudents() {
       rows.value = res.data
     }
   } catch (err) {
-    console.error('Error fetching students:', err)
+    // console.error('Error fetching students:', err)
   } finally {
     tableLoading.value = false
   }
@@ -769,7 +990,7 @@ async function getTotalCounts() {
       appTotal.value = appRes.data.length
     }
   } catch (err) {
-    console.error('Error fetching totals:', err)
+    // console.error('Error fetching totals:', err)
   }
 }
 
@@ -781,7 +1002,7 @@ async function autoRejectOnCourseChange() {
     })
     await Axios.post(`${process.env.api_host}/queues/rejectEnrollment`, { studentId: currentUserId.value })
   } catch (err) {
-    console.error('Error auto-rejecting:', err)
+    // console.error('Error auto-rejecting:', err)
   }
 }
 
@@ -812,12 +1033,215 @@ async function validateStudent(id) {
     getTotalCounts()
     dialogOpen.value = false
   } catch (err) {
-    console.error('Error validating:', err)
+    // console.error('Error validating:', err)
     $q.notify({ type: 'negative', message: 'Validation failed' })
   } finally {
     verifyLoading.value = false
   }
 }
+
+// CVSU Grading System Helper Functions
+// CVSU Grading Scale: 1.0-1.5=Perfect, 1.6-2.5=Good, 2.6-3.0=Pass, 3.1-5.0=Failed
+const getGradeColor = (grade) => {
+  const numGrade = parseFloat(grade)
+  if (isNaN(numGrade)) return 'grey'
+  
+  if (numGrade >= 1.0 && numGrade <= 1.5) return 'green'      
+  if (numGrade >= 1.6 && numGrade <= 2.5) return 'blue'     
+  if (numGrade >= 2.6 && numGrade <= 3.0) return 'orange'     
+  if (numGrade >= 3.1 && numGrade <= 5.0) return 'red'        
+  
+  return 'grey'
+}
+
+const getGradeDescription = (grade) => {
+  const numGrade = parseFloat(grade)
+  if (isNaN(numGrade)) return 'Invalid'
+  
+  if (numGrade >= 1.0 && numGrade <= 1.5) return 'Perfect'
+  if (numGrade >= 1.6 && numGrade <= 2.5) return 'Good'
+  if (numGrade >= 2.6 && numGrade <= 3.0) return 'Pass'
+  if (numGrade >= 3.1 && numGrade <= 5.0) return 'Failed'
+  
+  return 'Invalid'
+}
+
+// Grade columns definition
+const gradeColumns = [
+  {
+    name: 'code',
+    label: 'Course Code',
+    field: (row) => row.courseId?.code || '',
+    sortable: true,
+  },
+  {
+    name: 'name',
+    label: 'Course Name',
+    field: (row) => row.courseId?.name || '',
+    sortable: true,
+  },
+  {
+    name: 'sem',
+    label: 'Semester',
+    field: (row) => {
+      // Prioritize courseId.semester as it contains the correct semester information
+      if (row.courseId?.semester) return row.courseId.semester
+      // Fallback to sem field if courseId.semester is not available
+      if (row.sem) return row.sem
+      return '-'
+    },
+    sortable: true,
+    align: 'center'
+  },
+  {
+    name: 'year',
+    label: 'Year',
+    field: (row) => {
+      // Prioritize year field from course entry, fallback to courseId.year
+      if (row.year) return row.year
+      if (row.courseId?.year) return row.courseId.year
+      return '-'
+    },
+    sortable: true,
+    align: 'center'
+  },
+  { 
+    name: 'grade', 
+    label: 'Grade', 
+    field: 'grade', 
+    sortable: true,
+    align: 'center'
+  },
+  {
+    name: 'description',
+    label: 'Status',
+    field: (row) => getGradeDescription(row.grade),
+    sortable: true,
+    align: 'center'
+  },
+]
+
+// Helper function to normalize semester value
+const normalizeSemester = (sem) => {
+  if (!sem) return ''
+  const semStr = String(sem).trim()
+  const semLower = semStr.toLowerCase()
+  
+  // Check for various formats - be more flexible
+  if (semLower.includes('first') || semLower === '1' || semLower === 'first semester' || semLower === '1st') {
+    return 'first'
+  }
+  if (semLower.includes('second') || semLower === '2' || semLower === 'second semester' || semLower === '2nd') {
+    return 'second'
+  }
+  if (semLower.includes('summer') || semLower === '3' || semLower === 'summer semester' || semLower === '3rd') {
+    return 'summer'
+  }
+  
+  // Return original if no match (for display purposes)
+  return semStr
+}
+
+// Helper function to get semester from course (prioritizes courseId.semester as it's more accurate)
+const getCourseSemester = (course) => {
+  // Prioritize courseId.semester as it contains the correct semester information
+  // The course.sem field may be incorrect (e.g., all showing '1st')
+  if (course.courseId?.semester) {
+    return normalizeSemester(course.courseId.semester)
+  }
+  // Fallback to sem field if courseId.semester is not available
+  if (course.sem) {
+    return normalizeSemester(course.sem)
+  }
+  return ''
+}
+
+// Helper function to normalize year value
+const normalizeYear = (year) => {
+  if (!year) return ''
+  const yearStr = String(year).trim()
+  const yearLower = yearStr.toLowerCase()
+  
+  // Check for various formats
+  if (yearLower.includes('first') || yearLower === '1' || yearLower === '1st' || yearLower === 'first year') {
+    return 'First'
+  }
+  if (yearLower.includes('second') || yearLower === '2' || yearLower === '2nd' || yearLower === 'second year') {
+    return 'Second'
+  }
+  if (yearLower.includes('third') || yearLower === '3' || yearLower === '3rd' || yearLower === 'third year') {
+    return 'Third'
+  }
+  if (yearLower.includes('fourth') || yearLower === '4' || yearLower === '4th' || yearLower === 'fourth year') {
+    return 'Fourth'
+  }
+  
+  // Return capitalized first letter if it's a single word (e.g., "first" -> "First")
+  if (yearStr.length > 0) {
+    return yearStr.charAt(0).toUpperCase() + yearStr.slice(1).toLowerCase()
+  }
+  
+  return yearStr
+}
+
+// Helper function to get year level from course (prioritizes courseId.year as it's more accurate)
+const getCourseYear = (course) => {
+  // Prioritize courseId.year as it contains the correct year level information
+  if (course.courseId?.year) {
+    return normalizeYear(course.courseId.year)
+  }
+  // Fallback to year field if courseId.year is not available
+  if (course.year) {
+    return normalizeYear(course.year)
+  }
+  return ''
+}
+
+// Helper function to filter courses by year level
+const filterByYear = (courses) => {
+  if (selectedYearFilter.value === 'all') return courses
+  return courses.filter(course => {
+    const year = getCourseYear(course)
+    return year === selectedYearFilter.value
+  })
+}
+
+// Computed properties for filtering courses by semester and year
+const firstSemesterCourses = computed(() => {
+  if (!dialogCourses.value || !Array.isArray(dialogCourses.value)) return []
+  const filtered = dialogCourses.value.filter(course => {
+    if (!course) return false
+    const sem = getCourseSemester(course)
+    return sem === 'first'
+  })
+  return filterByYear(filtered)
+})
+
+const secondSemesterCourses = computed(() => {
+  if (!dialogCourses.value || !Array.isArray(dialogCourses.value)) return []
+  const filtered = dialogCourses.value.filter(course => {
+    if (!course) return false
+    const sem = getCourseSemester(course)
+    return sem === 'second'
+  })
+  return filterByYear(filtered)
+})
+
+const summerSemesterCourses = computed(() => {
+  if (!dialogCourses.value || !Array.isArray(dialogCourses.value)) return []
+  const filtered = dialogCourses.value.filter(course => {
+    if (!course) return false
+    const sem = getCourseSemester(course)
+    return sem === 'summer'
+  })
+  return filterByYear(filtered)
+})
+
+// Computed property for all courses filtered by year
+const allCoursesFiltered = computed(() => {
+  if (!dialogCourses.value || !Array.isArray(dialogCourses.value)) return []
+  return filterByYear(dialogCourses.value)
+})
 
 onMounted(async () => {
   await getUser()
