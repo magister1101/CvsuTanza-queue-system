@@ -233,7 +233,7 @@ async function sendEmail() {
       Notify.create({ type: 'positive', message: 'Email sent successfully' })
     }
   } catch (err) {
-    console.error(err)
+    // console.error(err)
     Notify.create({ type: 'negative', message: 'Failed to send email' })
   } finally {
     loading.value = false
@@ -270,7 +270,7 @@ async function getCourses() {
       Notify.create({ type: 'negative', message: 'Invalid data format received from server' })
     }
   } catch (err) {
-    console.error(err)
+    // console.error(err)
     rows.value = []
     Notify.create({ type: 'negative', message: 'Failed to fetch courses data' })
   } finally {
@@ -331,7 +331,7 @@ async function checkCourse() {
     }
     prerequisitesMessage.value = response.data
   } catch (err) {
-    console.error(err)
+    // console.error(err)
     Notify.create({ type: 'negative', message: 'Failed to update courses' })
   } finally {
     loading.value = false

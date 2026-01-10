@@ -7,6 +7,52 @@
       </q-btn>
     </q-card-section>
 
+    <!-- Prerequisites Warning -->
+    <q-card class="q-mt-md" v-if="prerequisitesMessage && prerequisitesRow.length > 0" style="border: 3px solid #ff9800; background-color: #fff3e0">
+      <q-card-section>
+        <div class="text-h6 text-orange">Prerequisites Warning</div>
+      </q-card-section>
+      <q-card-section>
+        <q-table
+          style="box-shadow: none"
+          :rows="prerequisitesRow"
+          :columns="prerequisitesColumn"
+          row-key="id"
+          :rows-per-page-options="[0]"
+          separator="cell"
+        >
+          <template #body="props">
+            <q-tr :props="props">
+              <q-td>{{ props.row.course }}</q-td>
+              <q-td>{{ props.row.prerequisites }}</q-td>
+            </q-tr>
+          </template>
+        </q-table>
+        <div class="q-mt-md text-negative text-weight-bold">
+          {{ prerequisitesMessage.message || 'Some prerequisites are missing or failed. Please complete prerequisites before enrolling.' }}
+        </div>
+      </q-card-section>
+    </q-card>
+
+    <!-- Already Taken Courses Warning -->
+    <q-card class="q-mt-md" v-if="alreadyTakenCourses.length > 0" style="border: 3px solid #f44336; background-color: #ffebee">
+      <q-card-section>
+        <div class="text-h6 text-negative">Already Passed Courses</div>
+      </q-card-section>
+      <q-card-section>
+        <q-list bordered>
+          <q-item v-for="(course, index) in alreadyTakenCourses" :key="index">
+            <q-item-section>
+              <q-item-label>{{ course.name }}</q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-list>
+        <div class="q-mt-md text-negative text-weight-bold">
+          These courses have already been passed and cannot be retaken. Please remove them from your selection.
+        </div>
+      </q-card-section>
+    </q-card>
+
     <!-- Selected Schedules Section -->
     <q-card class="q-mt-md" v-if="selectedScheduleDetails.length > 0">
       <q-card-section>
@@ -21,8 +67,8 @@
         <q-btn
           label="Enroll"
           color="primary"
-          @click="enroll"
-          :disable="selectedScheduleDetails.length === 0 || totalUnits > 24"
+          @click="checkPrerequisitesAndEnroll"
+          :disable="selectedScheduleDetails.length === 0 || totalUnits > 24 || hasPrerequisiteIssues"
           :loading="enrollLoading"
         />
       </q-card-section>
@@ -125,6 +171,15 @@ const selectedSchedules = ref({})
 const scheduleOptions = ref({})
 const searchQuery = ref('')
 
+// Prerequisites checking
+const prerequisitesMessage = ref(null)
+const prerequisitesRow = ref([])
+const prerequisitesColumn = ref([
+  { name: 'course', label: 'Selected Course', align: 'left', field: 'course' },
+  { name: 'prerequisites', label: 'Missing Prerequisites', align: 'left', field: 'prerequisites' },
+])
+const alreadyTakenCourses = ref([])
+
 // --- helpers ---
 const toId = (v) => {
   if (!v) return ''
@@ -145,7 +200,7 @@ async function getUser() {
     })
     userData.value = response.data
   } catch (err) {
-    console.error('Error fetching user:', err)
+    // console.error('Error fetching user:', err)
   }
 }
 
@@ -196,7 +251,7 @@ async function fetchCourses() {
 
     scheduleOptions.value = scheduleMap
   } catch (err) {
-    console.error('Error fetching courses or schedules:', err)
+    // console.error('Error fetching courses or schedules:', err)
   } finally {
     tableLoading.value = false
   }
@@ -217,7 +272,6 @@ function onScheduleSelected(courseIdRaw, scheduleIdRaw) {
   // If the course isn't yet counted and adding it would exceed 24, block
   if (!alreadySelected && totalUnits.value + courseUnits > 24) {
     Notify.create({ type: 'negative', message: 'You cannot enroll in more than 24 units.' })
-    // alert('You cannot enroll in more than 24 units.')
     return
   }
 
@@ -232,13 +286,68 @@ function onScheduleSelected(courseIdRaw, scheduleIdRaw) {
   if (selectedSchedules.value[courseId].length === 0) {
     delete selectedSchedules.value[courseId]
   }
+
+  // Clear prerequisite messages when selection changes
+  prerequisitesMessage.value = null
+  prerequisitesRow.value = []
+  alreadyTakenCourses.value = []
 }
 
-async function enroll() {
+async function checkPrerequisitesAndEnroll() {
   try {
     enrollLoading.value = true
 
+    // Clear previous prerequisite messages
+    prerequisitesMessage.value = null
+    prerequisitesRow.value = []
+    alreadyTakenCourses.value = []
+
     const courseToTakeIds = Object.keys(selectedSchedules.value) // normalized IDs
+    
+    if (courseToTakeIds.length === 0) {
+      Notify.create({ type: 'warning', message: 'Please select at least one course to enroll' })
+      return
+    }
+
+    // Check prerequisites first
+    const token = localStorage.getItem('authToken')
+    const response = await Axios.post(
+      `${process.env.api_host}/queues/checkPrerequisites`,
+      {
+        studentId: userData.value._id,
+        selectedCourses: courseToTakeIds,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token,
+        },
+      },
+    )
+
+    if (response.data.missing) {
+      // Handle missing prerequisites
+      if (response.data.missingPrerequisites) {
+        prerequisitesRow.value = Object.entries(response.data.missingPrerequisites).map(
+          ([course, prerequisites]) => ({
+            id: course,
+            course: course,
+            prerequisites: prerequisites.map((prereq) => prereq.name).join(', '),
+          }),
+        )
+      }
+      
+      // Handle already taken courses
+      if (response.data.alreadyTakenCourses) {
+        alreadyTakenCourses.value = response.data.alreadyTakenCourses
+      }
+
+      prerequisitesMessage.value = response.data
+      Notify.create({ type: 'negative', message: response.data.message || 'Prerequisites check failed' })
+      return
+    }
+
+    // All prerequisites met, proceed with enrollment
     const scheduleIds = Object.values(selectedSchedules.value).flat()
 
     await Axios.post(`${process.env.api_host}/users/update/${userData.value._id}`, {
@@ -248,9 +357,12 @@ async function enroll() {
       isEnrolled: true,
       isApproved: false,
     })
+    
+    Notify.create({ type: 'positive', message: 'Enrollment successful!' })
     redirect('/thankYou')
   } catch (err) {
-    console.error('Error during enrollment:', err)
+    // console.error('Error during enrollment:', err)
+    Notify.create({ type: 'negative', message: err.response?.data?.message || 'Failed to enroll courses' })
   } finally {
     enrollLoading.value = false
   }
@@ -320,6 +432,11 @@ const totalUnits = computed(() => {
     }
   }
   return sum
+})
+
+// Check if there are any prerequisite issues
+const hasPrerequisiteIssues = computed(() => {
+  return (prerequisitesRow.value && prerequisitesRow.value.length > 0) || alreadyTakenCourses.value.length > 0
 })
 
 onMounted(async () => {
