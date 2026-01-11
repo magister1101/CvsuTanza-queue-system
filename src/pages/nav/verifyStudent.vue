@@ -62,35 +62,17 @@
             <div class="text-subtitle1 q-mb-sm">
               Year & Section: {{ dialogStudent.year }} - {{ dialogStudent.section }}
             </div>
+            <div class="q-mt-md">
+              <q-btn
+                v-if="dialogCourses.length"
+                label="Check List"
+                color="primary"
+                outline
+                dense
+                @click="showGradesDialog = true"
+              />
+            </div>
           </q-card-section>
-        </q-card-section>
-
-        <q-separator spaced />
-
-        <!-- Courses with Grades -->
-        <q-card-section>
-          <div class="row items-center justify-between q-mb-sm">
-            <div class="text-subtitle1">Courses & Grades</div>
-            <q-btn
-              v-if="dialogCourses.length"
-              label="Show All Grades"
-              color="primary"
-              outline
-              dense
-              @click="showGradesDialog = true"
-            />
-          </div>
-          <div v-if="dialogCourses.length" class="scroll-section">
-            <q-list bordered separator>
-              <q-item v-for="(course, index) in dialogCourses" :key="index">
-                <q-item-section>
-                  <strong>{{ course.courseId?.name }}</strong> ({{ course.courseId?.code }})<br />
-                  Grade: {{ course.grade }}
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </div>
-          <div v-else>No grades found.</div>
         </q-card-section>
 
         <q-separator spaced />
@@ -285,185 +267,148 @@
       </q-card>
     </q-dialog>
 
-    <!-- Grades Dialog -->
+    <!-- Check List Dialog -->
     <q-dialog v-model="showGradesDialog" persistent>
-      <q-card style="min-width: 600px; max-width: 90vw; max-height: 90vh" class="q-pa-md scroll">
+      <q-card style="min-width: 900px; max-width: 95vw; max-height: 90vh" class="checklist-dialog">
         <q-card-section class="row items-center q-pb-none">
-          <q-icon name="school" class="q-mr-sm" />
-          <div class="text-h6">All Grades</div>
+          <q-icon name="checklist" class="q-mr-sm" />
+          <div class="text-h6">Check List</div>
         </q-card-section>
 
         <q-separator />
 
-        <q-card-section>
-          <!-- Courses and Grades -->
-          <div v-if="dialogCourses?.length" class="q-mt-md">
-            <div class="text-subtitle1 q-mb-sm"><strong>Courses and Grades</strong></div>
-            
-            <!-- Semester Tabs -->
-            <q-tabs v-model="selectedGradeTab" class="text-grey q-mb-md" active-color="primary" indicator-color="primary" align="justify">
-              <q-tab name="first" label="First Semester" />
-              <q-tab name="second" label="Second Semester" />
-              <q-tab name="summer" label="Summer" />
-              <q-tab name="all" label="All" />
-            </q-tabs>
+        <q-card-section class="q-pa-none">
+          <!-- Year Level Filter -->
+          <div class="q-pa-md q-pb-sm">
+            <q-btn-toggle
+              v-model="selectedYearFilter"
+              toggle-color="primary"
+              :options="[
+                { label: 'All Years', value: 'all' },
+                { label: 'First Year', value: 'First' },
+                { label: 'Second Year', value: 'Second' },
+                { label: 'Third Year', value: 'Third' },
+                { label: 'Fourth Year', value: 'Fourth' }
+              ]"
+              class="full-width"
+            />
+          </div>
 
-            <!-- Year Level Filter -->
-            <div class="q-mb-md">
-              <q-btn-toggle
-                v-model="selectedYearFilter"
-                toggle-color="primary"
-                :options="[
-                  { label: 'All Years', value: 'all' },
-                  { label: 'First Year', value: 'First' },
-                  { label: 'Second Year', value: 'Second' },
-                  { label: 'Third Year', value: 'Third' },
-                  { label: 'Fourth Year', value: 'Fourth' }
-                ]"
-                class="full-width"
-              />
-            </div>
+          <!-- Semester Tabs -->
+          <q-tabs v-model="selectedGradeTab" class="text-grey q-px-md" active-color="primary" indicator-color="primary" align="justify">
+            <q-tab name="first" label="First Semester" />
+            <q-tab name="second" label="Second Semester" />
+            <q-tab name="summer" label="Summer" />
+            <q-tab name="all" label="All" />
+          </q-tabs>
 
+          <!-- Checklist Table -->
+          <div v-if="allCoursesList?.length" class="checklist-table-container">
             <q-tab-panels v-model="selectedGradeTab" animated>
               <!-- First Semester -->
-              <q-tab-panel name="first">
+              <q-tab-panel name="first" class="q-pa-none">
+                <div class="checklist-semester-header">{{ getYearHeader() }} - First Semester</div>
                 <q-table
                   flat
                   dense
                   :rows="firstSemesterCourses"
-                  :columns="gradeColumns"
-                  :row-key="(row) => `${row.courseId?._id}-${row.sem}-${row.year}`"
-                  :loading="!dialogCourses"
+                  :columns="checklistColumns"
+                  :row-key="(row) => `${row.courseId?._id || row.courseId}-${row.sem || row.courseId?.semester}-${row.year || row.courseId?.year}`"
+                  :loading="!allCoursesList.length"
+                  class="checklist-table"
+                  :rows-per-page-options="[0]"
                 >
-                  <template v-slot:body-cell-grade="props">
-                    <q-td :props="props">
-                      <q-badge
-                        :color="getGradeColor(props.value)"
-                        text-color="white"
-                        class="q-px-md"
-                      >
-                        {{ props.value }}
-                      </q-badge>
-                    </q-td>
-                  </template>
-                  <template v-slot:body-cell-description="props">
-                    <q-td :props="props">
-                      <q-badge
-                        :color="getGradeColor(props.row.grade)"
-                        text-color="white"
-                        outline
-                        class="q-px-md"
-                      >
-                        {{ props.value }}
-                      </q-badge>
+                  <template v-slot:body-cell-finalRating="props">
+                    <q-td :props="props" class="text-center">
+                      <span :class="getGradeTextColor(props.value)">
+                        {{ props.value || '-' }}
+                      </span>
                     </q-td>
                   </template>
                 </q-table>
+                <div class="checklist-subtotal">
+                  <div class="subtotal-row">
+                    <span class="subtotal-label">Subtotal</span>
+                    <span class="subtotal-value">{{ getSubtotalUnits(firstSemesterCourses) }}</span>
+                  </div>
+                </div>
               </q-tab-panel>
 
               <!-- Second Semester -->
-              <q-tab-panel name="second">
+              <q-tab-panel name="second" class="q-pa-none">
+                <div class="checklist-semester-header">{{ getYearHeader() }} - Second Semester</div>
                 <q-table
                   flat
                   dense
                   :rows="secondSemesterCourses"
-                  :columns="gradeColumns"
-                  :row-key="(row) => `${row.courseId?._id}-${row.sem}-${row.year}`"
-                  :loading="!dialogCourses"
+                  :columns="checklistColumns"
+                  :row-key="(row) => `${row.courseId?._id || row.courseId}-${row.sem || row.courseId?.semester}-${row.year || row.courseId?.year}`"
+                  :loading="!allCoursesList.length"
+                  class="checklist-table"
+                  :rows-per-page-options="[0]"
                 >
-                  <template v-slot:body-cell-grade="props">
-                    <q-td :props="props">
-                      <q-badge
-                        :color="getGradeColor(props.value)"
-                        text-color="white"
-                        class="q-px-md"
-                      >
-                        {{ props.value }}
-                      </q-badge>
-                    </q-td>
-                  </template>
-                  <template v-slot:body-cell-description="props">
-                    <q-td :props="props">
-                      <q-badge
-                        :color="getGradeColor(props.row.grade)"
-                        text-color="white"
-                        outline
-                        class="q-px-md"
-                      >
-                        {{ props.value }}
-                      </q-badge>
+                  <template v-slot:body-cell-finalRating="props">
+                    <q-td :props="props" class="text-center">
+                      <span :class="getGradeTextColor(props.value)">
+                        {{ props.value || '-' }}
+                      </span>
                     </q-td>
                   </template>
                 </q-table>
+                <div class="checklist-subtotal">
+                  <div class="subtotal-row">
+                    <span class="subtotal-label">Subtotal</span>
+                    <span class="subtotal-value">{{ getSubtotalUnits(secondSemesterCourses) }}</span>
+                  </div>
+                </div>
               </q-tab-panel>
 
               <!-- Summer Semester -->
-              <q-tab-panel name="summer">
+              <q-tab-panel name="summer" class="q-pa-none">
+                <div class="checklist-semester-header">Summer Semester</div>
                 <q-table
                   flat
                   dense
                   :rows="summerSemesterCourses"
-                  :columns="gradeColumns"
-                  :row-key="(row) => `${row.courseId?._id}-${row.sem}-${row.year}`"
-                  :loading="!dialogCourses"
+                  :columns="checklistColumns"
+                  :row-key="(row) => `${row.courseId?._id || row.courseId}-${row.sem || row.courseId?.semester}-${row.year || row.courseId?.year}`"
+                  :loading="!allCoursesList.length"
+                  class="checklist-table"
+                  :rows-per-page-options="[0]"
                 >
                   <template v-slot:body-cell-grade="props">
-                    <q-td :props="props">
-                      <q-badge
-                        :color="getGradeColor(props.value)"
-                        text-color="white"
-                        class="q-px-md"
-                      >
-                        {{ props.value }}
-                      </q-badge>
-                    </q-td>
-                  </template>
-                  <template v-slot:body-cell-description="props">
-                    <q-td :props="props">
-                      <q-badge
-                        :color="getGradeColor(props.row.grade)"
-                        text-color="white"
-                        outline
-                        class="q-px-md"
-                      >
-                        {{ props.value }}
-                      </q-badge>
+                    <q-td :props="props" class="text-center">
+                      <span :class="getGradeTextColor(props.value)">
+                        {{ props.value || '-' }}
+                      </span>
                     </q-td>
                   </template>
                 </q-table>
+                <div class="checklist-subtotal">
+                  <div class="subtotal-row">
+                    <span class="subtotal-label">Subtotal</span>
+                    <span class="subtotal-value">{{ getSubtotalUnits(summerSemesterCourses) }}</span>
+                  </div>
+                </div>
               </q-tab-panel>
 
               <!-- All Grades -->
-              <q-tab-panel name="all">
+              <q-tab-panel name="all" class="q-pa-none">
                 <q-table
                   flat
                   dense
                   :rows="allCoursesFiltered"
-                  :columns="gradeColumns"
-                  :row-key="(row) => `${row.courseId?._id}-${row.sem}-${row.year}`"
-                  :loading="!dialogCourses"
+                  :columns="checklistColumns"
+                  :row-key="(row) => `${row.courseId?._id || row.courseId}-${row.sem || row.courseId?.semester}-${row.year || row.courseId?.year}`"
+                  :loading="!allCoursesList.length"
+                  class="checklist-table"
+                  :rows-per-page-options="[0]"
                 >
                   <template v-slot:body-cell-grade="props">
-                    <q-td :props="props">
-                      <q-badge
-                        :color="getGradeColor(props.value)"
-                        text-color="white"
-                        class="q-px-md"
-                      >
-                        {{ props.value }}
-                      </q-badge>
-                    </q-td>
-                  </template>
-                  <template v-slot:body-cell-description="props">
-                    <q-td :props="props">
-                      <q-badge
-                        :color="getGradeColor(props.row.grade)"
-                        text-color="white"
-                        outline
-                        class="q-px-md"
-                      >
-                        {{ props.value }}
-                      </q-badge>
+                    <q-td :props="props" class="text-center">
+                      <span :class="getGradeTextColor(props.value)">
+                        {{ props.value || '-' }}
+                      </span>
                     </q-td>
                   </template>
                 </q-table>
@@ -477,7 +422,7 @@
 
         <q-separator />
 
-        <q-card-actions align="right">
+        <q-card-actions align="right" class="q-pa-md">
           <q-btn flat label="Close" color="primary" v-close-popup />
         </q-card-actions>
       </q-card>
@@ -533,6 +478,7 @@ const addLoading = ref(false)
 const showGradesDialog = ref(false)
 const selectedGradeTab = ref('all')
 const selectedYearFilter = ref('all')
+const allCoursesList = ref([]) // Store all courses from first to fourth year
 
 function formatCourse(course) {
   if (!course) return ''
@@ -675,6 +621,36 @@ const hasCourseChanges = computed(() => {
   return adminModifiedCourses.value
 })
 
+async function fetchAllCourses() {
+  try {
+    // Fetch all courses for first to fourth year
+    const studentProgram = dialogStudent.value?.course || ''
+    
+    if (!studentProgram) {
+      allCoursesList.value = []
+      return
+    }
+    
+    const yearFilters = ['First', 'Second', 'Third', 'Fourth']
+    const allCoursesPromises = yearFilters.map(year => 
+      Axios.get(`${process.env.api_host}/courses`, {
+        params: {
+          isArchived: false,
+          year: year,
+          program: studentProgram
+        }
+      })
+    )
+    
+    const results = await Promise.all(allCoursesPromises)
+    const courses = results.flatMap(res => res.data || [])
+    allCoursesList.value = courses
+  } catch (err) {
+    // console.error('Error fetching all courses:', err)
+    allCoursesList.value = []
+  }
+}
+
 async function openDialog(row) {
   currentUserId.value = row._id
   
@@ -705,6 +681,9 @@ async function openDialog(row) {
     dialogSchedule.value = flattenFromRaw(dialogScheduleRaw.value)
     dialogStudent.value = freshStudent
     
+    // Fetch all courses for checklist
+    await fetchAllCourses()
+    
     // Reset grade filters when opening dialog
     selectedGradeTab.value = 'all'
     selectedYearFilter.value = 'all'
@@ -720,6 +699,9 @@ async function openDialog(row) {
   dialogScheduleRaw.value = JSON.parse(JSON.stringify(row.schedule || []))
   dialogSchedule.value = flattenFromRaw(dialogScheduleRaw.value)
   dialogStudent.value = row
+  
+  // Fetch all courses for checklist
+  await fetchAllCourses()
   
   // Reset grade filters when opening dialog
   selectedGradeTab.value = 'all'
@@ -1121,6 +1103,103 @@ const gradeColumns = [
   },
 ]
 
+// Checklist columns definition (transcript format)
+const checklistColumns = [
+  {
+    name: 'courseCodeTitle',
+    label: 'COURSE C COURSE TITLE',
+    field: (row) => {
+      // Handle both merged structure (courseId is object) and original structure
+      const courseId = row.courseId
+      let code = ''
+      let name = ''
+      
+      if (courseId && typeof courseId === 'object') {
+        code = courseId.code || ''
+        name = courseId.name || ''
+      } else {
+        code = row.courseId?.code || ''
+        name = row.courseId?.name || ''
+      }
+      
+      return code ? `${code} ${name}` : name || '-'
+    },
+    align: 'left',
+    style: 'min-width: 300px'
+  },
+  {
+    name: 'unit',
+    label: 'UNIT',
+    field: (row) => {
+      const courseId = row.courseId
+      if (courseId && typeof courseId === 'object') {
+        return courseId.unit || '-'
+      }
+      return row.courseId?.unit || '-'
+    },
+    align: 'center',
+    style: 'width: 80px'
+  },
+  {
+    name: 'prerequisite',
+    label: 'PRE-REQU',
+    field: (row) => {
+      const courseId = row.courseId
+      if (courseId && typeof courseId === 'object' && courseId.prerequisite) {
+        if (Array.isArray(courseId.prerequisite) && courseId.prerequisite.length > 0) {
+          return courseId.prerequisite.map(p => p.code || p.name || p).join(', ')
+        }
+      }
+      return '-'
+    },
+    align: 'left',
+    style: 'min-width: 150px'
+  },
+  {
+    name: 'Grade',
+    label: 'Grade',
+    field: (row) => row.grade || '-',
+    align: 'center',
+    style: 'width: 100px'
+  },
+]
+
+// Helper function to get grade text color class
+const getGradeTextColor = (grade) => {
+  const numGrade = parseFloat(grade)
+  if (isNaN(numGrade)) return ''
+  
+  if (numGrade >= 1.0 && numGrade <= 1.5) return 'grade-perfect'
+  if (numGrade >= 1.6 && numGrade <= 2.5) return 'grade-good'
+  if (numGrade >= 2.6 && numGrade <= 3.0) return 'grade-pass'
+  if (numGrade >= 3.1 && numGrade <= 5.0) return 'grade-failed'
+  
+  return ''
+}
+
+// Helper function to calculate subtotal units
+const getSubtotalUnits = (courses) => {
+  if (!courses || !Array.isArray(courses)) return 0
+  return courses.reduce((sum, course) => {
+    const units = course.courseId?.unit || 0
+    return sum + (Number(units) || 0)
+  }, 0)
+}
+
+// Helper function to get year header text
+const getYearHeader = () => {
+  if (selectedYearFilter.value === 'all') {
+    // Try to get year from first course if available
+    const firstCourse = mergedCoursesForChecklist.value?.[0] || dialogCourses.value?.[0]
+    if (firstCourse) {
+      const year = getCourseYear(firstCourse)
+      return year ? `${year.toUpperCase()} YEAR` : 'ALL YEARS'
+    }
+    return 'ALL YEARS'
+  }
+  return `${selectedYearFilter.value.toUpperCase()} YEAR`
+}
+
 // Helper function to normalize semester value
 const normalizeSemester = (sem) => {
   if (!sem) return ''
@@ -1144,6 +1223,10 @@ const normalizeSemester = (sem) => {
 
 // Helper function to get semester from course (prioritizes courseId.semester as it's more accurate)
 const getCourseSemester = (course) => {
+  // For merged courses (checklist), courseId is the full course object
+  if (course.courseId && typeof course.courseId === 'object' && course.courseId.semester) {
+    return normalizeSemester(course.courseId.semester)
+  }
   // Prioritize courseId.semester as it contains the correct semester information
   // The course.sem field may be incorrect (e.g., all showing '1st')
   if (course.courseId?.semester) {
@@ -1186,6 +1269,10 @@ const normalizeYear = (year) => {
 
 // Helper function to get year level from course (prioritizes courseId.year as it's more accurate)
 const getCourseYear = (course) => {
+  // For merged courses (checklist), courseId is the full course object
+  if (course.courseId && typeof course.courseId === 'object' && course.courseId.year) {
+    return normalizeYear(course.courseId.year)
+  }
   // Prioritize courseId.year as it contains the correct year level information
   if (course.courseId?.year) {
     return normalizeYear(course.courseId.year)
@@ -1196,6 +1283,46 @@ const getCourseYear = (course) => {
   }
   return ''
 }
+
+// Helper function to merge all courses with student's taken courses (to show grades)
+const mergedCoursesForChecklist = computed(() => {
+  if (!allCoursesList.value || !Array.isArray(allCoursesList.value)) return []
+  
+  // Create a map of student's courses by courseId for quick lookup
+  const studentCoursesMap = new Map()
+  if (dialogCourses.value && Array.isArray(dialogCourses.value)) {
+    dialogCourses.value.forEach(course => {
+      const courseId = course.courseId?._id || course.courseId
+      if (courseId) {
+        studentCoursesMap.set(String(courseId), course)
+      }
+    })
+  }
+  
+  // Merge all courses with student's grades
+  return allCoursesList.value.map(course => {
+    const courseId = course._id || course
+    const studentCourse = studentCoursesMap.get(String(courseId))
+    
+    if (studentCourse) {
+      // Student has taken this course - include grade
+      return {
+        courseId: course,
+        grade: studentCourse.grade,
+        sem: studentCourse.sem,
+        year: studentCourse.year
+      }
+    } else {
+      // Student hasn't taken this course - no grade
+      return {
+        courseId: course,
+        grade: null,
+        sem: course.semester,
+        year: course.year
+      }
+    }
+  })
+})
 
 // Helper function to filter courses by year level
 const filterByYear = (courses) => {
@@ -1208,9 +1335,9 @@ const filterByYear = (courses) => {
 
 // Computed properties for filtering courses by semester and year
 const firstSemesterCourses = computed(() => {
-  if (!dialogCourses.value || !Array.isArray(dialogCourses.value)) return []
-  const filtered = dialogCourses.value.filter(course => {
-    if (!course) return false
+  if (!mergedCoursesForChecklist.value || !Array.isArray(mergedCoursesForChecklist.value)) return []
+  const filtered = mergedCoursesForChecklist.value.filter(course => {
+    if (!course || !course.courseId) return false
     const sem = getCourseSemester(course)
     return sem === 'first'
   })
@@ -1218,9 +1345,9 @@ const firstSemesterCourses = computed(() => {
 })
 
 const secondSemesterCourses = computed(() => {
-  if (!dialogCourses.value || !Array.isArray(dialogCourses.value)) return []
-  const filtered = dialogCourses.value.filter(course => {
-    if (!course) return false
+  if (!mergedCoursesForChecklist.value || !Array.isArray(mergedCoursesForChecklist.value)) return []
+  const filtered = mergedCoursesForChecklist.value.filter(course => {
+    if (!course || !course.courseId) return false
     const sem = getCourseSemester(course)
     return sem === 'second'
   })
@@ -1228,9 +1355,9 @@ const secondSemesterCourses = computed(() => {
 })
 
 const summerSemesterCourses = computed(() => {
-  if (!dialogCourses.value || !Array.isArray(dialogCourses.value)) return []
-  const filtered = dialogCourses.value.filter(course => {
-    if (!course) return false
+  if (!mergedCoursesForChecklist.value || !Array.isArray(mergedCoursesForChecklist.value)) return []
+  const filtered = mergedCoursesForChecklist.value.filter(course => {
+    if (!course || !course.courseId) return false
     const sem = getCourseSemester(course)
     return sem === 'summer'
   })
@@ -1239,8 +1366,8 @@ const summerSemesterCourses = computed(() => {
 
 // Computed property for all courses filtered by year
 const allCoursesFiltered = computed(() => {
-  if (!dialogCourses.value || !Array.isArray(dialogCourses.value)) return []
-  return filterByYear(dialogCourses.value)
+  if (!mergedCoursesForChecklist.value || !Array.isArray(mergedCoursesForChecklist.value)) return []
+  return filterByYear(mergedCoursesForChecklist.value)
 })
 
 onMounted(async () => {
@@ -1277,6 +1404,87 @@ onMounted(async () => {
 .scroll-section
   max-height: 200px
   overflow-y: auto
+
+// Checklist Dialog Styles
+.checklist-dialog
+  .checklist-table-container
+    background-color: #f5f5f5
+    border: 1px solid #d0d0d0
+
+  .checklist-semester-header
+    background-color: #e0e0e0
+    padding: 8px 16px
+    font-weight: bold
+    font-size: 14px
+    text-transform: uppercase
+    border-bottom: 2px solid #b0b0b0
+
+  .checklist-table
+    background-color: #f5f5f5
+    
+    :deep(.q-table__top)
+      display: none
+    
+    :deep(.q-table__container)
+      background-color: #f5f5f5
+    
+    :deep(.q-table thead tr th)
+      background-color: #e8e8e8
+      color: #000
+      font-weight: bold
+      font-size: 12px
+      text-transform: uppercase
+      border: 1px solid #d0d0d0
+      padding: 8px 4px
+    
+    :deep(.q-table tbody tr td)
+      background-color: #ffffff
+      border: 1px solid #d0d0d0
+      padding: 6px 4px
+      font-size: 12px
+    
+    :deep(.q-table tbody tr:nth-child(even) td)
+      background-color: #fafafa
+    
+    :deep(.q-table tbody tr:hover td)
+      background-color: #f0f0f0
+
+  .checklist-subtotal
+    background-color: #e8e8e8
+    padding: 8px 16px
+    border-top: 2px solid #b0b0b0
+    border-bottom: 1px solid #d0d0d0
+    
+    .subtotal-row
+      display: flex
+      justify-content: space-between
+      align-items: center
+      font-weight: bold
+      font-size: 13px
+      
+      .subtotal-label
+        text-transform: uppercase
+      
+      .subtotal-value
+        min-width: 80px
+        text-align: center
+
+  // Grade color classes
+  .grade-perfect
+    color: #2e7d32
+    font-weight: bold
+
+  .grade-good
+    color: #1976d2
+    font-weight: bold
+
+  .grade-pass
+    color: #f57c00
+    font-weight: bold
+
+  .grade-failed
+    color: #d32f2f
+    font-weight: bold
 
 
 @media (max-width: 1200px)

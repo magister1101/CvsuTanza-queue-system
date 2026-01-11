@@ -973,38 +973,38 @@
             <q-tab-panels v-model="selectedGradeTab" animated>
               <!-- First Semester -->
               <q-tab-panel name="first">
-                <q-table
-                  flat
-                  dense
+            <q-table
+              flat
+              dense
                   :rows="firstSemesterCourses"
                   :columns="gradeColumns"
                   :row-key="(row) => `${row.courseId?._id}-${row.sem}-${row.year}`"
                   :loading="!selectedStudent.courses"
-                >
-                  <template v-slot:body-cell-grade="props">
-                    <q-td :props="props">
-                      <q-badge
-                        :color="getGradeColor(props.value)"
-                        text-color="white"
-                        class="q-px-md"
-                      >
-                        {{ props.value }}
-                      </q-badge>
-                    </q-td>
-                  </template>
-                  <template v-slot:body-cell-description="props">
-                    <q-td :props="props">
-                      <q-badge
-                        :color="getGradeColor(props.row.grade)"
-                        text-color="white"
-                        outline
-                        class="q-px-md"
-                      >
-                        {{ props.value }}
-                      </q-badge>
-                    </q-td>
-                  </template>
-                </q-table>
+            >
+              <template v-slot:body-cell-grade="props">
+                <q-td :props="props">
+                  <q-badge
+                    :color="getGradeColor(props.value)"
+                    text-color="white"
+                    class="q-px-md"
+                  >
+                    {{ props.value }}
+                  </q-badge>
+                </q-td>
+              </template>
+              <template v-slot:body-cell-description="props">
+                <q-td :props="props">
+                  <q-badge
+                    :color="getGradeColor(props.row.grade)"
+                    text-color="white"
+                    outline
+                    class="q-px-md"
+                  >
+                    {{ props.value }}
+                  </q-badge>
+                </q-td>
+              </template>
+            </q-table>
               </q-tab-panel>
 
               <!-- Second Semester -->
@@ -1726,29 +1726,29 @@ async function editStudent() {
     
     // Prepare update data
     const updateData = {
-      firstName: editForm.value.firstName,
-      middleName: editForm.value.middleName,
-      lastName: editForm.value.lastName,
-      studentNumber: editForm.value.studentId,
-      email: editForm.value.email,
-      course: editForm.value.program,
-      year: editForm.value.year,
-      section: editForm.value.section,
-      isRegular: editForm.value.status === 'Regular',
-      houseNumber: editForm.value.houseNumber,
-      street: editForm.value.street,
-      barangay: editForm.value.barangay,
-      city: editForm.value.city,
-      province: editForm.value.province,
-      sex: editForm.value.sex,
-      birthDate: editForm.value.birthDate,
-      elementarySchool: editForm.value.elementarySchool,
-      highSchool: editForm.value.highSchool,
-      seniorHighSchool: editForm.value.seniorHighSchool,
-      schoolAddress: editForm.value.schoolAddress,
-      isYouIndigenous: editForm.value.isYouIndigenous === 'true',
-      isDisabled: editForm.value.isDisabled === 'true',
-      isFirstCollegeGraduate: editForm.value.isFirstCollegeGraduate === 'true',
+        firstName: editForm.value.firstName,
+        middleName: editForm.value.middleName,
+        lastName: editForm.value.lastName,
+        studentNumber: editForm.value.studentId,
+        email: editForm.value.email,
+        course: editForm.value.program,
+        year: editForm.value.year,
+        section: editForm.value.section,
+        isRegular: editForm.value.status === 'Regular',
+        houseNumber: editForm.value.houseNumber,
+        street: editForm.value.street,
+        barangay: editForm.value.barangay,
+        city: editForm.value.city,
+        province: editForm.value.province,
+        sex: editForm.value.sex,
+        birthDate: editForm.value.birthDate,
+        elementarySchool: editForm.value.elementarySchool,
+        highSchool: editForm.value.highSchool,
+        seniorHighSchool: editForm.value.seniorHighSchool,
+        schoolAddress: editForm.value.schoolAddress,
+        isYouIndigenous: editForm.value.isYouIndigenous === 'true',
+        isDisabled: editForm.value.isDisabled === 'true',
+        isFirstCollegeGraduate: editForm.value.isFirstCollegeGraduate === 'true',
     }
     
     // Update username and password when studentNumber changes
