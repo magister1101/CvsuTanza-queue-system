@@ -427,6 +427,61 @@
                         </q-card-section>
                       </div>
                     </div>
+                    <!-- Change Password Section -->
+                    <div class="row justify-center q-col-gutter-md">
+                      <div class="col-12 col-sm-6">
+                        <q-card-section>
+                          New Password
+                          <div
+                            style="
+                              border: 2px solid #9fa092;
+                              background-color: #fefeff;
+                              border-radius: 14px;
+                            "
+                          >
+                            <q-input 
+                              :type="showPassword ? 'text' : 'password'" 
+                              v-model="newPassword" 
+                              borderless
+                            >
+                              <template v-slot:append>
+                                <q-icon
+                                  :name="showPassword ? 'visibility' : 'visibility_off'"
+                                  class="cursor-pointer"
+                                  @click="showPassword = !showPassword"
+                                />
+                              </template>
+                            </q-input>
+                          </div>
+                        </q-card-section>
+                      </div>
+                      <div class="col-12 col-sm-6">
+                        <q-card-section>
+                          Confirm New Password
+                          <div
+                            style="
+                              border: 2px solid #9fa092;
+                              background-color: #fefeff;
+                              border-radius: 14px;
+                            "
+                          >
+                            <q-input 
+                              :type="showConfirmPassword ? 'text' : 'password'" 
+                              v-model="confirmNewPassword" 
+                              borderless
+                            >
+                              <template v-slot:append>
+                                <q-icon
+                                  :name="showConfirmPassword ? 'visibility' : 'visibility_off'"
+                                  class="cursor-pointer"
+                                  @click="showConfirmPassword = !showConfirmPassword"
+                                />
+                              </template>
+                            </q-input>
+                          </div>
+                        </q-card-section>
+                      </div>
+                    </div>
                     <q-card-section class="flex flex-center">
                       <div>
                         <q-btn
@@ -477,6 +532,10 @@ const userName = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
+const newPassword = ref('')
+const confirmNewPassword = ref('')
+const showPassword = ref(false)
+const showConfirmPassword = ref(false)
 const role = ref(null)
 const year = ref(null)
 
@@ -559,7 +618,11 @@ async function cancelCreate() {
     (userName.value = ''),
     (email.value = ''),
     (password.value = ''),
-    (confirmPassword.value = '')
+    (confirmPassword.value = ''),
+    (newPassword.value = ''),
+    (confirmNewPassword.value = '')
+  showPassword.value = false
+  showConfirmPassword.value = false
   role.value = null
   year.value = null
   createAccountDialog.value = false
@@ -672,8 +735,13 @@ function openEditDialog(user) {
   userName.value = user.fullData.username
   email.value = user.fullData.email
   role.value = user.fullData.role
-  editDialog.value = true
   year.value = user.fullData.year
+  // Reset password fields
+  newPassword.value = ''
+  confirmNewPassword.value = ''
+  showPassword.value = false
+  showConfirmPassword.value = false
+  editDialog.value = true
 }
 
 async function deleteUserDialog(studentId) {
@@ -718,17 +786,52 @@ async function updateUser() {
   loading.value = true
   const token = localStorage.getItem('authToken')
   try {
+    // Validate password if provided (optional - only validate if user enters password)
+    if (newPassword.value || confirmNewPassword.value) {
+      if (!newPassword.value || !confirmNewPassword.value) {
+        Notify.create({
+          type: 'warning',
+          message: 'Please fill in both password fields or leave both empty',
+        })
+        loading.value = false
+        return
+      }
+      if (newPassword.value !== confirmNewPassword.value) {
+        Notify.create({
+          type: 'negative',
+          message: 'Passwords do not match',
+        })
+        loading.value = false
+        return
+      }
+      if (newPassword.value.length < 6) {
+        Notify.create({
+          type: 'warning',
+          message: 'Password must be at least 6 characters long',
+        })
+        loading.value = false
+        return
+      }
+    }
+
+    const updateData = {
+      firstName: firstName.value,
+      middleName: middleName.value,
+      lastName: lastName.value,
+      username: userName.value,
+      email: email.value,
+      role: role.value,
+      year: year.value
+    }
+
+    // Only include password if user provided a new password
+    if (newPassword.value && confirmNewPassword.value) {
+      updateData.password = newPassword.value
+    }
+
     const response = await axios.post(
       `${process.env.api_host}/users/update/${selectedUser.value._id}`,
-      {
-        firstName: firstName.value,
-        middleName: middleName.value,
-        lastName: lastName.value,
-        username: userName.value,
-        email: email.value,
-        role: role.value,
-        year: year.value
-      },
+      updateData,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -742,11 +845,16 @@ async function updateUser() {
     })
     editDialog.value = false
     getusers()
+    // Reset password fields
+    newPassword.value = ''
+    confirmNewPassword.value = ''
+    showPassword.value = false
+    showConfirmPassword.value = false
   } catch (err) {
     console.error(err)
     Notify.create({
       type: 'negative',
-      message: 'Error updating user',
+      message: err.response?.data?.message || 'Error updating user',
     })
   } finally {
     loading.value = false
