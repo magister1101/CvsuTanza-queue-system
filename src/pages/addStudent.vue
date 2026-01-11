@@ -814,8 +814,16 @@
 
             <q-item>
               <q-item-section>
-                <q-item-label><strong>Regular:</strong></q-item-label>
-                <q-item-label caption>{{ selectedStudent.isRegular ? 'Yes' : 'No' }}</q-item-label>
+                <q-item-label><strong>Status:</strong></q-item-label>
+                <q-item-label caption>
+                  {{
+                    selectedStudent.isRegular === null || selectedStudent.isRegular === undefined
+                      ? 'New'
+                      : selectedStudent.isRegular
+                      ? 'Regular'
+                      : 'Irregular'
+                  }}
+                </q-item-label>
               </q-item-section>
             </q-item>
 
@@ -1234,7 +1242,7 @@ const editYearOption = ref({
 const editSectionOption = ref({
   options: ['1', '2', '3', '4', '5', '6', '7'],
 })
-const editStatusOption = ref(['Regular', 'Irregular'])
+const editStatusOption = ref(['New', 'Regular', 'Irregular'])
 
 const tableLoading = ref(false)
 
@@ -1249,7 +1257,7 @@ async function cancelAdd() {
   program.value = ''
   year.value = ''
   section.value = ''
-  status.value = 'Regular'
+  status.value = 'New'
   houseNumber.value = ''
   street.value = ''
   barangay.value = ''
@@ -1293,7 +1301,7 @@ async function addStudent() {
       loading.value = false
       return
     }
-    const isRegular = status.value === 'Regular'
+    const isRegular = status.value === 'New' ? null : status.value === 'Regular'
     const token = localStorage.getItem('authToken')
     const response = await axios.post(
       `${process.env.api_host}/users/create`,
@@ -1483,7 +1491,10 @@ const columns = ref([
     name: 'status',
     align: 'left',
     label: 'Status',
-    field: (row) => (row.isRegular ? 'Regular' : 'Irregular'),
+    field: (row) => {
+      if (row.isRegular === null || row.isRegular === undefined) return 'New'
+      return row.isRegular ? 'Regular' : 'Irregular'
+    },
     sortable: true,
   },
   {
@@ -1689,6 +1700,14 @@ async function getAllStudents() {
 
 function openEditDialog(student) {
   const originalStudentNumber = student.studentNumber || student.username || ''
+  // Determine status: null/undefined = 'New', true = 'Regular', false = 'Irregular'
+  let status = 'New'
+  if (student.isRegular === true) {
+    status = 'Regular'
+  } else if (student.isRegular === false) {
+    status = 'Irregular'
+  }
+  
   editForm.value = {
     firstName: student.firstName || '',
     middleName: student.middleName || '',
@@ -1699,7 +1718,7 @@ function openEditDialog(student) {
     program: student.course || '',
     year: student.year || '',
     section: student.section || '',
-    status: student.isRegular ? 'Regular' : 'Irregular',
+    status: status,
     houseNumber: student.houseNumber || '',
     street: student.street || '',
     barangay: student.barangay || '',
@@ -1734,7 +1753,7 @@ async function editStudent() {
         course: editForm.value.program,
         year: editForm.value.year,
         section: editForm.value.section,
-        isRegular: editForm.value.status === 'Regular',
+        isRegular: editForm.value.status === 'New' ? null : editForm.value.status === 'Regular',
         houseNumber: editForm.value.houseNumber,
         street: editForm.value.street,
         barangay: editForm.value.barangay,
@@ -2026,7 +2045,13 @@ function exportTable() {
       { label: 'Program', field: 'course' },
       { label: 'Year', field: 'year' },
       { label: 'Section', field: 'section' },
-      { label: 'Status', field: (row) => (row.isRegular ? 'Regular' : 'Irregular') },
+      { 
+        label: 'Status', 
+        field: (row) => {
+          if (row.isRegular === null || row.isRegular === undefined) return 'New'
+          return row.isRegular ? 'Regular' : 'Irregular'
+        }
+      },
       { label: 'House Number', field: 'houseNumber' },
       { label: 'Street', field: 'street' },
       { label: 'Barangay', field: 'barangay' },
