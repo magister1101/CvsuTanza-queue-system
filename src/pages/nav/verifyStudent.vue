@@ -318,7 +318,7 @@
                   class="checklist-table"
                   :rows-per-page-options="[0]"
                 >
-                  <template v-slot:body-cell-finalRating="props">
+                  <template v-slot:body-cell-grade="props">
                     <q-td :props="props" class="text-center">
                       <span :class="getGradeTextColor(props.value)">
                         {{ props.value || '-' }}
@@ -347,7 +347,7 @@
                   class="checklist-table"
                   :rows-per-page-options="[0]"
                 >
-                  <template v-slot:body-cell-finalRating="props">
+                  <template v-slot:body-cell-grade="props">
                     <q-td :props="props" class="text-center">
                       <span :class="getGradeTextColor(props.value)">
                         {{ props.value || '-' }}
@@ -1156,7 +1156,7 @@ const checklistColumns = [
     style: 'min-width: 150px'
   },
   {
-    name: 'Grade',
+    name: 'grade',
     label: 'Grade',
     field: (row) => row.grade || '-',
     align: 'center',
