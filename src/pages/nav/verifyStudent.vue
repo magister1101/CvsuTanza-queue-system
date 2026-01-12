@@ -1284,33 +1284,80 @@ const getCourseYear = (course) => {
   return ''
 }
 
+// Helper function to normalize course ID to string for comparison
+const normalizeCourseId = (courseId) => {
+  if (!courseId) return null
+  // Handle ObjectId objects
+  if (typeof courseId === 'object' && courseId._id) {
+    return String(courseId._id)
+  }
+  // Handle ObjectId objects with toString method
+  if (typeof courseId === 'object' && typeof courseId.toString === 'function') {
+    return courseId.toString()
+  }
+  // Handle string IDs
+  return String(courseId)
+}
+
 // Helper function to merge all courses with student's taken courses (to show grades)
 const mergedCoursesForChecklist = computed(() => {
   if (!allCoursesList.value || !Array.isArray(allCoursesList.value)) return []
   
   // Create a map of student's courses by courseId for quick lookup
   const studentCoursesMap = new Map()
+  const studentCoursesByCodeMap = new Map() // Fallback: map by course code
   if (dialogCourses.value && Array.isArray(dialogCourses.value)) {
     dialogCourses.value.forEach(course => {
-      const courseId = course.courseId?._id || course.courseId
+      // Handle both populated object and string ID formats
+      let courseId = null
+      let courseCode = null
+      
+      if (course.courseId) {
+        if (typeof course.courseId === 'object') {
+          // Populated object - get _id and code
+          courseId = course.courseId._id || course.courseId.id || course.courseId
+          courseCode = course.courseId.code || null
+        } else {
+          // String ID
+          courseId = course.courseId
+        }
+      }
+      
       if (courseId) {
-        studentCoursesMap.set(String(courseId), course)
+        const normalizedId = normalizeCourseId(courseId)
+        if (normalizedId) {
+          studentCoursesMap.set(normalizedId, course)
+        }
+      }
+      
+      // Also store by course code as fallback
+      if (courseCode) {
+        studentCoursesByCodeMap.set(courseCode.toUpperCase().trim(), course)
       }
     })
   }
   
   // Merge all courses with student's grades
   return allCoursesList.value.map(course => {
-    const courseId = course._id || course
-    const studentCourse = studentCoursesMap.get(String(courseId))
+    // Normalize the course ID from allCoursesList
+    const courseId = normalizeCourseId(course._id || course)
+    
+    // Try to find matching student course by ID first
+    let studentCourse = courseId ? studentCoursesMap.get(courseId) : null
+    
+    // Fallback: try to match by course code if ID match failed
+    if (!studentCourse && course.code) {
+      const courseCode = course.code.toUpperCase().trim()
+      studentCourse = studentCoursesByCodeMap.get(courseCode) || null
+    }
     
     if (studentCourse) {
       // Student has taken this course - include grade
       return {
         courseId: course,
-        grade: studentCourse.grade,
-        sem: studentCourse.sem,
-        year: studentCourse.year
+        grade: studentCourse.grade || null,
+        sem: studentCourse.sem || studentCourse.courseId?.semester || course.semester,
+        year: studentCourse.year || studentCourse.courseId?.year || course.year
       }
     } else {
       // Student hasn't taken this course - no grade
