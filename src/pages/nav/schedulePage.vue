@@ -208,7 +208,9 @@
           <div class="text-caption text-grey-7 q-mt-xs">
             Upload an Excel file (.xlsx or .xls) with columns:
             <br />
-            <code>CourseCode, Section, Day, StartTime, EndTime, Room</code>
+            <code>code, course, section, room, day, startTime, endTime</code>
+            <br />
+            <span class="text-grey-6">Optional: Add a "program" column (e.g., BEE, BSIT) if course codes exist in multiple programs</span>
           </div>
         </q-card-section>
 
