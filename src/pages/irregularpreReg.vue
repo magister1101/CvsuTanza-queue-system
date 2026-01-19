@@ -24,7 +24,20 @@
           <template #body="props">
             <q-tr :props="props">
               <q-td>{{ props.row.course }}</q-td>
-              <q-td>{{ props.row.prerequisites }}</q-td>
+              <q-td>
+                <div v-for="prereq in props.row.prerequisitesList" :key="prereq.id" class="row items-center q-gutter-x-sm q-mb-xs">
+                  <span>{{ prereq.name }}</span>
+                  <q-btn 
+                    size="sm" 
+                    dense 
+                    color="primary" 
+                    label="Add to Selection" 
+                    @click="addMissingPrerequisite(prereq.id)"
+                    v-if="!isCourseSelected(prereq.id)"
+                  />
+                  <q-badge v-else color="positive" label="Added" />
+                </div>
+              </q-td>
             </q-tr>
           </template>
         </q-table>
@@ -287,7 +300,27 @@ function onScheduleSelected(courseIdRaw, scheduleIdRaw) {
     delete selectedSchedules.value[courseId]
   }
 
-  // Clear prerequisite messages when selection changes
+  clearPrerequisiteWarnings()
+}
+
+function isCourseSelected(courseId) {
+  return !!selectedSchedules.value[toId(courseId)]
+}
+
+function addMissingPrerequisite(courseIdRaw) {
+  const courseId = toId(courseIdRaw)
+  // Try to find the first available schedule for this course
+  const options = scheduleOptions.value[courseId]
+  if (options && options.length > 0) {
+    onScheduleSelected(courseId, options[0]._id)
+    Notify.create({ type: 'positive', message: 'Prerequisite course added to selection.' })
+  } else {
+    Notify.create({ type: 'negative', message: 'No available schedules found for this prerequisite course.' })
+  }
+}
+
+// Clear prerequisite messages when selection changes
+function clearPrerequisiteWarnings() {
   prerequisitesMessage.value = null
   prerequisitesRow.value = []
   alreadyTakenCourses.value = []
@@ -332,6 +365,7 @@ async function checkPrerequisitesAndEnroll() {
           ([course, prerequisites]) => ({
             id: course,
             course: course,
+            prerequisitesList: prerequisites,
             prerequisites: prerequisites.map((prereq) => prereq.name).join(', '),
           }),
         )

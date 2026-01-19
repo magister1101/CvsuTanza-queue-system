@@ -1191,7 +1191,7 @@ const barangay = ref('')
 const city = ref('')
 const province = ref('')
 const sex = ref('')
-const sexOptions = ['Male', 'Female', 'Other']
+const sexOptions = ['Female', 'Male']
 const birthDate = ref('')
 const elementarySchool = ref('')
 const highSchool = ref('')
@@ -2142,24 +2142,32 @@ function exportTable() {
 // CVSU Grading Scale: 1.0-1.5=Perfect, 1.6-2.5=Good, 2.6-3.0=Pass, 3.1-5.0=Failed
 const getGradeColor = (grade) => {
   const numGrade = parseFloat(grade)
-  if (isNaN(numGrade)) return 'grey'
   
-  if (numGrade >= 1.0 && numGrade <= 1.5) return 'green'      
-  if (numGrade >= 1.6 && numGrade <= 2.5) return 'blue'     
-  if (numGrade >= 2.6 && numGrade <= 3.0) return 'orange'     
-  if (numGrade >= 3.1 && numGrade <= 5.0) return 'red'        
+  if (isNaN(numGrade)) {
+    const semLower = String(grade).toLowerCase()
+    if (semLower === 'inc') return 'orange'
+    if (semLower === 'dropped') return 'red'
+    return 'grey'
+  }
+  
+  if (numGrade >= 1.0 && numGrade <= 3.0) return 'green'
+  if (numGrade > 3.0 && numGrade <= 5.0) return 'red'
   
   return 'grey'
 }
 
 const getGradeDescription = (grade) => {
   const numGrade = parseFloat(grade)
-  if (isNaN(numGrade)) return 'Invalid'
   
-  if (numGrade >= 1.0 && numGrade <= 1.5) return 'Perfect'
-  if (numGrade >= 1.6 && numGrade <= 2.5) return 'Good'
-  if (numGrade >= 2.6 && numGrade <= 3.0) return 'Pass'
-  if (numGrade >= 3.1 && numGrade <= 5.0) return 'Failed'
+  if (isNaN(numGrade)) {
+    const semLower = String(grade).toLowerCase()
+    if (semLower === 'inc') return 'INC'
+    if (semLower === 'dropped') return 'Dropped'
+    return 'Invalid'
+  }
+  
+  if (numGrade >= 1.0 && numGrade <= 3.0) return 'Passed'
+  if (numGrade > 3.0 && numGrade <= 5.0) return 'Failed'
   
   return 'Invalid'
 }
@@ -2212,7 +2220,7 @@ const gradeColumns = [
   },
   {
     name: 'description',
-    label: 'Status',
+    label: 'Remarks',
     field: (row) => getGradeDescription(row.grade),
     sortable: true,
     align: 'center'

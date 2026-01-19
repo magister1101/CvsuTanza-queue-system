@@ -1026,24 +1026,32 @@ async function validateStudent(id) {
 // CVSU Grading Scale: 1.0-1.5=Perfect, 1.6-2.5=Good, 2.6-3.0=Pass, 3.1-5.0=Failed
 const getGradeColor = (grade) => {
   const numGrade = parseFloat(grade)
-  if (isNaN(numGrade)) return 'grey'
   
-  if (numGrade >= 1.0 && numGrade <= 1.5) return 'green'      
-  if (numGrade >= 1.6 && numGrade <= 2.5) return 'blue'     
-  if (numGrade >= 2.6 && numGrade <= 3.0) return 'orange'     
-  if (numGrade >= 3.1 && numGrade <= 5.0) return 'red'        
+  if (isNaN(numGrade)) {
+    const semLower = String(grade).toLowerCase()
+    if (semLower === 'inc') return 'orange'
+    if (semLower === 'dropped') return 'red'
+    return 'grey'
+  }
+  
+  if (numGrade >= 1.0 && numGrade <= 3.0) return 'green'
+  if (numGrade > 3.0 && numGrade <= 5.0) return 'red'
   
   return 'grey'
 }
 
 const getGradeDescription = (grade) => {
   const numGrade = parseFloat(grade)
-  if (isNaN(numGrade)) return 'Invalid'
   
-  if (numGrade >= 1.0 && numGrade <= 1.5) return 'Perfect'
-  if (numGrade >= 1.6 && numGrade <= 2.5) return 'Good'
-  if (numGrade >= 2.6 && numGrade <= 3.0) return 'Pass'
-  if (numGrade >= 3.1 && numGrade <= 5.0) return 'Failed'
+  if (isNaN(numGrade)) {
+    const semLower = String(grade).toLowerCase()
+    if (semLower === 'inc') return 'INC'
+    if (semLower === 'dropped') return 'Dropped'
+    return 'Invalid'
+  }
+  
+  if (numGrade >= 1.0 && numGrade <= 3.0) return 'Passed'
+  if (numGrade > 3.0 && numGrade <= 5.0) return 'Failed'
   
   return 'Invalid'
 }
@@ -1096,7 +1104,7 @@ const gradeColumns = [
   },
   {
     name: 'description',
-    label: 'Status',
+    label: 'Remarks',
     field: (row) => getGradeDescription(row.grade),
     sortable: true,
     align: 'center'
@@ -1109,7 +1117,6 @@ const checklistColumns = [
     name: 'courseCodeTitle',
     label: 'COURSE C COURSE TITLE',
     field: (row) => {
-      // Handle both merged structure (courseId is object) and original structure
       const courseId = row.courseId
       let code = ''
       let name = ''
@@ -1141,38 +1148,34 @@ const checklistColumns = [
     style: 'width: 80px'
   },
   {
-    name: 'prerequisite',
-    label: 'PRE-REQU',
-    field: (row) => {
-      const courseId = row.courseId
-      if (courseId && typeof courseId === 'object' && courseId.prerequisite) {
-        if (Array.isArray(courseId.prerequisite) && courseId.prerequisite.length > 0) {
-          return courseId.prerequisite.map(p => p.code || p.name || p).join(', ')
-        }
-      }
-      return '-'
-    },
-    align: 'left',
-    style: 'min-width: 150px'
-  },
-  {
     name: 'grade',
     label: 'Grade',
     field: (row) => row.grade || '-',
     align: 'center',
     style: 'width: 100px'
   },
+  {
+    name: 'remarks',
+    label: 'Remarks',
+    field: (row) => getGradeDescription(row.grade),
+    align: 'center',
+    style: 'width: 120px'
+  },
 ]
 
 // Helper function to get grade text color class
 const getGradeTextColor = (grade) => {
   const numGrade = parseFloat(grade)
-  if (isNaN(numGrade)) return ''
   
-  if (numGrade >= 1.0 && numGrade <= 1.5) return 'grade-perfect'
-  if (numGrade >= 1.6 && numGrade <= 2.5) return 'grade-good'
-  if (numGrade >= 2.6 && numGrade <= 3.0) return 'grade-pass'
-  if (numGrade >= 3.1 && numGrade <= 5.0) return 'grade-failed'
+  if (isNaN(numGrade)) {
+    const semLower = String(grade).toLowerCase()
+    if (semLower === 'inc') return 'grade-pass' // Orange
+    if (semLower === 'dropped') return 'grade-failed' // Red
+    return ''
+  }
+  
+  if (numGrade >= 1.0 && numGrade <= 3.0) return 'grade-perfect' // Green
+  if (numGrade > 3.0 && numGrade <= 5.0) return 'grade-failed' // Red
   
   return ''
 }
