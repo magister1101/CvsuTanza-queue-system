@@ -47,6 +47,40 @@
       </q-card-section>
     </q-card>
 
+    <!-- INC Agreement Warning -->
+    <q-card class="q-mt-md" v-if="incPrerequisitesRow.length > 0" style="border: 3px solid #03a9f4; background-color: #e1f5fe">
+      <q-card-section>
+        <div class="text-h6 text-light-blue-9">Prerequisite INC Agreement</div>
+      </q-card-section>
+      <q-card-section>
+        <div class="q-mb-md">
+          You have <strong>Incomplete (INC)</strong> grades in the following prerequisite courses. 
+          By enrolling, you agree and promise to complete these prerequisites within this year or semester.
+        </div>
+        <q-table
+          style="box-shadow: none"
+          :rows="incPrerequisitesRow"
+          :columns="prerequisitesColumn"
+          row-key="id"
+          :rows-per-page-options="[0]"
+          separator="cell"
+          :hide-bottom="true"
+        >
+          <template #body="props">
+            <q-tr :props="props">
+              <q-td>{{ props.row.course }}</q-td>
+              <q-td>
+                <div v-for="prereq in props.row.prerequisitesList" :key="prereq.id">
+                  {{ prereq.name }} (INC)
+                </div>
+              </q-td>
+            </q-tr>
+          </template>
+        </q-table>
+        <q-checkbox v-model="incAgreementAcknowledged" label="I agree to finish the prerequisite(s) of the subject I am taking now within this year or semester." class="q-mt-md text-weight-bold" color="primary" />
+      </q-card-section>
+    </q-card>
+
     <!-- Already Taken Courses Warning -->
     <q-card class="q-mt-md" v-if="alreadyTakenCourses.length > 0" style="border: 3px solid #f44336; background-color: #ffebee">
       <q-card-section>
@@ -160,6 +194,30 @@
         </q-list>
       </q-card-section>
     </q-card>
+    <!-- Agreement Confirmation Dialog -->
+    <q-dialog v-model="incAgreementDialog" persistent>
+      <q-card style="min-width: 350px">
+        <q-card-section class="row items-center">
+          <q-avatar icon="assignment_late" color="primary" text-color="white" />
+          <span class="q-ml-sm text-h6">Acknowledgement Required</span>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          Before you can enroll, you must acknowledge that you have Incomplete (INC) grades in prerequisite subjects 
+          and that you agree to finish them within this year or semester.
+        </q-card-section>
+
+        <q-card-section>
+          <q-checkbox v-model="incAgreementAcknowledged" label="I acknowledge and agree" />
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" color="primary" v-close-popup />
+          <q-btn flat label="Proceed to Enroll" color="primary" @click="finalEnroll" :disable="!incAgreementAcknowledged" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
   </q-page>
 </template>
 
@@ -187,6 +245,9 @@ const searchQuery = ref('')
 // Prerequisites checking
 const prerequisitesMessage = ref(null)
 const prerequisitesRow = ref([])
+const incPrerequisitesRow = ref([])
+const incAgreementAcknowledged = ref(false)
+const incAgreementDialog = ref(false)
 const prerequisitesColumn = ref([
   { name: 'course', label: 'Selected Course', align: 'left', field: 'course' },
   { name: 'prerequisites', label: 'Missing Prerequisites', align: 'left', field: 'prerequisites' },
@@ -323,7 +384,9 @@ function addMissingPrerequisite(courseIdRaw) {
 function clearPrerequisiteWarnings() {
   prerequisitesMessage.value = null
   prerequisitesRow.value = []
+  incPrerequisitesRow.value = []
   alreadyTakenCourses.value = []
+  incAgreementAcknowledged.value = false
 }
 
 async function checkPrerequisitesAndEnroll() {
@@ -359,7 +422,7 @@ async function checkPrerequisitesAndEnroll() {
     )
 
     if (response.data.missing) {
-      // Handle missing prerequisites
+      // Handle missing prerequisites (strictly blocked)
       if (response.data.missingPrerequisites) {
         prerequisitesRow.value = Object.entries(response.data.missingPrerequisites).map(
           ([course, prerequisites]) => ({
@@ -381,7 +444,37 @@ async function checkPrerequisitesAndEnroll() {
       return
     }
 
-    // All prerequisites met, proceed with enrollment
+    if (response.data.needsAgreement) {
+      // Handle INC prerequisites (not blocked, but needs agreement)
+      incPrerequisitesRow.value = Object.entries(response.data.incPrerequisites).map(
+        ([course, prerequisites]) => ({
+          id: course,
+          course: course,
+          prerequisitesList: prerequisites,
+        }),
+      )
+      
+      if (!incAgreementAcknowledged.value) {
+        incAgreementDialog.value = true
+        return
+      }
+    }
+
+    await finalEnroll()
+  } catch (err) {
+    // console.error('Error during enrollment:', err)
+    Notify.create({ type: 'negative', message: err.response?.data?.message || 'Failed to enroll courses' })
+  } finally {
+    enrollLoading.value = false
+  }
+}
+
+async function finalEnroll() {
+  try {
+    enrollLoading.value = true
+    incAgreementDialog.value = false
+    const token = localStorage.getItem('authToken')
+    const courseToTakeIds = Object.keys(selectedSchedules.value)
     const scheduleIds = Object.values(selectedSchedules.value).flat()
 
     await Axios.post(`${process.env.api_host}/users/update/${userData.value._id}`, {
@@ -390,13 +483,21 @@ async function checkPrerequisitesAndEnroll() {
       schedule: scheduleIds,
       isEnrolled: true,
       isApproved: false,
+      incAgreement: incAgreementAcknowledged.value,
+      incPrerequisites: incPrerequisitesRow.value.flatMap(r => r.prerequisitesList.map(p => ({
+        courseName: r.course,
+        prerequisiteName: p.name
+      })))
+    }, {
+      headers: {
+        Authorization: token,
+      },
     })
     
     Notify.create({ type: 'positive', message: 'Enrollment successful!' })
     redirect('/thankYou')
   } catch (err) {
-    // console.error('Error during enrollment:', err)
-    Notify.create({ type: 'negative', message: err.response?.data?.message || 'Failed to enroll courses' })
+    Notify.create({ type: 'negative', message: err.response?.data?.message || 'Failed to complete enrollment' })
   } finally {
     enrollLoading.value = false
   }

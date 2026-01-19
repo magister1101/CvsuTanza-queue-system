@@ -62,6 +62,28 @@
             <div class="text-subtitle1 q-mb-sm">
               Year & Section: {{ dialogStudent.year }} - {{ dialogStudent.section }}
             </div>
+            
+            <!-- INC Agreement Acknowledgement -->
+            <div v-if="dialogStudent.incAgreement" class="q-pa-md q-mt-md rounded-borders" style="background-color: #e1f5fe; border: 2px solid #03a9f4;">
+              <div class="text-subtitle1 text-light-blue-9 text-weight-bold">
+                <q-icon name="assignment_turned_in" size="sm" /> INC Prerequisite Agreement
+              </div>
+              <div class="text-body2 q-mt-sm">
+                The student has formally acknowledged and agreed to finish the following prerequisite(s) within this year or semester:
+              </div>
+              <q-list dense class="q-mt-sm">
+                <q-item v-for="(inc, index) in dialogStudent.incPrerequisites" :key="index">
+                  <q-item-section avatar>
+                    <q-icon name="check_circle" color="light-blue-9" size="xs" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label class="text-weight-medium">
+                      {{ inc.prerequisiteName }} (Prerequisite for {{ inc.courseName }})
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </div>
             <div class="q-mt-md">
               <q-btn
                 v-if="dialogCourses.length"
